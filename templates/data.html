@@ -4,12 +4,60 @@
  		<head>
 		<title>Hello, data!</title>
     <script type="text/javascript" src="{{ url_for('static', filename='d3.v3.js') }}"></script> 
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
     <script src="{{ url_for('static', filename='scatter.js') }}"></script>
+    <script src="http://d3export.cancan.cshl.edu/vkbeautify.0.99.00.beta.js"></script>
   </head>
   <body>
-    
+
+    <div id='test'>
+
     <script type="text/javascript">
       scatter({{numb}})
+    </script>
+
+  </div>
+
+    <div>
+   
+    <button class="btn btn-success" id="save_as_svg" value="">
+      Save as SVG</button>
+   
+  </div>
+
+  <form id="svgform" method="post" action="http://d3export.cancan.cshl.edu/download.pl">
+ <input type="hidden" id="output_format" name="output_format" value="">
+ <input type="hidden" id="data" name="data" value="">
+</form>
+
+      <script type="text/javascript">
+
+/*
+   Utility function: populates the <FORM> with the SVG data
+   and the requested output format, and submits the form.
+*/
+function submit_download_form(output_format)
+{
+  // Get the d3js SVG eleme
+  var tmp = document.getElementById("test");
+  var svg = tmp.getElementsByTagName("svg")[0];
+  // Extract the data as SVG text string
+  var svg_xml = (new XMLSerializer).serializeToString(svg);
+
+  // Submit the <FORM> to the server.
+  // The result will be an attachment file to download.
+  var form = document.getElementById("svgform");
+  form['output_format'].value = output_format;
+  form['data'].value = svg_xml ;
+  form.submit();
+}
+
+
+$(document).ready(function() {
+
+  $("#save_as_svg").click(function() { submit_download_form("svg"); });
+
+});
     </script>
     
     

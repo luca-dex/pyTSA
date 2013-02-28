@@ -9,7 +9,7 @@
 	
 			//Create SVG element
 function scatter(dataset){
-			var svg = d3.select("body")
+			var svg = d3.select("#test")
 						.append("svg")
 						.attr("width", w)
 						.attr("height", h);
@@ -25,7 +25,7 @@ function scatter(dataset){
 			   		return d[1];
 			   })
 			   .attr("r", function(d) {
-			   		return Math.sqrt(h - d[1]);
+			   		return 3;
 			   });
 
 			svg.selectAll("text")

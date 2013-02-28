@@ -7,10 +7,6 @@ app = Flask(__name__)
 def hello():
     return "Hello World!"
 
-@app.route("/casa")
-def hello2():
-    return "Hello World! 222"
-
 @app.route("/test")
 def circle():
     return render_template('circle.html', name='mr. x')
