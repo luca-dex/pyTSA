@@ -1,5 +1,5 @@
 //Width and height
-			var w = 1500;
+			var w = 1400;
 			var h = 700;
 			
 			//var dataset = [
@@ -32,26 +32,37 @@ function scatter(dataset){
 			   .style("fill", function(d) { 	
 		   			return color(serie); 
 			   });
-	}
-
-		text = svg.selectAll("text");
-		for(var serie in dataset) {
-			text.data(dataset[serie])
-			.enter()
-			.append("text")
-			   .text(function(d) {
-			   		return d[0] + "," + d[1];
-			   })
-			   .attr("x", function(d) {
-			   		return d[0];
-			   })
-			   .attr("y", function(d) {
-			   		return d[1];
-			   })
-			   .attr("font-family", "sans-serif")
-			   .attr("font-size", "11px")
-			   .attr("fill", "red");  
-			   
 		}
+
+		 d3.selectAll("input").on("change", function change() {
+    		var value = this.value === "label"
+        		? function() { return 1; }
+        		: function() { return 0; };
+        	if (value === "label") {
+        		text = svg.selectAll("text");
+				for(var serie in dataset) {
+					text.data(dataset[serie])
+					.enter()
+					.append("text")
+					   .text(function(d) {
+					   		return d[0] + "," + d[1];
+					   })
+					   .attr("x", function(d) {
+					   		return d[0];
+					   })
+					   .attr("y", function(d) {
+					   		return d[1];
+					   })
+					   .attr("font-family", "sans-serif")
+					   .attr("font-size", "11px")
+					   .attr("fill", "red");  
+			   
+				}
+        	}
+        	
+
+    	});
+
+		
 
 }

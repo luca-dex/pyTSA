@@ -1,71 +1,65 @@
 <!doctype html>
 
 <html>
- 		<head>
-		<title>Hello, data!</title>
-    <script type="text/javascript" src="{{ url_for('static', filename='d3.v3.js') }}"></script> 
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='scatter.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='vkbeautify.0.99.00.beta.js' ) }}"></script>
-  </head>
-  <body>
+    <head>
+        <title>Hello, data!</title>
+        <script type="text/javascript" src="{{ url_for('static', filename='d3.v3.js') }}"></script> 
+        <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='scatter.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='vkbeautify.0.99.00.beta.js' ) }}"></script>
+    </head>
+    <body>
+        <div>
+            <div id='test' style="float: left;">
+                <script type="text/javascript">
+                    scatter({{numb|safe}})
+                </script>
+            </div>
+            <div id='pref' style="float: right;">
+                <h3>Preferenze</h3>
 
-    <div id='test'>
+            </div>
+        
+        <div style="float: left;">
+            <button class="btn btn-success" id="save_as_svg" value="">Save as SVG</button>
+        </div>
+        <br>
+        <div style="float: left;">
+            <form>
+                <label><input type="radio" name="mode" value="label" checked> Label</label>
+                <label><input type="radio" name="mode" value="no_label"> No Label</label>
+            </form>
 
-    <script type="text/javascript">
-      scatter({{numb|safe}})
-    </script>
+            <script type="text/javascript">
 
-  </div>
+                /*
+                   Utility function: populates the <FORM> with the SVG data
+                   and the requested output format, and submits the form.
+                */
+                function submit_download_form(output_format)
+                {
+                  // Get the d3js SVG eleme
+                  var tmp = document.getElementById("test");
+                  var svg = tmp.getElementsByTagName("svg")[0];
+                  // Extract the data as SVG text string
+                  var svg_xml = (new XMLSerializer).serializeToString(svg);
 
-    <div>
-   
-    <button class="btn btn-success" id="save_as_svg" value="">
-      Save as SVG</button>
-   
-  </div>
-
-  <form id="svgform" method="post" action="http://d3export.cancan.cshl.edu/download.pl">
- <input type="hidden" id="output_format" name="output_format" value="">
- <input type="hidden" id="data" name="data" value="">
-</form>
-
-      <script type="text/javascript">
-
-/*
-   Utility function: populates the <FORM> with the SVG data
-   and the requested output format, and submits the form.
-*/
-function submit_download_form(output_format)
-{
-  // Get the d3js SVG eleme
-  var tmp = document.getElementById("test");
-  var svg = tmp.getElementsByTagName("svg")[0];
-  // Extract the data as SVG text string
-  var svg_xml = (new XMLSerializer).serializeToString(svg);
-
-  // Submit the <FORM> to the server.
-  // The result will be an attachment file to download.
-  var form = document.getElementById("svgform");
-  form['output_format'].value = output_format;
-  form['data'].value = svg_xml ;
-  form.submit();
-}
+                  // Submit the <FORM> to the server.
+                  // The result will be an attachment file to download.
+                  var form = document.getElementById("svgform");
+                  form['output_format'].value = output_format;
+                  form['data'].value = svg_xml ;
+                  form.submit();
+                }
 
 
-$(document).ready(function() {
+                $(document).ready(function() {
 
-  $("#save_as_svg").click(function() { submit_download_form("svg"); });
+                  $("#save_as_svg").click(function() { submit_download_form("svg"); });
 
-});
-    </script>
+                });
+            </script>
+        </div>
     
-    
-    
-
-    
-
-    
-
-  </body>
+    </body>
 </html>
