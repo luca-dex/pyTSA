@@ -12,11 +12,15 @@ def circle():
     return render_template('circle.html', name='mr. x')
 
 @app.route("/data")
-def circle():
+def data():
     numeretti = []
-    for _ in range(50):
-        numeretti.append([random.randint(1, 400), random.randint(1, 1000)])
-    num_to_js = json.dumps(numeretti)
+    numeretti2 = []
+    numeretti3 = []
+    for _ in range(5):
+        numeretti.append([random.randint(1, 1000), random.randint(1, 600)])
+        numeretti2.append([random.randint(1, 1000), random.randint(1, 600)])
+        numeretti3.append([random.randint(1, 1000), random.randint(1, 600)])
+    num_to_js = json.dumps({'serie1': numeretti, 'serie2': numeretti2, 'serie3': numeretti3}, indent=4, separators=(',',': '))
     return render_template('data.html', numb=num_to_js)
 
 if __name__ == "__main__":

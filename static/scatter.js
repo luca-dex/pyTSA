@@ -1,6 +1,6 @@
 //Width and height
-			var w = 1000;
-			var h = 400;
+			var w = 1500;
+			var h = 700;
 			
 			//var dataset = [
 			//				[5, 20], [480, 90], [250, 50], [100, 33], [330, 95],
@@ -9,15 +9,17 @@
 	
 			//Create SVG element
 function scatter(dataset){
-			var svg = d3.select("#test")
-						.append("svg")
-						.attr("width", w)
-						.attr("height", h);
-
-			svg.selectAll("circle")
-			   .data(dataset)
-			   .enter()
-			   .append("circle")
+	var svg = d3.select("#test")
+		.append("svg")
+			.attr("width", w)
+			.attr("height", h);
+	var color = d3.scale.category10()
+		
+		circle = svg.selectAll("circle");
+		for(var serie in dataset) {
+			circle.data(dataset[serie])
+			.enter()
+			.append("circle")
 			   .attr("cx", function(d) {
 			   		return d[0];
 			   })
@@ -25,13 +27,18 @@ function scatter(dataset){
 			   		return d[1];
 			   })
 			   .attr("r", function(d) {
-			   		return 3;
+			   		return 5;
+			   })
+			   .style("fill", function(d) { 	
+		   			return color(serie); 
 			   });
+	}
 
-			svg.selectAll("text")
-			   .data(dataset)
-			   .enter()
-			   .append("text")
+		text = svg.selectAll("text");
+		for(var serie in dataset) {
+			text.data(dataset[serie])
+			.enter()
+			.append("text")
 			   .text(function(d) {
 			   		return d[0] + "," + d[1];
 			   })
@@ -43,5 +50,8 @@ function scatter(dataset){
 			   })
 			   .attr("font-family", "sans-serif")
 			   .attr("font-size", "11px")
-			   .attr("fill", "red");   
+			   .attr("fill", "red");  
+			   
+		}
+
 }

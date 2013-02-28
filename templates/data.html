@@ -4,16 +4,16 @@
  		<head>
 		<title>Hello, data!</title>
     <script type="text/javascript" src="{{ url_for('static', filename='d3.v3.js') }}"></script> 
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-    <script src="{{ url_for('static', filename='scatter.js') }}"></script>
-    <script src="http://d3export.cancan.cshl.edu/vkbeautify.0.99.00.beta.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scatter.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='vkbeautify.0.99.00.beta.js' ) }}"></script>
   </head>
   <body>
 
     <div id='test'>
 
     <script type="text/javascript">
-      scatter({{numb}})
+      scatter({{numb|safe}})
     </script>
 
   </div>
