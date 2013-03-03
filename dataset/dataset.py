@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import csv
+import csv, os
 
 class CommentedFile:
     def __init__(self, f, commentstring):
@@ -28,40 +28,83 @@ class CommentedFile:
         self.f.seek(0)
 
     def close(self):
-        self.f.close
+        self.f.close()
 
     def __iter__(self):
         return self
 
-class DataSetParse:
+class SingleDataSetParse:
     def __init__(self, filename, commentstring=None, delimiter=None, numlines=20, skipinitialspace=True):
         self.filename = filename
         self.delimiter = delimiter
         self.numlines = numlines
         self.commentstring = commentstring
         self.skipinitialspace = skipinitialspace
-        self.csvreader = {}
+        self.dataset = {}
 
-    def open(self, readername='reader'): 
+    def open(self, datasetname='reader'): 
         csvfile = CommentedFile(open(self.filename, 'rb'), commentstring=self.commentstring)
         if self.delimiter:
-            self.csvreader[readername] = csv.reader(csvfile, delimiter=self.delimiter, skipinitialspace=self.skipinitialspace)
+            csvreader = csv.reader(csvfile, delimiter=self.delimiter, skipinitialspace=self.skipinitialspace)
         else:
             dialect = csv.Sniffer().sniff(csvfile.test_lines(self.numlines))
             csvfile.seek()
-            self.csvreader[readername] = csv.reader(csvfile, dialect)
+            csvreader = csv.reader(csvfile, dialect)
+        
+        self.dataset[datasetname] = []
+        for row in csvreader:
+            self.dataset[datasetname].append(row)
         csvfile.close()
+        return self.dataset[datasetname]
+        
 
-    def display(self, readername='reader'):
+    def display(self, datasetname='reader'):
         a = 0
-        for row in self.csvreader[readername]:
+        for row in self.dataset[datasetname]:
             a = a + 1
             print row
-            if a == 50:
+            if a == 15:
                 break
 
+class MultiDataSetParse:
+    def __init__(self, foldername, commentstring=None, delimiter=None, numlines=20, skipinitialspace=True):
+        self.foldername = foldername
+        self.filenames = os.listdir(foldername)
+        self.delimiter = delimiter
+        self.numlines = numlines
+        self.commentstring = commentstring
+        self.skipinitialspace = skipinitialspace
+        self.datasets = {}
+
+    def open(self):
+        for filename in self.filenames:
+            csvfile = SingleDataSetParse(filename=os.path.join(self.foldername, filename), delimiter=self.delimiter, commentstring=self.commentstring, numlines=self.numlines, skipinitialspace=self.skipinitialspace)
+            csvdata = csvfile.open()
+            self.datasets[filename] = csvdata
+
+    def display(self):
+        a = 0
+        for filename in self.filenames:
+            for row in self.datasets[filename]:
+                a = a + 1
+                print row
+                if a == 15:
+                    break
+            print '...\n#### FINE FILE ####\n'
+            a = 0
+
 if __name__ == '__main__':
-    from dataset import DataSetParse as dsp
-    a = dsp('1-state.data', commentstring='#', delimiter='\t')
+    
+    print '############ FILE SINGOLO #############'
+
+    from dataset import SingleDataSetParse as sds
+    a = sds('1-state.data', commentstring=('#', '//'), delimiter='\t')
     a.open('a')
-    a.display()
+    a.display('a')
+
+    print '\n\n############ FILES MULTIPLI #############'
+
+    from dataset import MultiDataSetParse as mds
+    b = mds('data', commentstring='#', delimiter='\t')
+    b.open()
+    b.display()
