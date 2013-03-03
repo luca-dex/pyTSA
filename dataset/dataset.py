@@ -27,29 +27,34 @@ class CommentedFile:
     def seek(self):
         self.f.seek(0)
 
+    def close(self):
+        self.f.close
+
     def __iter__(self):
         return self
 
 class DataSetParse:
-    def __init__(self, filename, commentstring=None, delimiter=None, numlines=2, skipinitialspace=True):
+    def __init__(self, filename, commentstring=None, delimiter=None, numlines=20, skipinitialspace=True):
         self.filename = filename
         self.delimiter = delimiter
         self.numlines = numlines
         self.commentstring = commentstring
         self.skipinitialspace = skipinitialspace
+        self.csvreader = {}
 
-    def open(self):    
+    def open(self, readername='reader'): 
         csvfile = CommentedFile(open(self.filename, 'rb'), commentstring=self.commentstring)
         if self.delimiter:
-            self.csvreader = csv.reader(csvfile, delimiter=self.delimiter, skipinitialspace=self.skipinitialspace)
+            self.csvreader[readername] = csv.reader(csvfile, delimiter=self.delimiter, skipinitialspace=self.skipinitialspace)
         else:
             dialect = csv.Sniffer().sniff(csvfile.test_lines(self.numlines))
             csvfile.seek()
-            self.csvreader = csv.reader(csvfile, dialect)
+            self.csvreader[readername] = csv.reader(csvfile, dialect)
+        csvfile.close()
 
-    def stamp(self):
+    def display(self, readername='reader'):
         a = 0
-        for row in self.csvreader:
+        for row in self.csvreader[readername]:
             a = a + 1
             print row
             if a == 50:
@@ -58,5 +63,5 @@ class DataSetParse:
 if __name__ == '__main__':
     from dataset import DataSetParse as dsp
     a = dsp('1-state.data', commentstring='#', delimiter='\t')
-    a.open()
-    a.stamp()
+    a.open('a')
+    a.display()
