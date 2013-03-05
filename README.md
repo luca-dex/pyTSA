@@ -10,10 +10,10 @@ Per il momento lavoro su csv/tsv/simili:
 
 Esempio:
 
-	sds('file-path', commentstring=None, delimiter=None, numlines=20, skipinitialspace=True)
-	open(datasetname='default', [scelta di cosa caricare])
-	testprint(datasetname='default')
-	view(datasetname='reader', [scelta di come effettuare la visualizzazione])
-	display()
+	data = sds('file-path', commentstring=None, delimiter=None, numlines=20, skipinitialspace=True)
+	data.open(datasetname='default', [scelta di cosa caricare])
+	data.testprint(datasetname='default')
+	data.view(datasetname='reader', [scelta di come effettuare la visualizzazione])
+	data.display()
 
 
