@@ -58,13 +58,14 @@ class SingleDataSetParse:
         return self.dataset[datasetname]
         
 
-    def display(self, datasetname='reader'):
+    def testprint(self, datasetname='reader'):
         a = 0
         for row in self.dataset[datasetname]:
             a = a + 1
             print row
             if a == 15:
                 break
+        print '...\n#### FINE FILE ####\n'
 
 class MultiDataSetParse:
     def __init__(self, foldername, commentstring=None, delimiter=None, numlines=20, skipinitialspace=True):
@@ -82,7 +83,7 @@ class MultiDataSetParse:
             csvdata = csvfile.open()
             self.datasets[filename] = csvdata
 
-    def display(self):
+    def testprint(self):
         a = 0
         for filename in self.filenames:
             for row in self.datasets[filename]:
@@ -95,16 +96,16 @@ class MultiDataSetParse:
 
 if __name__ == '__main__':
     
-    print '############ FILE SINGOLO #############'
+    print '############ FILE SINGOLO #############\n'
 
     from dataset import SingleDataSetParse as sds
     a = sds('1-state.data', commentstring=('#', '//'), delimiter='\t')
     a.open('a')
-    a.display('a')
+    a.testprint('a')
 
-    print '\n\n############ FILES MULTIPLI #############'
+    print '\n\n############ FILES MULTIPLI #############\n'
 
     from dataset import MultiDataSetParse as mds
     b = mds('data', commentstring='#', delimiter='\t')
     b.open()
-    b.display()
+    b.testprint()
