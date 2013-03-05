@@ -34,3 +34,4 @@ To do
 - [ ] creare una funzione che prima di open decide le viste necessarie al file e l'operazione da fare su questa vista
 - [ ] verificare se può essere utile (http://sbml.org/Software/libSBML/docs/python-api/libsbml-python-reading-files.html)
 
+
