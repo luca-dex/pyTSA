@@ -11,8 +11,8 @@ Per il momento lavoro su csv/tsv/simili:
 Esempio:
 
 	sds('file-path', commentstring=None, delimiter=None, numlines=20, skipinitialspace=True)
-	open(datasetname='reader', [scelta di cosa caricare])
-	testprint(datasetname='reader')
+	open(datasetname='default', [scelta di cosa caricare])
+	testprint(datasetname='default')
 	view(datasetname='reader', [scelta di come effettuare la visualizzazione])
 	display()
 

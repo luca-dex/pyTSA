@@ -42,7 +42,7 @@ class SingleDataSetParse:
         self.skipinitialspace = skipinitialspace
         self.dataset = {}
 
-    def open(self, datasetname='reader'): 
+    def open(self, datasetname='default'): 
         csvfile = CommentedFile(open(self.filename, 'rb'), commentstring=self.commentstring)
         if self.delimiter:
             csvreader = csv.reader(csvfile, delimiter=self.delimiter, skipinitialspace=self.skipinitialspace)
@@ -58,7 +58,7 @@ class SingleDataSetParse:
         return self.dataset[datasetname]
         
 
-    def testprint(self, datasetname='reader'):
+    def testprint(self, datasetname='default'):
         a = 0
         for row in self.dataset[datasetname]:
             a = a + 1
