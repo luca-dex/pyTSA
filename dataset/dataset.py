@@ -33,7 +33,17 @@ class CommentedFile:
     def __iter__(self):
         return self
 
-class SingleDataSetParse:
+class DataSet:
+    def __init__(self):
+        pass
+
+    def open(self):
+        pass
+
+    def testprint(self):
+        pass
+
+class SingleDataSetParse(DataSet):
     def __init__(self, filename, commentstring=None, delimiter=None, numlines=20, skipinitialspace=True):
         self.filename = filename
         self.delimiter = delimiter
@@ -67,7 +77,7 @@ class SingleDataSetParse:
                 break
         print '...\n#### FINE FILE ####\n'
 
-class MultiDataSetParse:
+class MultiDataSetParse(DataSet):
     def __init__(self, foldername, commentstring=None, delimiter=None, numlines=20, skipinitialspace=True):
         self.foldername = foldername
         self.filenames = os.listdir(foldername)
