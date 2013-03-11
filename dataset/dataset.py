@@ -48,11 +48,11 @@ class DataSet(object):
         self.dataset = {}
         self.dataset_descriptor = {}
 
-    def set_operation(self, opname, datasetname='default', **kwargs):
+    def task(self, opname, datasetname='default', **kwargs):
         self.check_args(opname, kwargs)
         self.dataset_descriptor[datasetname] = (opname, kwargs)
 
-    def open(self):
+    def load(self):
         pass
 
     def testprint(self):
@@ -64,11 +64,13 @@ class DataSet(object):
 
 class SingleDataSetParse(DataSet):
     """ This class analyzes a single file """
-    def __init__(self, filename, commentstring=None, delimiter=None, numlines=20, skipinitialspace=True):
-        super(SingleDataSetParse, self).__init__(commentstring, delimiter, numlines, skipinitialspace)
+    def __init__(self, filename, commentstring=None, delimiter=None, 
+        numlines=20, skipinitialspace=True):
+        super(SingleDataSetParse, self).__init__(commentstring, delimiter,
+            numlines, skipinitialspace)
         self.filename = filename
 
-    def open(self, datasetname='default'): 
+    def load(self, datasetname='default'): 
         csvfile = CommentedFile(open(self.filename, 'rb'), commentstring=self.commentstring)
         if self.delimiter:
             csvreader = csv.reader(csvfile, delimiter=self.delimiter, skipinitialspace=self.skipinitialspace)
@@ -100,10 +102,12 @@ class MultiDataSetParse(DataSet):
         self.foldername = foldername
         self.filenames = os.listdir(foldername)
 
-    def open(self):
+    def load(self):
         for filename in self.filenames:
-            csvfile = SingleDataSetParse(filename=os.path.join(self.foldername, filename), delimiter=self.delimiter, commentstring=self.commentstring, numlines=self.numlines, skipinitialspace=self.skipinitialspace)
-            csvdata = csvfile.open()
+            csvfile = SingleDataSetParse(filename=os.path.join(self.foldername, filename), 
+                delimiter=self.delimiter, commentstring=self.commentstring, numlines=self.numlines, 
+                skipinitialspace=self.skipinitialspace)
+            csvdata = csvfile.load()
             self.dataset[filename] = csvdata
 
     def testprint(self):
@@ -123,13 +127,13 @@ if __name__ == '__main__':
 
     from dataset import SingleDataSetParse as sds
     a = sds('1-state.data', commentstring=('#', '//'), delimiter='\t')
-    a.set_operation('prova', datasetname='a')
-    a.open('a')
+    a.task('prova', datasetname='a')
+    a.load('a')
     a.testprint('a')
 
     print '\n\n############ FILES MULTIPLI #############\n'
 
     from dataset import MultiDataSetParse as mds
     b = mds('data', commentstring='#', delimiter='\t')
-    b.open()
+    b.load()
     b.testprint()
