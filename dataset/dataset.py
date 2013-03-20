@@ -1,33 +1,30 @@
 #!/usr/bin/env python
 
-import csv
 import os
+import pandas as pd
+import numpy as np
+import scipy.stats as stats
 
-class CommentedFile:
+class CommentedFile(file):
     """ this class skips comment lines. comment lines start with any of the symbols in commentstring """
-    def __init__(self, f, commentstring):
+    def __init__(self, f, commentstring=None, low_limit=-float('inf'), high_limit=float('inf')):
         self.f = f
         self.commentstring = commentstring
+        self.l_limit = low_limit
+        self.h_limit = high_limit
 
     # return next line, skip lines starting with commentstring
     def next(self):
         line = self.f.next()
-        if self.commentstring:
-            while line.startswith(self.commentstring) or len(line.strip())==0:
-                line = self.f.next()
-        return line
-
-    # return only 'size' lines using next()
-    def test_lines(self, size):
-        line = self.f.next()
-        text = ''
-        for _ in range(size):
-            while line.startswith(self.commentstring) or len(line.strip())==0:
-                line = self.f.next() 
-            text += line
+        comments = self.commentstring + '\n'
+        while line[0] in comments or float(line.split()[0]) < self.l_limit:
             line = self.f.next()
-        return text
-
+        if  float(line.split()[0]) < self.h_limit:
+            return line
+        else:
+            self.close()
+            raise StopIteration
+    
     # moves the cursor to the initial position
     def seek(self):
         self.f.seek(0)
@@ -121,19 +118,83 @@ class MultiDataSetParse(DataSet):
             print '...\n#### FINE FILE ####\n'
             a = 0
 
-if __name__ == '__main__':
+class biodf(object):
+    @classmethod
+    def create_dfs(self, path, commentstring=None, colnames=None, low_limit=-float('inf'), high_limit=float('inf')):
+        dfs = {}
+        for x in os.listdir(path):
+            source = CommentedFile(open(os.path.join(path, x), 'rb'), \
+                commentstring=commentstring, low_limit=low_limit, high_limit=high_limit)
+            dfs[x] = pd.read_csv(source, delimiter='[\s\t]+', index_col=0, \
+                header=None, names=colnames)
+        return dfs
+
+    @classmethod
+    def create_df(self, path, commentstring=None, colnames=None, low_limit=-float('inf'), high_limit=float('inf')):
+        source = CommentedFile(open(path, 'rb'), \
+            commentstring=commentstring, low_limit=low_limit, high_limit=high_limit)
+        return pd.read_csv(source, delimiter='[\s\t]+', index_col=0, header=None, names=colnames)
+
+    @classmethod
+    def get(self, df, l_limit, h_limit, step):
+        start = float(l_limit)
+        now = float(start + step)
+        to_return = []
+        try:
+            last_value = df.truncate(after=start).tail(1).values[0]
+        except:
+            last_value = 0
+        to_return.append(last_value)
+        while now < h_limit:
+            try:
+                last_value = df.truncate(before=start, after=now).tail(1).values[0]
+            except:
+                pass
+            to_return.append(last_value)
+            start = start + step
+            now = now + step
+        return to_return
     
-    print '############ FILE SINGOLO #############\n'
+    @classmethod
+    def create_range(self, df_dict, colname, l_limit, h_limit, step):
+        index = np.arange(l_limit, h_limit, step)
+        mean_df = pd.DataFrame(index=index)
+        for k,v in df_dict.iteritems():
+            mean_df.insert(0, k, biodf.get(v[colname], l_limit, h_limit, step))
+        return mean_df
+    
+    @classmethod
+    def pdf(self, df_dict, colname, value):
+        value = float(value)
+        to_return = np.array([])
+        for k,v in df_dict.iteritems():
+            to_return = np.append(to_return, v[colname].truncate(after=value).tail(1).values[0])
+        itemfreq = stats.itemfreq(to_return)
+        tot = 0
+        for x in itemfreq:
+            tot += x[1]
+        itemfreq = [[x[0], x[1]/tot] for x in itemfreq]
+        return itemfreq
+    
+    @classmethod
+    def meq(self, df_dict, colname, limit_l, limit_h, step):
+        # non usare!!!
+        limit_l = float(l_limit)
+        limit_h = float(h_limit)
+        step = float(step)
+        index = np.arange(limit_l, limit_h, step)
+        df = sp.DataFrame(index = index)
+        now = float(start + step)
+        to_return = np.array([])
+        for k,v in df_dict.iteritems():
+            to_return = np.append(to_return, v[colname].truncate(after=value).tail(1).values[0])
+        itemfreq = stats.itemfreq(to_return)
+        tot = 0
+        for x in itemfreq:
+            tot += x[1]
+        itemfreq = [[x[0], x[1]/tot] for x in itemfreq]
+        return 'scherzavo'
 
-    from dataset import SingleDataSetParse as sds
-    a = sds('1-state.data', commentstring=('#', '//'), delimiter='\t')
-    a.task('prova', datasetname='a')
-    a.load('a')
-    a.testprint('a')
 
-    print '\n\n############ FILES MULTIPLI #############\n'
-
-    from dataset import MultiDataSetParse as mds
-    b = mds('data', commentstring='#', delimiter='\t')
-    b.load()
-    b.testprint()
+if __name__ == '__main__':
+    pass
