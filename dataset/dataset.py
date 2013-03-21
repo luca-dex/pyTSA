@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 import scipy.stats as stats
+import matplotlib.pyplot as plt
 
 class CommentedFile(file):
     """ this class skips comment lines. comment lines start with any of the symbols in commentstring """
