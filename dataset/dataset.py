@@ -195,23 +195,53 @@ class biodf(object):
         return to_return
     
     @classmethod
-    def meq(self, df_dict, colname, limit_l, limit_h, step):
-        # non usare!!!
-        limit_l = float(l_limit)
-        limit_h = float(h_limit)
-        step = float(step)
-        index = np.arange(limit_l, limit_h, step)
-        df = sp.DataFrame(index = index)
-        now = float(start + step)
-        to_return = np.array([])
-        for k,v in df_dict.iteritems():
-            to_return = np.append(to_return, v[colname].truncate(after=value).tail(1).values[0])
-        itemfreq = stats.itemfreq(to_return)
-        tot = 0
-        for x in itemfreq:
-            tot += x[1]
-        itemfreq = [[x[0], x[1]/tot] for x in itemfreq]
-        return 'scherzavo'
+    def meq_relfreq(self, df_dict, colname, l_limit, h_limit, step, numbins=10):
+        range_df = biodf.create_range(df_dict, colname, l_limit, h_limit, step)
+        rangeX = np.arange(l_limit, h_limit, step)
+        X = np.zeros((len(rangeX),numbins))
+        for x in range(len(rangeX)):
+            X[x] = rangeX[x]
+        Y = []
+        Z = []
+        for x in rangeX: 
+            relfreq, startpoint, binsize, extrap = stats.relfreq(range_df.loc[x].values, numbins=numbins, \
+                    defaultreallimits=(min(range_df.loc[x]),max(range_df.loc[x])))
+            Yline = [startpoint]
+            Z.append(list(relfreq))
+            for _ in range(1, len(relfreq)):
+                next_y = Yline[-1] + binsize
+                Yline.append(next_y)
+            Y.append(Yline)
+        Y = np.array(Y)
+        Z = np.array(Z)
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        cset = ax.contourf(X, Y, Z, cmap=cm.coolwarm)
+        ax.clabel(cset, fontsize=9, inline=1)
+        ax.set_zlim3d(0, 1)
+        return (X, Y, Z)
+
+    @classmethod
+    def meq_itemfreq(self, df_dict, colname, l_limit, h_limit, step):
+        range_df = biodf.create_range(df_dict, colname, l_limit, h_limit, step)
+        rangeX = np.arange(l_limit, h_limit, step)
+        X = np.zeros((len(rangeX),len(rangeX)))
+        for x in range(len(rangeX)):
+            X[x] = rangeX[x]
+        Y = []
+        Z = []
+        for x in rangeX: 
+            itemfreq = stats.itemfreq(range_df.loc[x].values)
+            return itemfreq
+            Y.append([y[0] for y in itemfreq])
+            Z.append([z[1] for z in itemfreq])
+        return (X, Y, Z)
+        Y = np.array(Y)
+        Z = np.array(Z)
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        cset = ax.contourf(X, Y, Z, cmap=cm.coolwarm)
+        ax.clabel(cset, fontsize=9, inline=1)
 
 
 if __name__ == '__main__':
