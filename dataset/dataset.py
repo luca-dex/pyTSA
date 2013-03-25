@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d
 
 class CommentedFile(file):
     """ this class skips comment lines. comment lines start with any of the symbols in commentstring """
@@ -176,6 +177,22 @@ class biodf(object):
             tot += x[1]
         itemfreq = [[x[0], x[1]/tot] for x in itemfreq]
         return itemfreq
+
+    @classmethod
+    def rel_pdf(self, df_dict, numbins=10):
+        to_return = np.array([])
+        for k,v in df_dict.iteritems():
+            to_return = np.append(to_return, [k].append(stats.relfreq(v, numbins=numbins)))
+        #plt.ion()
+        #fig = plt.figure()
+        #ax = fig.add_subplot(111, projection='3d')
+        #X, Y, Z = axes3d.get_test_data(0.1)
+        #ax.plot_wireframe(X, Y, Z, rstride=5, cstride=5)
+#
+#        #for angle in range(0, 360):
+#        #    ax.view_init(30, angle)
+        #plt.draw()
+        return to_return
     
     @classmethod
     def meq(self, df_dict, colname, limit_l, limit_h, step):
