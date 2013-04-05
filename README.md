@@ -1,9 +1,12 @@
-====
-bio3
-====
+======
+bio-d3
+======
 
 Documentazione?
 ===============
+
+Qualche riga giusto per comprendere il funzionamento del sw scritto. Estensione a panda per lavorare su serie
+temporali di dati prevalentemente di tipo biologico.
 
 Struttura per la parte di analisi dati
 --------------------------------------
@@ -47,11 +50,11 @@ Sul progetto
 Struttura che il progetto dovrebbe avere
 ----------------------------------------
 
-1.Selezione della fonde dei dati (load)
-2.Selezione delle operazioni da eseguire sui dati (operation)
-3.Selezione della visualizzazione (view)
-4.Esecuzione delle istruzioni memorizzate (go)
-5.Eventuale aggiustamento dei grafici (solo sulla parte javascript)
+1. Selezione della fonde dei dati (load)
+2. Selezione delle operazioni da eseguire sui dati (operation)
+3. Selezione della visualizzazione (view)
+4. Esecuzione delle istruzioni memorizzate (go)
+5. Eventuale aggiustamento dei grafici (solo sulla parte javascript)
 
 To do
 -----
@@ -64,16 +67,3 @@ To do
 - [ ] verificare se può essere utile (http://sbml.org/Software/libSBML/docs/python-api/libsbml-python-reading-files.html)
 - [ ] ristrutturare l'esecuzione dei passi
 - [ ] riaoganizzare la struttura gerarchica delle cartelle
-
-Idee
-----
-
-Nell'archiviazione delle informazioni ho 3 fasi:
-
-- selezione della sorgente
-- selezione dell'operazione da fare (indicando paramentri come righe, colonne,...). Posso ripetere più volte questo passaggio
-- scorrimento di tutta la sorgente salvando i dati relativi alle varie operazioni. Unica esecuzione per tutte le operazioni stabilite?
-- applicazione delle operazioni ai dati
-- visualizzazione dei dati. Manca da capire dove definirla e se definirla prima dell'effettiva importazione dei dati
-
-
