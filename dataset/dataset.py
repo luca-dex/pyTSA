@@ -216,8 +216,8 @@ class biodf(object):
         Z = np.array(Z)
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        cset = ax.contourf(X, Y, Z, cmap=cm.coolwarm)
-        ax.clabel(cset, fontsize=9, inline=1)
+        cset = ax.contourf(X, Y, Z, alpha=0.5)
+        #ax.clabel(cset, fontsize=9, inline=1)
         ax.set_zlim3d(0, 1)
         return (X, Y, Z)
 
