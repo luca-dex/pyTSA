@@ -15,11 +15,17 @@ Per il momento lavoro su csv/tsv/simili:
 
 Esempio:
 
-	data = sds('file-path', commentstring=None, delimiter=None, numlines=20, skipinitialspace=True)
-	data.open(datasetname='default', [scelta di cosa caricare])
-	data.testprint(datasetname='default')
-	data.view(datasetname='default', [scelta di come effettuare la visualizzazione])
-	data.display()
+	data = biodf.create_df('file-path', commentstring='#', colnames['time', 'A', 'B'], \
+	low_limit='', high_limit='')
+	
+	data = biodf.create_dfs('folder-path', commentstring='#', colnames['time', 'A', 'B'], \
+	low_limit='', high_limit='')
+	
+	data.create_range(df_dict, colname, l_limit, h_limit, step)
+	
+	data.meq_relfreq(self, df_dict, colname, l_limit, h_limit, step, numbins=10)
+	
+	data.meq_itemfreq(self, df_dict, colname, l_limit, h_limit, step)
 
 Sul progetto
 ============
