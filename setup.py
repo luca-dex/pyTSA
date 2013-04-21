@@ -6,8 +6,6 @@ setup(
     author='L. De Sano',
     author_email='l.desano@campus.unimib.it',
     packages=['biodf',],
- #   scripts=['bin/stowe-towels.py','bin/wash-towels.py'],
- #   url='http://pypi.python.org/pypi/TowelStuff/',
     license='LICENSE.txt',
     description='Bio data analysis with pandas and d3',
     long_description=open('README.txt').read(),
