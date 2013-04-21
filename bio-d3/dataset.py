@@ -242,7 +242,3 @@ class biodf(object):
         ax = fig.gca(projection='3d')
         cset = ax.contourf(X, Y, Z, cmap=cm.coolwarm)
         ax.clabel(cset, fontsize=9, inline=1)
-
-
-if __name__ == '__main__':
-    pass
