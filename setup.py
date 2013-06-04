@@ -1,11 +1,11 @@
 from distutils.core import setup
 
 setup(
-    name='bio-d3',
+    name='RedPanda',
     version='0.1.0',
     author='L. De Sano',
     author_email='l.desano@campus.unimib.it',
-    packages=['biodf',],
+    packages=['redpanda',],
     license='LICENSE.txt',
     description='Bio data analysis with pandas and d3',
     long_description=open('README.txt').read(),

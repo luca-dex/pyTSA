@@ -2,12 +2,12 @@
 License
 =======
 
-bio-d3 is distributed under a 3-clause ("Simplified" or "New") BSD
+RedPanda is distributed under a 3-clause ("Simplified" or "New") BSD
 license. Parts of Pandas, NumPy, SciPy, numpydoc, bottleneck, which all have
 BSD-compatible licenses, are included. Their licenses follow the pandas
 license.
 
-bio-d3 license
+RedPanda license
 ==============
 
 Copyright (c) 2013, Luca De Sano
