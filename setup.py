@@ -2,12 +2,13 @@ from distutils.core import setup
 
 setup(
     name='RedPanda',
-    version='0.1.0',
+    version='0.1.1',
     author='L. De Sano',
     author_email='l.desano@campus.unimib.it',
     packages=['redpanda',],
     license='LICENSE.txt',
     description='Bio data analysis with pandas and d3',
+    url='https://github.com/luca-dex/RedPanda',
     long_description=open('README.txt').read(),
     install_requires=[
         "Numpy >= 1.6.1",

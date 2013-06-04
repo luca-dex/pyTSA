@@ -1,1 +1,2 @@
 v0.1.0, 05.04.2013 -- Initial release.
+v0.1.1, 04.06.2013 -- Renamed to RedPanda. Now with task!
