@@ -9,9 +9,9 @@ temporali di dati prevalentemente di tipo biologico.
 
 Come come ottenere il software:
 
-> git clone https://github.com/luca-dex/RedPanda.git
-> cd RedPanda
-> sudo pip install .
+	git clone https://github.com/luca-dex/RedPanda.git
+	cd RedPanda
+	sudo pip install .
 
 **Struttura per la parte di analisi dati**
 
