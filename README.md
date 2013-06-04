@@ -1,9 +1,8 @@
-========
 RedPanda
 ========
 
 Documentazione?
-===============
+---------------
 
 Qualche riga giusto per comprendere il funzionamento del sw scritto. Estensione a panda per lavorare su serie
 temporali di dati prevalentemente di tipo biologico.
@@ -12,8 +11,8 @@ Come come ottenere il software:
 
 > git clone https://github.com/luca-dex/RedPanda
 
-Struttura per la parte di analisi dati
---------------------------------------
+**Struttura per la parte di analisi dati**
+
 
 Per il momento lavoro su csv/tsv/simili:
 
@@ -29,7 +28,7 @@ df = create_df('file-path', commentstring='#', colnames['time', 'A', 'B'], low_l
 ```
 
 Importazione di file da una cartella, ogni file una serie temporale 
-con piu' colonne (i file devono avere tuttu lo stesso numero di colonne):
+con piu' colonne (i file devono avere tutti lo stesso numero di colonne):
 
 ```python
 dfs = create_dfs('folder-path', commentstring='#', colnames['time', 'A', 'B'], low_limit='', high_limit='')
