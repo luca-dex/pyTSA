@@ -1,0 +1,41 @@
+<!doctype html>
+
+<html>
+ 		<head>
+		<title>Hello, data!</title>
+    <script type="text/javascript" src="{{ url_for('static', filename='d3.v3.js') }}"></script> 
+    <script src="{{ url_for('static', filename='circle.js') }}"></script>
+    <script src="{{ url_for('static', filename='js_test.js') }}"></script>
+  </head>
+  <body>
+
+    {% if name %}
+  <h1>Hello {{ name }}!</h1>
+{% else %}
+  <h1>Hello World!</h1>
+{% endif %}
+
+    <div>
+      <script type="text/javascript">
+      circle()
+      </script>
+
+    </div>
+ <p id="demo">A Paragraph</p>
+
+<button type="button" onclick="test()">Try it</button>
+<button type="button" onclick="circle()">Circle</button>
+
+<div id="viz"></div>
+
+<svg width="50" height="50">
+    <circle cx="25" cy="25" r="22"
+     fill="blue" stroke="gray" stroke-width="2"/>
+</svg>
+
+    
+
+    
+
+  </body>
+</html>
