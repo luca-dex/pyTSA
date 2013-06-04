@@ -13,9 +13,9 @@ setup(
     install_requires=[
         "Numpy >= 1.6.1",
         "Scipy >= 0.10.1",
+        "statsmodels",
         "Pandas >= 0.11.0",
         "python-dateutil >= 1.5",
         "matplotlib",
-        "statsmodels",
     ],
 )
