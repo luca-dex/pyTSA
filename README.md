@@ -9,7 +9,7 @@ temporali di dati prevalentemente di tipo biologico.
 
 Come come ottenere il software:
 
-> git clone https://github.com/luca-dex/RedPanda
+> git clone https://github.com/luca-dex/RedPanda.git
 
 **Struttura per la parte di analisi dati**
 
@@ -53,10 +53,9 @@ meq_itemfreq(dfs, colname, l_limit, h_limit, step)
 ```
 
 Sul progetto
-============
+------------
 
-Struttura che il progetto dovrebbe avere
-----------------------------------------
+**Struttura che il progetto dovrebbe avere**
 
 1. Selezione della fonde dei dati (load)
 2. Selezione delle operazioni da eseguire sui dati (operation)
@@ -64,8 +63,7 @@ Struttura che il progetto dovrebbe avere
 4. Esecuzione delle istruzioni memorizzate (go)
 5. Eventuale aggiustamento dei grafici (solo sulla parte javascript)
 
-To do
------
+**To do**
 
 * [x] trovare un nome più decente al tutto...
 * [x] rendere la struttura simile a quanto riportato su (http://guide.python-distribute.org/creation.html)
