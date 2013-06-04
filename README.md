@@ -26,14 +26,14 @@ from redpanda import *
 Importazione di un singolo file contenente una serie temporale con piu' colonne:
 
 ```python
-df = create_df('file-path', commentstring='#', colnames['time', 'A', 'B'], low_limit='', high_limit='')
+df = create_df('file-path', commentstring = '#', colnames = ['time', 'A', 'B'], low_limit='', high_limit='')
 ```
 
 Importazione di file da una cartella, ogni file una serie temporale 
 con piu' colonne (i file devono avere tutti lo stesso numero di colonne):
 
 ```python
-dfs = create_dfs('folder-path', commentstring='#', colnames['time', 'A', 'B'], low_limit='', high_limit='')
+dfs = create_dfs('folder-path', commentstring='#', colnames = ['time', 'A', 'B'], low_limit='', high_limit='')
 ```
 
 Creazione di un dataframe su range temporale a step fisso, partendo da un dfs:
