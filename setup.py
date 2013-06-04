@@ -7,7 +7,7 @@ setup(
     author_email='l.desano@campus.unimib.it',
     packages=['redpanda',],
     license='LICENSE.txt',
-    description='Bio data analysis with pandas and d3',
+    description='Time Series analysis with pandas',
     url='https://github.com/luca-dex/RedPanda',
     long_description=open('README.txt').read(),
     install_requires=[

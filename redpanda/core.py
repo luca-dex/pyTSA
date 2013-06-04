@@ -72,6 +72,7 @@ def meq_relfreq(df_dict, colname, l_limit, h_limit, step, numbins=10):
     cset = ax.contourf(X, Y, Z, alpha=0.5)
     #ax.clabel(cset, fontsize=9, inline=1)
     ax.set_zlim3d(0, 1)
+    plt.show()
     return (X, Y, Z)
 
 def meq_itemfreq(df_dict, colname, l_limit, h_limit, step):
