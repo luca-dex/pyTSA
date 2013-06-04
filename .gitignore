@@ -1,2 +1,3 @@
-/dataset/Untitled0.ipynb
+*.ipynb
 *.pyc
+/build/
