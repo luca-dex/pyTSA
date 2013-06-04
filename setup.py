@@ -16,6 +16,6 @@ setup(
         "Pandas >= 0.11.0",
         "python-dateutil >= 1.5",
         "matplotlib",
-        "statsmodel",
+        "statsmodels",
     ],
 )
