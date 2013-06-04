@@ -5,7 +5,7 @@ setup(
     version='0.1.1',
     author='L. De Sano',
     author_email='l.desano@campus.unimib.it',
-    packages=['redpanda',],
+    packages=['redpanda'],
     license='LICENSE.txt',
     description='Time Series analysis with pandas',
     url='https://github.com/luca-dex/RedPanda',
