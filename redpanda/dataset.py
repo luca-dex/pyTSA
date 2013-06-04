@@ -179,22 +179,6 @@ class biodf(object):
         return itemfreq
 
     @classmethod
-    def rel_pdf(self, df_dict, numbins=10):
-        to_return = np.array([])
-        for k,v in df_dict.iteritems():
-            to_return = np.append(to_return, [k].append(stats.relfreq(v, numbins=numbins)))
-        #plt.ion()
-        #fig = plt.figure()
-        #ax = fig.add_subplot(111, projection='3d')
-        #X, Y, Z = axes3d.get_test_data(0.1)
-        #ax.plot_wireframe(X, Y, Z, rstride=5, cstride=5)
-#
-#        #for angle in range(0, 360):
-#        #    ax.view_init(30, angle)
-        #plt.draw()
-        return to_return
-    
-    @classmethod
     def meq_relfreq(self, df_dict, colname, l_limit, h_limit, step, numbins=10):
         range_df = biodf.create_range(df_dict, colname, l_limit, h_limit, step)
         rangeX = np.arange(l_limit, h_limit, step)
@@ -242,3 +226,19 @@ class biodf(object):
         ax = fig.gca(projection='3d')
         cset = ax.contourf(X, Y, Z, cmap=cm.coolwarm)
         ax.clabel(cset, fontsize=9, inline=1)
+
+    @classmethod
+    def rel_pdf(self, df_dict, numbins=10):
+        to_return = np.array([])
+        for k,v in df_dict.iteritems():
+            to_return = np.append(to_return, [k].append(stats.relfreq(v, numbins=numbins)))
+        #plt.ion()
+        #fig = plt.figure()
+        #ax = fig.add_subplot(111, projection='3d')
+        #X, Y, Z = axes3d.get_test_data(0.1)
+        #ax.plot_wireframe(X, Y, Z, rstride=5, cstride=5)
+#
+#        #for angle in range(0, 360):
+#        #    ax.view_init(30, angle)
+        #plt.draw()
+        return to_return
