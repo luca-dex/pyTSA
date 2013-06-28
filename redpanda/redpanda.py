@@ -88,8 +88,9 @@ class RedPanda:
         self.data = data
         # what's the type
         self.isSet = isSet
-        # start with default terminal
-        self.output = ['view']
+        # start with default terminal (supported type are png, pdf, ps, eps and svg)
+        self.outputs = set()
+        self.outputs.add('view')
         # range -> label:data (pandas df with index)
         self.range = {}
 
@@ -103,6 +104,20 @@ class RedPanda:
         for k,v in self.data.iteritems():
             mean_df.insert(0, k, self.get(v[colname], start, stop, step))
         self.range[label] = mean_df
+
+    def addoutput(self, out):
+        """select outputs from png, pdf, ps, eps and svg"""
+        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
+            self.outputs.add(out)
+
+    def deloutput(self, out):
+        """select outputs from png, pdf, ps, eps and svg"""
+        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
+            try:
+                self.outputs.remove(out)
+            except:
+                print '%s not in outputs' % out
+                pass
 
     @staticmethod
     def get(df, l_limit, h_limit, step):
@@ -124,6 +139,70 @@ class RedPanda:
             now = now + step
         return to_return
 
+    def splot(self, columns, start, stop, merge=None):
+        start = float(start)
+        stop = float(stop)
+        if self.isSet:
+            for ds in self.data:
+                for col in columns:
+                    name = '_'.join(('ts', ds, col))
+                    self.data[ds][col].truncate(before=start, after=stop).plot()
+                    if not merge:
+                        self.printto(name)
+                        plt.clf()
+                if merge:
+                    name = '_'.join(('ds', col))
+                    self.printto(name)
+        else:
+            for col in columns:
+                name = '_'.join(('ts', col))
+                self.data[col].truncate(before=start, after=stop).plot()
+                self.printto(name)
+
+    def mplot(self, columns, start, stop, step=1):
+        start = float(start)
+        stop = float(stop)
+        if self.isSet:
+            for col in columns:
+                name = '_'.join(('mean', col))
+                self.createrange('internal_range', col, start, stop, step)
+                self.range['internal_range'].mean(1).plot()
+                self.printto(name)
+                self.range['internal_range'] = None
+                plt.clf()
+
+    def sdplot(self, columns, start, stop, step=1):
+        start = float(start)
+        stop = float(stop)
+        if self.isSet:
+            for col in columns:
+                name = '_'.join(('std', col))
+                self.createrange('internal_range', col, start, stop, step)
+                self.range['internal_range'].std(1).plot()
+                self.printto(name)
+                self.range['internal_range'] = None
+                plt.clf()
+
+    def msdplot(self, columns, start, stop, step=1):
+        start = float(start)
+        stop = float(stop)
+        if self.isSet:
+            for col in columns:
+                name = '_'.join(('mean&std', col))
+                self.createrange('internal_range', col, start, stop, step)
+                self.range['internal_range'].mean(1).plot()
+                self.range['internal_range'].std(1).plot()
+                self.printto(name)
+                self.range['internal_range'] = None
+                plt.clf()
+
+    def printto(self, figname):
+        for out in self.outputs:
+            if out == 'view':
+                plt.show()
+            else:
+                name = '.'.join((figname, out))
+                plt.savefig(name)
 
 
 def meq_relfreq(df_dict, colname, l_limit, h_limit, step, numbins=10):
