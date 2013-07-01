@@ -23,55 +23,107 @@ Importare la libreria:
 from redpanda import *
 ```
 
-Importazione di un singolo file contenente una serie temporale con piu' colonne:
 
+Carica un singolo file temporale.
 ```python
-df = create_df('file-path', commentstring = '#', colnames = ['time', 'A', 'B'], low_limit='', high_limit='')
+ts = timeseries('foo.tsv')
 ```
 
-Importazione di file da una cartella, ogni file una serie temporale 
-con piu' colonne (i file devono avere tutti lo stesso numero di colonne):
-
+Carica un file singolo. Delimiter esplicito (default: [\t\s]+ )
 ```python
-dfs = create_dfs('folder-path', commentstring='#', colnames = ['time', 'A', 'B'], low_limit='', high_limit='')
+ts = timeseries('foo.tsv', delimiter=',')
 ```
 
-Creazione di un dataframe su range temporale a step fisso, partendo da un dfs:
-
+Carica un file singolo, con commento.
 ```python
-new_range = create_range(dfs, colname, l_limit, h_limit, step)
+ts = timeseries('foo.tsv', commentstring='#')
 ```
 
-Visualizzazione della MEQ con normalizzazione tra 0 e 1:
-
+Carica un file singolo, con nomi. (tanti nomi quanto colonne presenti)
 ```python
-meq_relfreq(dfs, colname, l_limit, h_limit, step, numbins=10)
+ts = timeseries('foo.tsv', colnames=['a','b'] )
 ```
 
-Visualizzazione della MEQ senza normalizzazione tra 0 e 1 (ancora da terminare)
-
+Carica con intervallo [0,100]
 ```python
-meq_itemfreq(dfs, colname, l_limit, h_limit, step)
+ts = timeseries('foo.tsv', colnames=['a','b'], start=0, stop=100 )
 ```
 
-Sul progetto
-------------
 
-**Struttura che il progetto dovrebbe avere**
+////////////////// OUTPUT
+terminali sono view, raw, eps, ps, pdf, png color/white
+- possibilita di settare piu di un terminale (default view)
+- nomi dei file coerenti
 
-1. Selezione della fonde dei dati (load)
-2. Selezione delle operazioni da eseguire sui dati (operation)
-3. Selezione della visualizzazione (view)
-4. Esecuzione delle istruzioni memorizzate (go)
-5. Eventuale aggiustamento dei grafici (solo sulla parte javascript)
 
-**To do**
+gli output al momento funzionanti sono: png, pdf, ps, eps and svg + view(std)
 
-* [x] trovare un nome più decente al tutto...
-* [x] rendere la struttura simile a quanto riportato su (http://guide.python-distribute.org/creation.html)
-* [ ] gestire l'importazione di xml (o json?)
-* [ ] open() esegue l'importazione dei file passandoli tutti e immagazzina solamente i dati necessari
-* [ ] creare una funzione che prima di open decide le viste necessarie al file e l'operazione da fare su questa vista
-* [ ] verificare se può essere utile (http://sbml.org/Software/libSBML/docs/python-api/libsbml-python-reading-files.html)
-* [x] ristrutturare l'esecuzione dei passi
-* [x] riaoganizzare la struttura gerarchica delle cartelle
+
+
+
+
+
+
+
+
+ho dovuto cambiare from -> to in start -> stop perchè from è una keyword
+
+// carica un sottoinsieme delle colonne: colonna 3 e 23, nome 'a'
+ts = timeseries('foo.tsv', colid=[3,23], colnames=['a', 'dio'])
+-> tanti nomi quanto colonne usate, se i nomi sono presenti.
+	ok
+
+problema: sottoinsieme delle colonne funzione solo quando il delimiter è ',' (il problema arriva dal parser C interno a pandas, dovrebbe risolversi con la 0.12 di pandas)
+ 
+////////// Dataset (valgono tutti i discorsi di prima)
+
+ts = dataset('./', ext='csv')
+file-> estensione vuota = suffisso assente. Def '.csv'
+	ok
+
+modificato in ext: file è keyword
+
+in questo momento l'oggetto contiene i seguenti dati (supponendo il nome ts):
+
+ts.data -> dati importati da file
+ts.isSet -> indica se è dataset o timeseries
+ts.view -> output (di default lo std su view)
+ts.range -> i range creati dall'utente o internamente nelle elaborazioni 
+(x accedere direttamente ts.range['label'] dove label è il nome dato in fase di creazione=
+
+//////////// Plot singola traccia
+Ipotesi: ts e' un timeseries, ds e' dataset
+splot(ts, columns=[..], from=.., to=.. ) // traccia base
+err-> colonna non presente
+   -> out of range
+
+modificato in ts.splot(param...)
+
+////////// Plot singola traccia dataset
+splot(ds, columns=[..], from=.., to=.. ) // traccia base per ogni file del dataset
+warn -> troppi plots? interagire con l'utente, o disabilitare le finestre di default
+	ok
+
+// traccia base per ogni file del dataset, ma in unico file!
+splot(ds, columns=[..], from=.., to=.., merge=True)
+	ok
+
+////////// Plot media/deviazione standard
+mplot(ds, columns=[..], from=.., to=.. ) // media di tracce
+	ok
+sdplot(ds, columns=[..], from=.., to=.. ) // standard deviation di tracce
+	ok
+msdplot(ds, columns=[..], from=.., to=.. ) // media + standard deviation di tracce
+	ok
+
+-> riflettere sulla rappresentazione del file raw
+-> riflettere sulla possibilita di implementare tutto con delle BITMASK
+   mplot(..., AVG | STDV )
+   con default: AVG | STDV
+
+////////// Plot medie/... + singole tracce
+merge(
+	mplot(ds, columns=[..], from=.., to=.. ), // media di tracce
+	splot(ds, columns=[..], from=.., to=.., merge )
+);
+-> merge deve essere attivo.. o lo forzi attivo tu
