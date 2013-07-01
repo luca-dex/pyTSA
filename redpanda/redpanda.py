@@ -6,7 +6,7 @@ import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
-from dataset import *
+from commentedfile import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None):
