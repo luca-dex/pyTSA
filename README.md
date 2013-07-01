@@ -1,8 +1,8 @@
 RedPanda
 ========
 
-Documentazione?
----------------
+Documentazione
+--------------
 
 Qualche riga giusto per comprendere il funzionamento del sw scritto. Estensione a panda per lavorare su serie
 temporali di dati prevalentemente di tipo biologico.
@@ -15,63 +15,83 @@ Come come ottenere il software:
 
 **Struttura per la parte di analisi dati**
 
-
-Per il momento lavoro su csv/tsv/simili:
-
 Importare la libreria:
 ```python
 from redpanda import *
 ```
 
-Importazione di un singolo file contenente una serie temporale con piu' colonne:
+**Serie temporali**
 
+Carica un singolo file temporale.
 ```python
-df = create_df('file-path', commentstring = '#', colnames = ['time', 'A', 'B'], low_limit='', high_limit='')
+ts = timeseries('foo.tsv')
 ```
 
-Importazione di file da una cartella, ogni file una serie temporale 
-con piu' colonne (i file devono avere tutti lo stesso numero di colonne):
-
+Carica un file singolo. Delimiter esplicito (default: [\t\s]+ )
 ```python
-dfs = create_dfs('folder-path', commentstring='#', colnames = ['time', 'A', 'B'], low_limit='', high_limit='')
+ts = timeseries('foo.tsv', delimiter=',')
 ```
 
-Creazione di un dataframe su range temporale a step fisso, partendo da un dfs:
-
+Carica un file singolo, con commento.
 ```python
-new_range = create_range(dfs, colname, l_limit, h_limit, step)
+ts = timeseries('foo.tsv', commentstring='#')
 ```
 
-Visualizzazione della MEQ con normalizzazione tra 0 e 1:
-
+Carica un file singolo, con nomi. (tanti nomi quanto colonne presenti)
 ```python
-meq_relfreq(dfs, colname, l_limit, h_limit, step, numbins=10)
+ts = timeseries('foo.tsv', colnames=['a','b'] )
 ```
 
-Visualizzazione della MEQ senza normalizzazione tra 0 e 1 (ancora da terminare)
-
+Carica con intervallo [0,100]
 ```python
-meq_itemfreq(dfs, colname, l_limit, h_limit, step)
+ts = timeseries('foo.tsv', colnames=['a','b'], start=0, stop=100 )
 ```
 
-Sul progetto
-------------
+Carica un sottoinsieme delle colonne: colonna 3 e 23, nome 'a', 'dio' (funziona solo se delimiter=',')
+```python
+ts = timeseries('foo.tsv', colid=[3,23], colnames=['a', 'dio'])
+```
 
-**Struttura che il progetto dovrebbe avere**
+**Dataset**
 
-1. Selezione della fonde dei dati (load)
-2. Selezione delle operazioni da eseguire sui dati (operation)
-3. Selezione della visualizzazione (view)
-4. Esecuzione delle istruzioni memorizzate (go)
-5. Eventuale aggiustamento dei grafici (solo sulla parte javascript)
+Dataset (valgono tutti i discorsi di prima) E' possibile specificare l'estensione
+```python
+ts = dataset('./', ext='csv')
+```
 
-**To do**
+**Definizione dell'output**
 
-* [x] trovare un nome più decente al tutto...
-* [x] rendere la struttura simile a quanto riportato su (http://guide.python-distribute.org/creation.html)
-* [ ] gestire l'importazione di xml (o json?)
-* [ ] open() esegue l'importazione dei file passandoli tutti e immagazzina solamente i dati necessari
-* [ ] creare una funzione che prima di open decide le viste necessarie al file e l'operazione da fare su questa vista
-* [ ] verificare se può essere utile (http://sbml.org/Software/libSBML/docs/python-api/libsbml-python-reading-files.html)
-* [x] ristrutturare l'esecuzione dei passi
-* [x] riaoganizzare la struttura gerarchica delle cartelle
+E' possibile scegliere il tipo di output tra view, png, pdf, ps, eps e svg. Caricato di default: view
+```python
+ts.addoutput('output_mode')
+```
+
+Per rimuovere un canale di output
+```python
+ts.deloutput('output_mode')
+```
+
+**Plot**
+
+Ipotesi: ts e' un timeseries, ds e' dataset
+
+Plot singola traccia timeseries
+```python
+ts.splot(columns=[..], start=.., stop=.. )
+```
+Plot singola traccia dataset
+```python
+ds.splot(columns=[..], start=.., stop=.. )
+```
+
+Traccia base per ogni file del dataset, ma in unico file!
+```python
+ds.splot(columns=[..], start=.., stop=.., merge=True)
+```
+
+**Plot media/deviazione standard**
+```python
+ds.mplot(columns=[..], from=.., to=.. ) 	#media di tracce
+sdplot(ds, columns=[..], from=.., to=.. ) 	#standard deviation di tracce
+msdplot(ds, columns=[..], from=.., to=.. ) 	#media + standard deviation di tracce
+```
