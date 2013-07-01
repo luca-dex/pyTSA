@@ -91,7 +91,22 @@ ds.splot(columns=[..], start=.., stop=.., merge=True)
 
 **Plot media/deviazione standard**
 ```python
-ds.mplot(columns=[..], from=.., to=.. ) 	#media di tracce
-sdplot(ds, columns=[..], from=.., to=.. ) 	#standard deviation di tracce
-msdplot(ds, columns=[..], from=.., to=.. ) 	#media + standard deviation di tracce
+ds.mplot(columns=[..], start=.., stop=.. ) 	#media di tracce
+sdplot(ds, columns=[..], start=.., stop=.. ) 	#standard deviation di tracce
+msdplot(ds, columns=[..], start=.., stop=.. ) 	#media + standard deviation di tracce
+```
+
+**Uso con gestione dei task**
+
+```python
+from redpanda import Task
+task1 = Task('task description')
+task1.addtask('timeseries', 'foo.tsv')
+task1.addtask('splot', columns=['a'], start=.., stop=..)
+task1.exe()
+```
+
+Se sono presente più task
+```python
+Task.start(task1, task2)
 ```
