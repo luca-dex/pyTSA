@@ -91,9 +91,9 @@ ds.splot(columns=[..], start=.., stop=.., merge=True)
 
 **Plot media/deviazione standard**
 ```python
-ds.mplot(columns=[..], start=.., stop=.. ) 	#media di tracce
-sdplot(ds, columns=[..], start=.., stop=.. ) 	#standard deviation di tracce
-msdplot(ds, columns=[..], start=.., stop=.. ) 	#media + standard deviation di tracce
+ds.mplot(columns=[..], start=.., stop=.., step=.. ) 	#media di tracce
+ds.sdplot(columns=[..], start=.., stop=.., step=.. ) 	#standard deviation di tracce
+ds.msdplot(columns=[..], start=.., stop=.., step=.. ) 	#media + standard deviation di tracce
 ```
 
 **Uso con gestione dei task**
