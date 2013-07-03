@@ -12,7 +12,7 @@ class CommentedFile(file):
     def __init__(self, f, commentstring=None, low_limit=-float('inf'), high_limit=float('inf'), every=None):
         self.f = f
         if commentstring is None:
-            self.commentstring = []
+            self.commentstring = ''
         else:
             self.commentstring = commentstring
         self.l_limit = low_limit
@@ -33,13 +33,19 @@ class CommentedFile(file):
             line = self.f.next()
         self.readnumber += 1
         comments = self.commentstring + '\n'
-        while line[0] in comments or float(line.split()[0]) < self.l_limit:
-            line = self.f.next()
-        if  float(line.split()[0]) < self.h_limit:
-            return line
-        else:
+        try:
+            while line[0] in comments or float(line.split()[0]) < self.l_limit:
+                line = self.f.next()
+
+            if  float(line.split()[0]) < self.h_limit:
+                return line
+            else:
+                self.close()
+                self.readnumber = 0
+                raise StopIteration
+
+        except ValueError:
             self.close()
-            self.readnumber = 0
             raise StopIteration
     
     # moves the cursor to the initial position

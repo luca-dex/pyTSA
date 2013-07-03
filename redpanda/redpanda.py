@@ -56,11 +56,17 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
             continue
 
         # import
-        source = CommentedFile(open(actualfile, 'rb'), \
-            commentstring=commentstring, low_limit=start, high_limit=stop)
-        dataset[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
-            header=None, names=colnames, usecols=colid, prefix=col_pref)
-        source.close()
+        try:
+            source = CommentedFile(open(actualfile, 'rb'), \
+                commentstring=commentstring, low_limit=start, high_limit=stop)
+            dataset[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
+                header=None, names=colnames, usecols=colid, prefix=col_pref)
+            source.close()
+
+        except StopIteration:
+            sys.stdout.write("\b" * (progressbarlen+2))
+            print 'Warning! In file %s a line starts with NaN' % actualfile
+            break
 
         if (counter % atraitevery) == 0:
             sys.stdout.write("=")
