@@ -36,31 +36,3 @@ class CommentedFile(file):
 
     def __iter__(self):
         return self
-
-# class dataset(object):
-#     """ This is the DataSet model """
-#     def __init__(self, commentstring=None, delimiter=None, numlines=20, skipinitialspace=True):
-#         self.delimiter = delimiter
-#         self.numlines = numlines
-#         self.commentstring = commentstring
-#         self.skipinitialspace = skipinitialspace
-#         self.dataset = {}
-#         self.dataset_descriptor = {}
-#         self.dataset_order = []
-# 
-#     def task(self, opname, datasetname='default', **kwargs):
-#         self.check_args(opname, kwargs)
-#         self.dataset_descriptor[datasetname] = (opname, kwargs)
-#         self.dataset_order.append(opname)
-# 
-#     def load(self):
-#         pass
-# 
-#     def testprint(self):
-#         pass
-# 
-#     @classmethod
-#     def check_args(self, opname, opargs):
-#         return True
-
-

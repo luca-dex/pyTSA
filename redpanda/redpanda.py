@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+import sys
 from mpl_toolkits.mplot3d import axes3d
 from commentedfile import *
 
@@ -31,6 +32,16 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
 
     dataset = {}
+    numberoffile = len([f for f in os.listdir(path) if os.path.isfile(path + f)])
+    progressbarlen = 50
+    atraitevery = int(numberoffile / progressbarlen) + 1
+    counter = 0
+    if (numberoffile % progressbarlen) != 0:
+        progressbarlen -= 1
+
+    sys.stdout.write("[%s]" % (" " * progressbarlen))
+    sys.stdout.flush()
+    sys.stdout.write("\b" * (progressbarlen+1)) # return to start of line, after '['
 
     # skip dir, parse all file matching ext
     for filename in os.listdir(path):
@@ -39,7 +50,6 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         # check if isdir
         if os.path.isdir(actualfile):
             continue
-        _, actualext = os.path.splitext(actualfile)
 
         # check if ext match
         if ext and not filename.endswith(ext):
@@ -51,6 +61,14 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         dataset[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
             header=None, names=colnames, usecols=colid, prefix=col_pref)
         source.close()
+
+        if (counter % atraitevery) == 0:
+            sys.stdout.write("=")
+            sys.stdout.flush()
+
+        counter += 1
+
+    sys.stdout.write("\n")
 
     # return RedPanda Obj (isset = True)
     return RedPanda(dataset, True)

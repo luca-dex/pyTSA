@@ -1,3 +1,4 @@
+/redpanda/libpeerconnection.log
 *.ipynb
 *.pyc
 /build/
