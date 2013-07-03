@@ -3,13 +3,11 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import os
 
-#Create custom HTTPRequestHandler class
 class D3HTTPRequestHandler(BaseHTTPRequestHandler):
     
-    #handle GET command
     def do_GET(self):
         # inserire gli static per i file
-        rootdir = 'c:/xampp/htdocs/' #file location
+        rootdir = 'c:/xampp/htdocs/'
         try:
             if self.path.endswith('.html'):
                 f = open(rootdir + self.path) #open requested file
@@ -32,11 +30,8 @@ class D3HTTPRequestHandler(BaseHTTPRequestHandler):
 
 # il run va spostato dentro RedPanda così da avviare 
 def run():
-    print('http server is starting...')
-
-    #ip and port of servr
-    #by default http server port is 80
+    print('d3 http server is starting...')
     server_address = ('127.0.0.1', 80)
-    httpd = HTTPServer(server_address, KodeFunHTTPRequestHandler)
-    print('http server is running...')
+    httpd = HTTPServer(server_address, D3HTTPRequestHandler)
+    print('d3 http server is now running...')
     httpd.serve_forever()

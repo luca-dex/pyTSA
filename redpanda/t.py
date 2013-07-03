@@ -18,6 +18,6 @@ class Task:
 			 RedPanda.__dict__[job[0]](a, *job[1], **job[2]) 
 
 	@staticmethod
-	def start(*tasksk.s):
+	def start(*tasks):
 		for task in tasks:
 			task.exe()
