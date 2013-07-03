@@ -42,7 +42,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         _, actualext = os.path.splitext(actualfile)
 
         # check if ext match
-        if ext and filename.endswith(ext):
+        if ext and not filename.endswith(ext):
             continue
 
         # import
@@ -109,6 +109,8 @@ class RedPanda:
         """select outputs from png, pdf, ps, eps and svg"""
         if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
             self.outputs.add(out)
+        else:
+            print '%s not in outputs' % out
 
     def deloutput(self, out):
         """select outputs from png, pdf, ps, eps and svg"""
@@ -117,7 +119,8 @@ class RedPanda:
                 self.outputs.remove(out)
             except:
                 print '%s not in outputs' % out
-                pass
+        else:
+            print '%s not in outputs' % out
 
     @staticmethod
     def get(df, l_limit, h_limit, step):
