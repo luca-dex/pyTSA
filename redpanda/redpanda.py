@@ -19,7 +19,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     if colnames and colid:
         if len(colnames) != len(colid):
             print 'colid and colnames must have same length!'
-    if not colnames:
+    if colnames is None:
         col_pref = 'Y'
     else:
         col_pref = None
