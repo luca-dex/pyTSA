@@ -23,8 +23,8 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     else:
         col_pref = None
 
-    if ext and not ext.startswith('.'):
-        ext = ''.join(('.', ext))
+    # if ext and not ext.startswith('.'):
+    #    ext = ''.join(('.', ext))
 
     if colid and delimiter != ',':
         print 'column selection work only with delimiter = \',\' (yet)'
@@ -33,8 +33,8 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     dataset = {}
 
     # skip dir, parse all file matching ext
-    for x in os.listdir(path):
-        actualfile = os.path.join(path, x)
+    for filename in os.listdir(path):
+        actualfile = os.path.join(path, filename)
 
         # check if isdir
         if os.path.isdir(actualfile):
@@ -42,13 +42,13 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         _, actualext = os.path.splitext(actualfile)
 
         # check if ext match
-        if ext and ext != actualext:
+        if ext and filename.endswith(ext):
             continue
 
         # import
         source = CommentedFile(open(actualfile, 'rb'), \
             commentstring=commentstring, low_limit=start, high_limit=stop)
-        dataset[x] = pd.read_csv(source, sep=delimiter, index_col=0, \
+        dataset[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
             header=None, names=colnames, usecols=colid, prefix=col_pref)
         source.close()
 
