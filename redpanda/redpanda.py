@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d import axes3d
 from commentedfile import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
-    colid=None, ext=None):
+    colid=None, ext=None, every=None):
     '''more than one file'''
     
     #microvalidation
@@ -57,7 +57,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
         # import
         try:
-            source = CommentedFile(open(actualfile, 'rb'), \
+            source = CommentedFile(open(actualfile, 'rb'), every=every, \
                 commentstring=commentstring, low_limit=start, high_limit=stop)
             dataset[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
                 header=None, names=colnames, usecols=colid, prefix=col_pref)
@@ -169,59 +169,130 @@ class RedPanda:
     def splot(self, columns, start, stop, merge=None):
         start = float(start)
         stop = float(stop)
+        if len(columns) == 1:
+            merge = True
         if self.isSet:
-            for ds in self.data:
-                for col in columns:
-                    name = '_'.join(('ts', ds, col))
-                    self.data[ds][col].truncate(before=start, after=stop).plot()
-                    if not merge:
-                        self.printto(name)
-                        plt.clf()
-                if merge:
-                    name = '_'.join(('ds', col))
-                    self.printto(name)
+            if merge:
+                plt.figure()
+                plt.title('merged set')
+                for i, col in enumerate(columns):
+                    for ds in self.data:
+                        name = '_'.join(('ds_merge', ds, col))
+                        self.data[ds][col].truncate(before=start, after=stop).plot()
+            else:
+                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                for i, col in enumerate(columns):
+                    name = '_'.join(('ds_col', col))
+                    axes[i].set_title(name)
+                    for ds in self.data:
+                        self.data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])
+            self.printto(name)
+            plt.close()
+                        
+                
+                  
+        
         else:
             for col in columns:
                 name = '_'.join(('ts', col))
                 self.data[col].truncate(before=start, after=stop).plot()
-                self.printto(name)
+            self.printto(name)
 
-    def mplot(self, columns, start, stop, step=1):
+    def mplot(self, columns, start, stop, step=1, merge=None):
         start = float(start)
         stop = float(stop)
+        if len(columns) == 1:
+            merge = True
         if self.isSet:
-            for col in columns:
-                name = '_'.join(('mean', col))
-                self.createrange('internal_range', col, start, stop, step)
-                self.range['internal_range'].mean(1).plot()
-                self.printto(name)
-                self.range['internal_range'] = None
-                plt.clf()
+            if merge:
+                plt.figure()
+                name = 'mean_all_columns'
+                for col in columns:
+                    self.createrange('internal_range', col, start, stop, step)
+                    self.range['internal_range'].mean(1).plot(label=col)
+                    self.range['internal_range'] = None
+                plt.legend(loc='best')
+                plt.title(name)
+            else:
+                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                for i, col in enumerate(columns):
+                    name = '_'.join(('mean', col))
+                    self.createrange('internal_range', col, start, stop, step)
+                    self.range['internal_range'].mean(1).plot(label=col, ax=axes[i])
+                    axes[i].set_title(name)
+                    axes[i].legend(loc='best')
+            self.printto(name)
+            plt.close()
 
-    def sdplot(self, columns, start, stop, step=1):
+    def sdplot(self, columns, start, stop, step=1, merge=None):
         start = float(start)
         stop = float(stop)
+        if len(columns) == 1:
+            merge = True
         if self.isSet:
-            for col in columns:
-                name = '_'.join(('std', col))
-                self.createrange('internal_range', col, start, stop, step)
-                self.range['internal_range'].std(1).plot()
-                self.printto(name)
-                self.range['internal_range'] = None
-                plt.clf()
+            if merge:
+                plt.figure()
+                name = 'std_all_columns'
+                for col in columns:
+                    self.createrange('internal_range', col, start, stop, step)
+                    self.range['internal_range'].std(1).plot(label=col)
+                    self.range['internal_range'] = None
+                plt.legend(loc='best')
+                plt.title(name)
+            else:
+                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                for i, col in enumerate(columns):
+                    name = '_'.join(('std', col))
+                    self.createrange('internal_range', col, start, stop, step)
+                    self.range['internal_range'].std(1).plot(label=col, ax=axes[i])
+                    self.range['internal_range'] = None
+                    axes[i].set_title(name)
+                    axes[i].legend(loc='best')
+            self.printto(name)
+            plt.close()
 
-    def msdplot(self, columns, start, stop, step=1):
+
+    def msdplot(self, columns, start, stop, step=1, merge=None):
         start = float(start)
         stop = float(stop)
+        if len(columns) == 1:
+            merge = True
         if self.isSet:
-            for col in columns:
-                name = '_'.join(('mean&std', col))
-                self.createrange('internal_range', col, start, stop, step)
-                self.range['internal_range'].mean(1).plot()
-                self.range['internal_range'].std(1).plot()
-                self.printto(name)
-                self.range['internal_range'] = None
-                plt.clf()
+            if merge:
+                plt.figure()
+                name = 'mean&std_all_columns'
+                for col in columns:
+                    self.createrange('internal_range', col, start, stop, step)
+                    mean = self.range['internal_range'].mean(1)
+                    std = self.range['internal_range'].std(1)
+                    upper = mean + std
+                    lower = mean - std
+                    mean.plot(label=col)
+                    upper.plot(style='k--')
+                    lower.plot(style='k--')
+                    self.range['internal_range'] = None
+                plt.legend(loc='best')
+                plt.title(name)
+            else:
+                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                for i, col in enumerate(columns):
+                    name = '_'.join(('mean&std', col))
+                    self.createrange('internal_range', col, start, stop, step)
+                    mean = self.range['internal_range'].mean(1)
+                    std = self.range['internal_range'].std(1)
+                    upper = mean + std
+                    lower = mean - std
+                    mean.plot(label=col, ax=axes[i])
+                    upper.plot(style='k--', ax=axes[i])
+                    lower.plot(style='k--', ax=axes[i])
+                    self.range['internal_range'] = None
+                    axes[i].set_title(name)
+                    axes[i].legend(loc='best')
+            self.printto(name)
+            plt.close()
+
+
+
 
     def printto(self, figname):
         for out in self.outputs:
