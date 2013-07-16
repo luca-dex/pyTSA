@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='RedPanda',
-    version='0.1.1',
+    version='0.1.2',
     author='L. De Sano',
     author_email='l.desano@campus.unimib.it',
     packages=['redpanda'],
