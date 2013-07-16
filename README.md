@@ -52,6 +52,11 @@ Carica un sottoinsieme delle colonne: colonna 3 e 23, nome 'a', 'dio' (funziona 
 ts = timeseries('foo.tsv', colid=[3,23], colnames=['a', 'dio'])
 ```
 
+Carica un una riga ogni x righe (default al momento a 10)
+```python
+ts = timeseries('foo.tsv', colnames=['a', 'dio'], every=10)
+```
+
 **Dataset**
 
 Dataset (valgono tutti i discorsi di prima) E' possibile specificare l'estensione
@@ -79,21 +84,22 @@ Plot singola traccia timeseries
 ```python
 ts.splot(columns=[..], start=.., stop=.. )
 ```
-Plot singola traccia dataset
-```python
-ds.splot(columns=[..], start=.., stop=.. )
-```
 
-Traccia base per ogni file del dataset, ma in unico file!
+Traccia base per ogni file del dataset (per quanto possa avere senso)
 ```python
+ds.splot(columns=[..], start=.., stop=.., )
 ds.splot(columns=[..], start=.., stop=.., merge=True)
 ```
 
 **Plot media/deviazione standard**
+
+I plot su dataset hanno il merge non attivo di defaul.
+Si puo' attivare ponendo merge=True
+
 ```python
-ds.mplot(columns=[..], start=.., stop=.., step=.. ) 	#media di tracce
-ds.sdplot(columns=[..], start=.., stop=.., step=.. ) 	#standard deviation di tracce
-ds.msdplot(columns=[..], start=.., stop=.., step=.. ) 	#media + standard deviation di tracce
+ds.mplot(columns=[..], start=.., stop=.., step=.. , merge=) 	#media di tracce
+ds.sdplot(columns=[..], start=.., stop=.., step=.. merge=) 	#standard deviation di tracce
+ds.msdplot(columns=[..], start=.., stop=.., step=.. merge=) 	#media + standard deviation di tracce
 ```
 
 **Uso con gestione dei task**
