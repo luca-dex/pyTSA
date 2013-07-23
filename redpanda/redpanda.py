@@ -63,6 +63,10 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
                 header=None, names=colnames, usecols=colid, prefix=col_pref)
             source.close()
 
+        except ValueError:
+            raise
+            break
+
         except StopIteration:
             sys.stdout.write("\b" * (progressbarlen+2))
             print 'Warning! In file %s a line starts with NaN' % actualfile
@@ -80,7 +84,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     return RedPanda(dataset, True)
 
 def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
-    colid=None):
+    colid=None, every=None):
     '''just one file'''
     
     # microvalidation
@@ -98,7 +102,7 @@ def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', sta
         print 'column selection work only with delimiter = \',\' (yet)' 
 
     source = CommentedFile(open(path, 'rb'), \
-        commentstring=commentstring, low_limit=start, high_limit=stop)
+        commentstring=commentstring, low_limit=start, high_limit=stop, every=every)
     timeseries = pd.read_csv(source, sep=delimiter, index_col=0, \
         header=None, names=colnames, usecols=colid, prefix=col_pref)
     source.close()
@@ -208,17 +212,20 @@ class RedPanda:
                 plt.figure()
                 name = 'mean_all_columns'
                 for col in columns:
-                    self.createrange('internal_range', col, start, stop, step)
-                    self.range['internal_range'].mean(1).plot(label=col)
-                    self.range['internal_range'] = None
+                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                    if thisrange not in self.range:
+                        self.createrange(thisrange, col, start, stop, step)
+                    self.range[thisrange].mean(1).plot(label=col)
                 plt.legend(loc='best')
                 plt.title(name)
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                 for i, col in enumerate(columns):
                     name = '_'.join(('mean', col))
-                    self.createrange('internal_range', col, start, stop, step)
-                    self.range['internal_range'].mean(1).plot(label=col, ax=axes[i])
+                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                    if thisrange not in self.range:
+                        self.createrange(thisrange, col, start, stop, step)
+                    self.range[thisrange].mean(1).plot(label=col, ax=axes[i])
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
             self.printto(name)
@@ -234,18 +241,20 @@ class RedPanda:
                 plt.figure()
                 name = 'std_all_columns'
                 for col in columns:
-                    self.createrange('internal_range', col, start, stop, step)
-                    self.range['internal_range'].std(1).plot(label=col)
-                    self.range['internal_range'] = None
+                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                    if thisrange not in self.range:
+                        self.createrange(thisrange, col, start, stop, step)
+                    self.range[thisrange].std(1).plot(label=col)
                 plt.legend(loc='best')
                 plt.title(name)
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                 for i, col in enumerate(columns):
                     name = '_'.join(('std', col))
-                    self.createrange('internal_range', col, start, stop, step)
-                    self.range['internal_range'].std(1).plot(label=col, ax=axes[i])
-                    self.range['internal_range'] = None
+                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                    if thisrange not in self.range:
+                        self.createrange(thisrange, col, start, stop, step)
+                    self.range[thisrange].std(1).plot(label=col, ax=axes[i])
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
             self.printto(name)
@@ -262,30 +271,32 @@ class RedPanda:
                 plt.figure()
                 name = 'mean&std_all_columns'
                 for col in columns:
-                    self.createrange('internal_range', col, start, stop, step)
-                    mean = self.range['internal_range'].mean(1)
-                    std = self.range['internal_range'].std(1)
+                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                    if thisrange not in self.range:
+                        self.createrange(thisrange, col, start, stop, step)
+                    mean = self.range[thisrange].mean(1)
+                    std = self.range[thisrange].std(1)
                     upper = mean + std
                     lower = mean - std
                     mean.plot(label=col)
                     upper.plot(style='k--')
                     lower.plot(style='k--')
-                    self.range['internal_range'] = None
                 plt.legend(loc='best')
                 plt.title(name)
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                 for i, col in enumerate(columns):
                     name = '_'.join(('mean&std', col))
-                    self.createrange('internal_range', col, start, stop, step)
-                    mean = self.range['internal_range'].mean(1)
-                    std = self.range['internal_range'].std(1)
+                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                    if thisrange not in self.range:
+                        self.createrange(thisrange, col, start, stop, step)
+                    mean = self.range[thisrange].mean(1)
+                    std = self.range[thisrange].std(1)
                     upper = mean + std
                     lower = mean - std
                     mean.plot(label=col, ax=axes[i])
                     upper.plot(style='k--', ax=axes[i])
                     lower.plot(style='k--', ax=axes[i])
-                    self.range['internal_range'] = None
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
             self.printto(name)
