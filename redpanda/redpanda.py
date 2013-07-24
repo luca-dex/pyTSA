@@ -211,10 +211,18 @@ class RedPanda:
                   
         
         else:
-            for col in columns:
-                name = '_'.join(('ts', col))
-                self.data[col].truncate(before=start, after=stop).plot()
+            if merge:
+                for col in columns:
+                    name = '_'.join(('ts', col))
+                    self.data[col].truncate(before=start, after=stop).plot()
+            else: 
+                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                for i, col in enumerate(columns):
+                    name = '_'.join(('ds_col', col))
+                    axes[i].set_title(name)
+                    self.data[col].truncate(before=start, after=stop).plot(ax=axes[i])
             self.printto(name)
+            plt.close()
 
     def mplot(self, columns, start, stop, step=1, merge=None):
         start = float(start)
