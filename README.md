@@ -52,9 +52,9 @@ Carica un sottoinsieme delle colonne: colonna 3 e 23, nome 'a', 'dio' (funziona 
 ts = timeseries('foo.tsv', colid=[3,23], colnames=['a', 'dio'])
 ```
 
-Carica un una riga ogni x righe (default al momento a 10)
+Carica la percentuale specificata [0.0 - 1.0] di righe, prendendole in maniera uniforme
 ```python
-ts = timeseries('foo.tsv', colnames=['a', 'dio'], every=10)
+ts = timeseries('foo.tsv', colnames=['a', 'dio'], every=1)
 ```
 
 **Dataset**
