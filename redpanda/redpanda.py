@@ -121,6 +121,7 @@ class RedPanda:
         self.outputs.add('view')
         # range -> label:data (pandas df with index)
         self.range = {}
+        self.row = {}
 
     def createrange(self, label, colname, start, stop, step):
         """Select 1 column and create a range from start to stop"""
@@ -154,7 +155,7 @@ class RedPanda:
     def get(df, l_limit, h_limit, step):
         start = float(l_limit)
         now = float(start + step)
-        to_return = []
+        to_return = nd.array
         try:
             last_value = df.truncate(after=start).tail(1).values[0]
         except:
@@ -169,6 +170,19 @@ class RedPanda:
             start = start + step
             now = now + step
         return to_return
+
+    def getarow(self, index, col):
+        value = float(index)
+        to_return = np.array([])
+        label = '_'.join((str(value), str(col)))
+        for k, ts in self.data.iteritems():
+            try:
+                fromthists = ts[col].truncate(after=value).tail(1).values[0]
+            except:
+                fromthists = 0.0
+            to_return = np.append(to_return, fromthists)
+        self.row[label] = pd.Series(to_return)
+        
 
     def splot(self, columns, start, stop, merge=None):
         start = float(start)
@@ -302,8 +316,91 @@ class RedPanda:
             self.printto(name)
             plt.close()
 
+    def itemfreq(self, columns, value, merge=None, bins=None):
+        value = float(value)
+        if len(columns) == 1:
+            merge = True
+        if self.isSet:
+            if merge:
+                plt.figure()
+                name = 'item_freq'
+                for col in columns:
+                    thisrow = '_'.join((str(value), str(col)))
+                    if thisrow not in self.row:
+                        self.getarow(value, col)
+                    if bins:
+                        factor = pd.cut(self.row[thisrow], bins)
+                        pd.value_counts(factor).sort_index(1).plot(kind='bar', label=col, alpha=0.5)
+                    else:
+                        valuecounts = self.row[thisrow].value_counts().sort_index(1)
+                        valuecounts = valuecounts.reindex(index=np.arange(self.row[thisrow].min(), self.row[thisrow].max()), fill_value=0.0)
+                        valuecounts.plot(kind='bar', label=col, alpha=0.5)
+                plt.legend(loc='best')
+                plt.title(name)
+            else:
+                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                for i, col in enumerate(columns):
+                    name = '_'.join(('item_freq', col))
+                    thisrow = '_'.join((str(value), str(col)))
+                    if thisrow not in self.row:
+                        self.getarow(value, col)
+                    if bins:
+                        factor = pd.cut(self.row[thisrow], bins)
+                        pd.value_counts(factor).sort_index(1).plot(kind='bar', label=col, alpha=0.5, ax=axes[i])
+                    else:
+                        valuecounts = self.row[thisrow].value_counts().sort_index(1)
+                        valuecounts = valuecounts.reindex(index=np.arange(self.row[thisrow].min(), self.row[thisrow].max()), fill_value=0.0)
+                        valuecounts.plot(kind='bar', label=col, ax=axes[i])
+                    axes[i].set_title(name)
+                    axes[i].legend(loc='best')
+            self.printto(name)
+            plt.close()
 
-
+    def relfreq(self, columns, value, merge=None, fit=None, bins=None):
+        value = float(value)
+        if len(columns) == 1:
+            merge = True
+        if self.isSet:
+            if merge:
+                plt.figure()
+                name = 'rel_freq'
+                for col in columns:
+                    thisrow = '_'.join((str(value), str(col)))
+                    if thisrow not in self.row:
+                        self.getarow(value, col)
+                    if bins:
+                        factor = pd.cut(self.row[thisrow], bins)
+                        valuecounts = pd.value_counts(factor, normalize=True).sort_index(1)
+                        valuecounts.plot(kind='bar', label=col, alpha=0.5)
+                    else:
+                        valuecounts = self.row[thisrow].value_counts(normalize=True).sort_index(1)
+                        valuecounts = valuecounts.reindex(index=np.arange(self.row[thisrow].min(), self.row[thisrow].max()), fill_value=0.0)
+                        valuecounts.plot(kind='bar', label=col, alpha=0.5)
+                    if fit:
+                        valuecounts.plot(kind='line', label=col, style='r--')
+                plt.legend(loc='best')
+                plt.title(name)
+            else:
+                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                for i, col in enumerate(columns):
+                    name = '_'.join(('rel_freq', col))
+                    thisrow = '_'.join((str(value), str(col)))
+                    if thisrow not in self.row:
+                        self.getarow(value, col)
+                    if bins:
+                        factor = pd.cut(self.row[thisrow], bins)
+                        valuecounts = pd.value_counts(factor, normalize=True).sort_index(1)
+                        valuecounts.plot(kind='bar', label=col, alpha=0.5, ax=axes[i])
+                    else:
+                        valuecounts = self.row[thisrow].value_counts(normalize=True).sort_index(1)
+                        valuecounts = valuecounts.reindex(index=np.arange(self.row[thisrow].min(), self.row[thisrow].max()), fill_value=0.0)
+                        valuecounts.plot(kind='bar', label=col, ax=axes[i], alpha=0.5)
+                    if fit:
+                        valuecounts.plot(kind='line', ax=axes[i], style='r--')
+                    axes[i].set_title(name)
+                    axes[i].legend(loc='best')
+            self.printto(name)
+            plt.close()
 
     def printto(self, figname):
         for out in self.outputs:
