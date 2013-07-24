@@ -97,9 +97,11 @@ I plot su dataset hanno il merge non attivo di defaul.
 Si puo' attivare ponendo merge=True
 
 ```python
-ds.mplot(columns=[..], start=.., stop=.., step=.. , merge=) 	#media di tracce
-ds.sdplot(columns=[..], start=.., stop=.., step=.. merge=) 	#standard deviation di tracce
-ds.msdplot(columns=[..], start=.., stop=.., step=.. merge=) 	#media + standard deviation di tracce
+ds.mplot(columns=[..], start=.., stop=.., step=.. , merge=None) 	#media di tracce
+ds.sdplot(columns=[..], start=.., stop=.., step=.. merge=None) 	#standard deviation di tracce
+ds.msdplot(columns=[..], start=.., stop=.., step=.. merge=None) 	#media + standard deviation di tracce
+ds.itemfreq(columns=[..], value=.., merge=None, bins=None) # value counts
+ds.relfreq(columns=[..], value=.., merge=None, bins=None, fit=None) # densità di probabilità con eventuale fit
 ```
 
 **Uso con gestione dei task**
