@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
 import sys
 from mpl_toolkits.mplot3d import axes3d
 from commentedfile import *
@@ -32,7 +33,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
 
     dataset = {}
-    numberoffile = len([f for f in os.listdir(path) if os.path.isfile(path + f)])
+    numberoffile = len([f for f in os.listdir(path) if (os.path.isfile(path + f) and not f.endswith(ext))])
     progressbarlen = 50
     atraitevery = int(numberoffile / progressbarlen) + 1
     counter = 0
@@ -155,7 +156,7 @@ class RedPanda:
     def get(df, l_limit, h_limit, step):
         start = float(l_limit)
         now = float(start + step)
-        to_return = nd.array
+        to_return = []
         try:
             last_value = df.truncate(after=start).tail(1).values[0]
         except:
@@ -324,7 +325,7 @@ class RedPanda:
             self.printto(name)
             plt.close()
 
-    def itemfreq(self, columns, value, merge=None, bins=None):
+    def pdf(self, columns, value, merge=None, binsize=None, numbins=None, normed=False, fit=False, range=None):
         value = float(value)
         if len(columns) == 1:
             merge = True
@@ -332,17 +333,35 @@ class RedPanda:
             if merge:
                 plt.figure()
                 name = 'item_freq'
+                minrange = None
+                maxrange = None
                 for col in columns:
                     thisrow = '_'.join((str(value), str(col)))
                     if thisrow not in self.row:
                         self.getarow(value, col)
-                    if bins:
-                        factor = pd.cut(self.row[thisrow], bins)
-                        pd.value_counts(factor).sort_index(1).plot(kind='bar', label=col, alpha=0.5)
-                    else:
-                        valuecounts = self.row[thisrow].value_counts().sort_index(1)
-                        valuecounts = valuecounts.reindex(index=np.arange(self.row[thisrow].min(), self.row[thisrow].max()), fill_value=0.0)
-                        valuecounts.plot(kind='bar', label=col, alpha=0.5)
+                    if not minrange or self.row[thisrow].min() < minrange:
+                        minrange = self.row[thisrow].min()
+                    if not maxrange or self.row[thisrow].max() > maxrange:
+                        maxrange = self.row[thisrow].max()
+                print 'range: %d - %d' % (minrange, maxrange)
+                if binsize:
+                    numbins = int((maxrange - minrange) / binsize)
+                if not numbins:
+                    numbins = 10
+
+                for col in columns:  
+                    thisrow = '_'.join((str(value), str(col)))       
+                    n, bins, patches = plt.hist(self.row[thisrow].values, range=[minrange, maxrange], bins=numbins, \
+                        normed=normed, alpha=0.5, label=col)
+                    if fit:
+                        if not normed:
+                            print 'Fit only if normed!'
+                            fit = False
+                        else:
+                            (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
+                            y = mlab.normpdf(bins, mu, sigma)
+                            l = plt.plot(bins, y, 'r--', linewidth=2)
+
                 plt.legend(loc='best')
                 plt.title(name)
             else:
@@ -352,63 +371,28 @@ class RedPanda:
                     thisrow = '_'.join((str(value), str(col)))
                     if thisrow not in self.row:
                         self.getarow(value, col)
-                    if bins:
-                        factor = pd.cut(self.row[thisrow], bins)
-                        pd.value_counts(factor).sort_index(1).plot(kind='bar', label=col, alpha=0.5, ax=axes[i])
-                    else:
-                        valuecounts = self.row[thisrow].value_counts().sort_index(1)
-                        valuecounts = valuecounts.reindex(index=np.arange(self.row[thisrow].min(), self.row[thisrow].max()), fill_value=0.0)
-                        valuecounts.plot(kind='bar', label=col, ax=axes[i])
+                    if binsize:
+                        numbins = int((self.row[thisrow].max() - self.row[thisrow].min()) / binsize)
+                    if not numbins:
+                        numbins = 10
+                    n, bins, patches = axes[i].hist(self.row[thisrow].values, bins=numbins, range=range,\
+                        normed=normed, alpha=0.75, label=col)
+                    
+                    if fit:
+                        if not normed:
+                            print 'Fit only if normed!'
+                            fit = False
+                        else:
+                            (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
+                            y = mlab.normpdf(bins, mu, sigma)
+                            l = axes[i].plot(bins, y, 'r--', linewidth=2)
+
+
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
             self.printto(name)
             plt.close()
 
-    def relfreq(self, columns, value, merge=None, fit=None, bins=None):
-        value = float(value)
-        if len(columns) == 1:
-            merge = True
-        if self.isSet:
-            if merge:
-                plt.figure()
-                name = 'rel_freq'
-                for col in columns:
-                    thisrow = '_'.join((str(value), str(col)))
-                    if thisrow not in self.row:
-                        self.getarow(value, col)
-                    if bins:
-                        factor = pd.cut(self.row[thisrow], bins)
-                        valuecounts = pd.value_counts(factor, normalize=True).sort_index(1)
-                        valuecounts.plot(kind='bar', label=col, alpha=0.5)
-                    else:
-                        valuecounts = self.row[thisrow].value_counts(normalize=True).sort_index(1)
-                        valuecounts = valuecounts.reindex(index=np.arange(self.row[thisrow].min(), self.row[thisrow].max()), fill_value=0.0)
-                        valuecounts.plot(kind='bar', label=col, alpha=0.5)
-                    if fit:
-                        valuecounts.plot(kind='line', label=col, style='r--')
-                plt.legend(loc='best')
-                plt.title(name)
-            else:
-                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                for i, col in enumerate(columns):
-                    name = '_'.join(('rel_freq', col))
-                    thisrow = '_'.join((str(value), str(col)))
-                    if thisrow not in self.row:
-                        self.getarow(value, col)
-                    if bins:
-                        factor = pd.cut(self.row[thisrow], bins)
-                        valuecounts = pd.value_counts(factor, normalize=True).sort_index(1)
-                        valuecounts.plot(kind='bar', label=col, alpha=0.5, ax=axes[i])
-                    else:
-                        valuecounts = self.row[thisrow].value_counts(normalize=True).sort_index(1)
-                        valuecounts = valuecounts.reindex(index=np.arange(self.row[thisrow].min(), self.row[thisrow].max()), fill_value=0.0)
-                        valuecounts.plot(kind='bar', label=col, ax=axes[i], alpha=0.5)
-                    if fit:
-                        valuecounts.plot(kind='line', ax=axes[i], style='r--')
-                    axes[i].set_title(name)
-                    axes[i].legend(loc='best')
-            self.printto(name)
-            plt.close()
 
     def printto(self, figname):
         for out in self.outputs:
