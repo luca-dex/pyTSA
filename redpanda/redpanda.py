@@ -32,7 +32,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         print('column selection work only with delimiter = \',\' (yet)')
 
 
-    dataset = {}
+    datadict = {}
     numberoffile = len([f for f in os.listdir(path) if os.path.isfile(path + f)])
     progressbarlen = 50
     atraitevery = int(numberoffile / progressbarlen) + 1
@@ -60,7 +60,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         try:
             source = CommentedFile(open(actualfile, 'rb'), every=every, \
                 commentstring=commentstring, low_limit=start, high_limit=stop)
-            dataset[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
+            datadict[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
                 header=None, names=colnames, usecols=colid, prefix=col_pref)
             source.close()
 
@@ -82,7 +82,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     sys.stdout.write("\n")
 
     # return RedPanda Obj (isset = True)
-    return RedPanda(dataset, True)
+    return RedPanda(datadict, True)
 
 def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, every=None):
@@ -104,12 +104,12 @@ def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', sta
 
     source = CommentedFile(open(path, 'rb'), \
         commentstring=commentstring, low_limit=start, high_limit=stop, every=every)
-    timeseries = pd.read_csv(source, sep=delimiter, index_col=0, \
+    timedata = pd.read_csv(source, sep=delimiter, index_col=0, \
         header=None, names=colnames, usecols=colid, prefix=col_pref)
     source.close()
 
     # return RedPanda Obj (isset = False)
-    return RedPanda(timeseries, None)
+    return RedPanda(timedata, None)
 
 class RedPanda:
     def __init__(self, data, isSet):
