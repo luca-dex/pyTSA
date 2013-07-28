@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+import __builtin__ as py
 import os
 import pandas as pd
 import numpy as np
@@ -8,7 +9,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import sys
-from mpl_toolkits.mplot3d import axes3d
+from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
@@ -328,7 +329,7 @@ class RedPanda:
         if self.isSet:
             if merge:
                 plt.figure()
-                name = 'item_freq'
+                name = 'pdf'
                 minrange = None
                 maxrange = None
                 for col in columns:
@@ -388,6 +389,70 @@ class RedPanda:
                     axes[i].legend(loc='best')
             self.printto(name)
             plt.close()
+    def pdf3d(self, column, moments, binsize=None, numbins=None, normed=False, fit=False, range=None, \
+        height=None):
+        moments = [float(x) for x in moments]
+        moments.sort()
+        if self.isSet:
+            name = 'pdf'
+            minrange = None
+            maxrange = None
+            for moment in moments:
+                thisrow = '_'.join((str(moment), str(column)))
+                if thisrow not in self.row:
+                    self.getarow(moment, column)
+                if not minrange or self.row[thisrow].min() < minrange:
+                    minrange = self.row[thisrow].min()
+                if not maxrange or self.row[thisrow].max() > maxrange:
+                    maxrange = self.row[thisrow].max()
+            print('range: ', minrange, ' - ', maxrange)
+            if binsize:
+                numbins = int((maxrange - minrange) / binsize)
+            if not numbins:
+                numbins = 10
+
+            fig = plt.figure()
+            ax = Axes3D(fig)
+
+            for i, moment in enumerate(moments):
+                thisrow = '_'.join((str(moment), str(column)))
+                histogram, low_range, binsize, extrapoints = stats.histogram(self.row[thisrow].values, \
+                    numbins=numbins, defaultlimits=(minrange, maxrange))
+                newx = np.array([low_range + (binsize * 0.5)])
+                for index in py.range(1, len(histogram)):
+                    newx = np.append(newx, newx[index-1] + binsize)
+                
+
+                if normed:
+                    histogram = histogram / sum(histogram)
+
+                ax.bar(newx, histogram, zs=i, zdir='y', alpha=0.5, width=binsize, label='A')
+
+                if fit:
+                    if not normed:
+                        print ('Fit only if normed')
+                        fit = False
+                    else:
+                        (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
+                        gauss = mlab.normpdf(newx, mu, sigma)
+                        ax.plot(newx, gauss, zs=i, zdir='y', c='r', ls='--', lw=2)
+
+            if height:
+                ax.set_zlim3d(0, height)
+
+            ax.set_xlabel(column)
+            ax.set_ylabel('moments')
+            ax.set_ylim3d(-1, len(moments))
+            yticks = [-1] + py.range(len(moments)) + [len(moments)]
+            ytick_labels = [''] + moments + ['']
+            ax.set_yticks(yticks)
+            ax.set_yticklabels(ytick_labels)
+
+            self.printto(name)
+            plt.close()   
+
+
+
 
 
     def printto(self, figname):
