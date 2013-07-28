@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os
 import pandas as pd
 import numpy as np
@@ -16,10 +17,10 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     
     #microvalidation
     if start > stop:
-        print 'maybe start > stop ? \n'
+        print('maybe start > stop ?\n')
     if colnames and colid:
         if len(colnames) != len(colid):
-            print 'colid and colnames must have same length!'
+            print('colid and colnames must have same length!')
     if colnames is None:
         col_pref = 'Y'
     else:
@@ -29,11 +30,10 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     #    ext = ''.join(('.', ext))
 
     if colid and delimiter != ',':
-        print 'column selection work only with delimiter = \',\' (yet)'
+        print('column selection work only with delimiter = \',\' (yet)')
 
-
-    dataset = {}
-    numberoffile = len([f for f in os.listdir(path) if (os.path.isfile(path + f) and not f.endswith(ext))])
+    datadict = {}
+    numberoffile = len([f for f in os.listdir(path) if (os.path.isfile(path + f) )])
     progressbarlen = 50
     atraitevery = int(numberoffile / progressbarlen) + 1
     counter = 0
@@ -60,7 +60,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         try:
             source = CommentedFile(open(actualfile, 'rb'), every=every, \
                 commentstring=commentstring, low_limit=start, high_limit=stop)
-            dataset[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
+            datadict[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
                 header=None, names=colnames, usecols=colid, prefix=col_pref)
             source.close()
 
@@ -70,7 +70,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
         except StopIteration:
             sys.stdout.write("\b" * (progressbarlen+2))
-            print 'Warning! In file %s a line starts with NaN' % actualfile
+            print('Warning! In file', actualfile, 'a line starts with NaN')
             break
 
         if (counter % atraitevery) == 0:
@@ -82,7 +82,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     sys.stdout.write("\n")
 
     # return RedPanda Obj (isset = True)
-    return RedPanda(dataset, True)
+    return RedPanda(datadict, True)
 
 def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, every=None):
@@ -90,26 +90,26 @@ def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', sta
     
     # microvalidation
     if start > stop:
-        print 'maybe start > stop ? \n'
+        print('maybe start > stop ?\n')
     if colnames and colid:
         if len(colnames) != len(colid):
-            print 'colid and colnames must have same length!'
+            print('colid and colnames must have same length!')
     if not colnames:
         col_pref = 'Y'
     else:
         col_pref = None
 
     if colid and delimiter != ',':
-        print 'column selection work only with delimiter = \',\' (yet)' 
+        print('column selection work only with delimiter = \',\' (yet)')
 
     source = CommentedFile(open(path, 'rb'), \
         commentstring=commentstring, low_limit=start, high_limit=stop, every=every)
-    timeseries = pd.read_csv(source, sep=delimiter, index_col=0, \
+    timedata = pd.read_csv(source, sep=delimiter, index_col=0, \
         header=None, names=colnames, usecols=colid, prefix=col_pref)
     source.close()
 
     # return RedPanda Obj (isset = False)
-    return RedPanda(timeseries, None)
+    return RedPanda(timedata, None)
 
 class RedPanda:
     def __init__(self, data, isSet):
@@ -127,7 +127,7 @@ class RedPanda:
     def createrange(self, label, colname, start, stop, step):
         """Select 1 column and create a range from start to stop"""
         if not self.isSet:
-            print 'createrange works only on dataset'
+            print('createrange works only on dataset')
             return
         index = np.arange(start, stop, step)
         mean_df = pd.DataFrame(index=index)
@@ -140,7 +140,7 @@ class RedPanda:
         if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
             self.outputs.add(out)
         else:
-            print '%s not in outputs' % out
+            print(out, 'not in outputs')
 
     def deloutput(self, out):
         """select outputs from png, pdf, ps, eps and svg"""
@@ -148,9 +148,9 @@ class RedPanda:
             try:
                 self.outputs.remove(out)
             except:
-                print '%s not in outputs' % out
+                print(out, 'not in outputs')
         else:
-            print '%s not in outputs' % out
+            print(out, 'not in outputs')
 
     @staticmethod
     def get(df, l_limit, h_limit, step):
@@ -207,10 +207,6 @@ class RedPanda:
                         self.data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])
             self.printto(name)
             plt.close()
-                        
-                
-                  
-        
         else:
             if merge:
                 for col in columns:
@@ -343,7 +339,7 @@ class RedPanda:
                         minrange = self.row[thisrow].min()
                     if not maxrange or self.row[thisrow].max() > maxrange:
                         maxrange = self.row[thisrow].max()
-                print 'range: %d - %d' % (minrange, maxrange)
+                print('range: ', minrange, ' - ', maxrange)
                 if binsize:
                     numbins = int((maxrange - minrange) / binsize)
                 if not numbins:
@@ -355,7 +351,7 @@ class RedPanda:
                         normed=normed, alpha=0.5, label=col)
                     if fit:
                         if not normed:
-                            print 'Fit only if normed!'
+                            print ('Fit only if normed')
                             fit = False
                         else:
                             (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
@@ -380,7 +376,7 @@ class RedPanda:
                     
                     if fit:
                         if not normed:
-                            print 'Fit only if normed!'
+                            print ('Fit only if normed')
                             fit = False
                         else:
                             (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
