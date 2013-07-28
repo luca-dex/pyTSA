@@ -2,6 +2,7 @@
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import os
+from __future__ import print_function
 
 class D3HTTPRequestHandler(BaseHTTPRequestHandler):
     

@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import sys
 from mpl_toolkits.mplot3d import axes3d
 from commentedfile import *
+from __future__ import print_function
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None):
@@ -15,10 +16,10 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     
     #microvalidation
     if start > stop:
-        print 'maybe start > stop ? \n'
+        print('maybe start > stop ?\n')
     if colnames and colid:
         if len(colnames) != len(colid):
-            print 'colid and colnames must have same length!'
+            print('colid and colnames must have same length!')
     if colnames is None:
         col_pref = 'Y'
     else:
@@ -28,7 +29,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     #    ext = ''.join(('.', ext))
 
     if colid and delimiter != ',':
-        print 'column selection work only with delimiter = \',\' (yet)'
+        print('column selection work only with delimiter = \',\' (yet)')
 
 
     dataset = {}
@@ -69,7 +70,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
         except StopIteration:
             sys.stdout.write("\b" * (progressbarlen+2))
-            print 'Warning! In file %s a line starts with NaN' % actualfile
+            print('Warning! In file', actualfile, 'a line starts with NaN')
             break
 
         if (counter % atraitevery) == 0:
@@ -89,17 +90,17 @@ def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', sta
     
     # microvalidation
     if start > stop:
-        print 'maybe start > stop ? \n'
+        print('maybe start > stop ?\n')
     if colnames and colid:
         if len(colnames) != len(colid):
-            print 'colid and colnames must have same length!'
+            print('colid and colnames must have same length!')
     if not colnames:
         col_pref = 'Y'
     else:
         col_pref = None
 
     if colid and delimiter != ',':
-        print 'column selection work only with delimiter = \',\' (yet)' 
+        print('column selection work only with delimiter = \',\' (yet)')
 
     source = CommentedFile(open(path, 'rb'), \
         commentstring=commentstring, low_limit=start, high_limit=stop, every=every)
@@ -126,7 +127,7 @@ class RedPanda:
     def createrange(self, label, colname, start, stop, step):
         """Select 1 column and create a range from start to stop"""
         if not self.isSet:
-            print 'createrange works only on dataset'
+            print('createrange works only on dataset')
             return
         index = np.arange(start, stop, step)
         mean_df = pd.DataFrame(index=index)
@@ -139,7 +140,7 @@ class RedPanda:
         if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
             self.outputs.add(out)
         else:
-            print '%s not in outputs' % out
+            print(out, 'not in outputs')
 
     def deloutput(self, out):
         """select outputs from png, pdf, ps, eps and svg"""
@@ -147,9 +148,9 @@ class RedPanda:
             try:
                 self.outputs.remove(out)
             except:
-                print '%s not in outputs' % out
+                print(out, 'not in outputs')
         else:
-            print '%s not in outputs' % out
+            print(out, 'not in outputs')
 
     @staticmethod
     def get(df, l_limit, h_limit, step):
@@ -206,10 +207,6 @@ class RedPanda:
                         self.data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])
             self.printto(name)
             plt.close()
-                        
-                
-                  
-        
         else:
             if merge:
                 for col in columns:
