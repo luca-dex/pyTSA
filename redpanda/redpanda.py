@@ -15,7 +15,8 @@ from commentedfile import *
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None):
     '''more than one file'''
-    
+    if not path.endswith('/'):
+        path = path + '/'
     #microvalidation
     if start > stop:
         print('maybe start > stop ?\n')
@@ -27,6 +28,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     else:
         col_pref = None
 
+
     # if ext and not ext.startswith('.'):
     #    ext = ''.join(('.', ext))
 
@@ -35,11 +37,20 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
     datadict = {}
     numberoffile = len([f for f in os.listdir(path) if (os.path.isfile(path + f) )])
+    if ext:
+        badfiles = len([f for f in os.listdir(path) if ((os.path.isfile(path + f) ) and not f.endswith(ext))])
+        numberoffile -= badfiles
+    print ('Files to load: ', numberoffile)
     progressbarlen = 50
-    atraitevery = int(numberoffile / progressbarlen) + 1
-    counter = 0
-    if (numberoffile % progressbarlen) != 0:
-        progressbarlen -= 1
+    atraitevery = numberoffile / float(progressbarlen)
+    counter = 0.0
+    stepcounter = atraitevery
+    traitcounter = 0
+    if numberoffile >= progressbarlen:
+        biggerthanone = True
+    else:
+        biggerthanone = False
+
 
     sys.stdout.write("[%s]" % (" " * progressbarlen))
     sys.stdout.flush()
@@ -74,11 +85,36 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
             print('Warning! In file', actualfile, 'a line starts with NaN')
             break
 
-        if (counter % atraitevery) == 0:
-            sys.stdout.write("=")
-            sys.stdout.flush()
-
         counter += 1
+        if biggerthanone:
+            if counter > stepcounter:
+                sys.stdout.write("=")
+                sys.stdout.flush()
+                stepcounter += atraitevery
+                traitcounter += 1
+        else:
+            while stepcounter < int(counter):
+                sys.stdout.write("=")
+                sys.stdout.flush()
+                stepcounter += atraitevery
+                traitcounter += 1
+
+
+
+    if counter == stepcounter:
+        sys.stdout.write("=")
+        sys.stdout.flush()
+        traitcounter += 1
+
+
+    if traitcounter < progressbarlen:
+        sys.stdout.write("=")
+        sys.stdout.flush()
+
+
+            
+    print ('\nc: ', counter, 'stepco: ', stepcounter, 'atrev: ', atraitevery, 'trc', traitcounter, 'pbl', progressbarlen)
+
 
     sys.stdout.write("\n")
 
