@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import print_function, division
 import __builtin__ as py
 import os
 import pandas as pd
@@ -13,7 +13,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
-    colid=None, ext=None, every=None):
+    colid=None, ext=None, every=None, numfiles=None):
     '''more than one file'''
     if not path.endswith('/'):
         path = path + '/'
@@ -36,11 +36,15 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         print('column selection work only with delimiter = \',\' (yet)')
 
     datadict = {}
-    numberoffile = len([f for f in os.listdir(path) if (os.path.isfile(path + f) )])
+    files = [f for f in os.listdir(path) if (os.path.isfile(path + f) )]
     if ext:
-        badfiles = len([f for f in os.listdir(path) if ((os.path.isfile(path + f) ) and not f.endswith(ext))])
-        numberoffile -= badfiles
-    print ('Files to load: ', numberoffile)
+        badfiles = [f for f in os.listdir(path) if ((os.path.isfile(path + f) ) and not f.endswith(ext))]
+        files = [x for x in files if x not in badfiles]
+    if numfiles:
+        files = files[:numfiles]
+    numberoffile = len(files)
+    size = sum([os.path.getsize(path + f) for f in files]) / (1024**2)
+    print ('Files to load: ', numberoffile, ' - Size: {:0.3f}'.format(size), 'Mb')
     progressbarlen = 50
     atraitevery = numberoffile / float(progressbarlen)
     counter = 0.0
@@ -57,16 +61,8 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     sys.stdout.write("\b" * (progressbarlen+1)) # return to start of line, after '['
 
     # skip dir, parse all file matching ext
-    for filename in os.listdir(path):
+    for filename in files:
         actualfile = os.path.join(path, filename)
-
-        # check if isdir
-        if os.path.isdir(actualfile):
-            continue
-
-        # check if ext match
-        if ext and not filename.endswith(ext):
-            continue
 
         # import
         try:
@@ -110,11 +106,6 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     if traitcounter < progressbarlen:
         sys.stdout.write("=")
         sys.stdout.flush()
-
-
-            
-    print ('\nc: ', counter, 'stepco: ', stepcounter, 'atrev: ', atraitevery, 'trc', traitcounter, 'pbl', progressbarlen)
-
 
     sys.stdout.write("\n")
 
