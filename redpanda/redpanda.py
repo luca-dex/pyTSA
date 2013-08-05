@@ -308,7 +308,7 @@ class RedPanda:
             plt.close()
 
 
-    def msdplot(self, columns, start, stop, step=1, merge=None):
+    def msdplot(self, columns, start, stop, step=1, merge=None, errorbar=None, bardist=5):
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -323,11 +323,17 @@ class RedPanda:
                         self.createrange(thisrange, col, start, stop, step)
                     mean = self.range[thisrange].mean(1)
                     std = self.range[thisrange].std(1)
-                    upper = mean + std
-                    lower = mean - std
                     mean.plot(label=col)
-                    upper.plot(style='k--')
-                    lower.plot(style='k--')
+                    if errorbar:
+                        xind = [t for i, t in enumerate(mean.index.values) if (i % bardist) == 0]
+                        yval = [t for i, t in enumerate(mean.values) if (i % bardist) == 0]
+                        yerr = [t for i, t in enumerate(std.values) if (i % bardist) == 0]
+                        plt.errorbar(xind, yval, yerr=yerr, fmt=None)
+                    else:
+                        upper = mean + std
+                        lower = mean - std
+                        upper.plot(style='k--')
+                        lower.plot(style='k--')
                 plt.legend(loc='best')
                 plt.title(name)
             else:
@@ -339,11 +345,17 @@ class RedPanda:
                         self.createrange(thisrange, col, start, stop, step)
                     mean = self.range[thisrange].mean(1)
                     std = self.range[thisrange].std(1)
-                    upper = mean + std
-                    lower = mean - std
                     mean.plot(label=col, ax=axes[i])
-                    upper.plot(style='k--', ax=axes[i])
-                    lower.plot(style='k--', ax=axes[i])
+                    if errorbar:
+                        xind = [t for j, t in enumerate(mean.index.values) if (j % bardist) == 0]
+                        yval = [t for j, t in enumerate(mean.values) if (j % bardist) == 0]
+                        yerr = [t for j, t in enumerate(std.values) if (j % bardist) == 0]
+                        axes[i].errorbar(xind, yval, yerr=yerr, fmt=None)
+                    else:
+                        upper = mean + std
+                        lower = mean - std
+                        upper.plot(style='k--', ax=axes[i])
+                        lower.plot(style='k--', ax=axes[i])
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
             self.printto(name)

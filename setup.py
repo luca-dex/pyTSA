@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='RedPanda',
-    version='0.1.2',
+    version='0.1.3',
     author='L. De Sano',
     author_email='l.desano@campus.unimib.it',
     packages=['redpanda'],
@@ -16,6 +16,6 @@ setup(
         "statsmodels",
         "Pandas >= 0.11.0",
         "python-dateutil >= 1.5",
-        "matplotlib",
+        "matplotlib >= 1.3.0",
     ],
 )
