@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division
-import __builtin__ as py
+try:
+    import builtins as py
+except ImportError:
+    import __builtin__ as py
+
 import os
 import pandas as pd
 import numpy as np
@@ -428,6 +432,7 @@ class RedPanda:
                     axes[i].legend(loc='best')
             self.printto(name)
             plt.close()
+
     def pdf3d(self, column, moments, binsize=None, numbins=None, normed=False, fit=False, range=None, \
         height=None):
         moments = [float(x) for x in moments]
@@ -488,7 +493,69 @@ class RedPanda:
             ax.set_yticklabels(ytick_labels)
 
             self.printto(name)
-            plt.close()   
+            plt.close()
+
+    def meq2d(self, columns, start, stop, step=1.0, binsize=None, numbins=None, normed=False, fit=False, range=None, \
+        height=None):
+        step = float(step)
+        moments = np.arange(start, stop, step)
+        if self.isSet:
+            fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+            for i, column in enumerate(columns):
+                name = 'meq'
+                minrange = None
+                maxrange = None
+                newindex = np.array([])
+                thesemoments = []
+                for moment in moments:
+                    thisrow = '_'.join((str(moment), str(column)))
+                    if thisrow not in self.row:
+                        self.getarow(moment, column)
+                    thesemoments.append(self.row[thisrow])
+                    if not minrange or self.row[thisrow].min() < minrange:
+                        minrange = self.row[thisrow].min()
+                    if not maxrange or self.row[thisrow].max() > maxrange:
+                        maxrange = self.row[thisrow].max()
+                    newindex = np.append(newindex, self.row[thisrow].index.values)
+                
+                newindex = np.unique(np.append(newindex, np.arange(newindex.min(), newindex.max())))
+                newindex.sort()
+                
+                if binsize:
+                    numbins = int((maxrange - minrange) / binsize)
+                if not numbins:
+                    numbins = 10
+
+                histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[0], numbins=numbins, \
+                    defaultlimits=(minrange, maxrange))
+                if normed:
+                    histogram = histogram / sum(histogram)
+                
+                I = np.array(histogram)
+                for j in py.range(1, len(thesemoments)):
+                    histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[j], numbins=numbins, \
+                        defaultlimits=(minrange, maxrange))
+                    if normed:
+                        histogram = histogram / sum(histogram)
+                    I = np.vstack([I, histogram])
+
+                value = np.array([low_range + (intbinsize * 0.5)])
+                for index in py.range(1, len(histogram)):
+                    value = np.append(value, value[index-1] + intbinsize)
+
+                if len(columns) == 1:
+                    im = axes.imshow(I.T, aspect='auto', interpolation='nearest', \
+                        extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower')
+                    fig.colorbar(im, ax=axes)
+                else:    
+                    im = axes[i].imshow(I.T, aspect='auto', interpolation='nearest', \
+                        extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower')
+                    fig.colorbar(im, ax=axes[i])
+
+            self.printto(name)
+            plt.close()
+
+
 
 
 
