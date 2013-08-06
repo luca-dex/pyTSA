@@ -495,8 +495,8 @@ class RedPanda:
             self.printto(name)
             plt.close()
 
-    def meq2d(self, columns, start, stop, step=1.0, binsize=None, numbins=None, normed=False, fit=False, range=None, \
-        height=None):
+    def meq2d(self, columns, start, stop, step=1.0, binsize=None, numbins=None, normed=True, fit=False, range=None, \
+        vmax=None):
         step = float(step)
         moments = np.arange(start, stop, step)
         if self.isSet:
@@ -545,11 +545,11 @@ class RedPanda:
 
                 if len(columns) == 1:
                     im = axes.imshow(I.T, aspect='auto', interpolation='nearest', \
-                        extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower')
+                        extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
                     fig.colorbar(im, ax=axes)
                 else:    
                     im = axes[i].imshow(I.T, aspect='auto', interpolation='nearest', \
-                        extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower')
+                        extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
                     fig.colorbar(im, ax=axes[i])
 
             self.printto(name)
