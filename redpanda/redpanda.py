@@ -557,8 +557,66 @@ class RedPanda:
 
 
 
+    def meq3d(self, column, start, stop, step=1.0, binsize=None, numbins=None, normed=True, fit=False, range=None, \
+            vmax=None):
+            step = float(step)
+            moments = np.arange(start, stop, step)
+            if self.isSet:
+                fig = plt.figure()
+                ax = Axes3D(fig)
+                
+                name = 'meq'
+                minrange = None
+                maxrange = None
+                newindex = np.array([])
+                thesemoments = []
+                for moment in moments:
+                    thisrow = '_'.join((str(moment), str(column)))
+                    if thisrow not in self.row:
+                        self.getarow(moment, column)
+                    thesemoments.append(self.row[thisrow])
+                    if not minrange or self.row[thisrow].min() < minrange:
+                        minrange = self.row[thisrow].min()
+                    if not maxrange or self.row[thisrow].max() > maxrange:
+                        maxrange = self.row[thisrow].max()
+                    newindex = np.append(newindex, self.row[thisrow].index.values)
+                
+                newindex = np.unique(np.append(newindex, np.arange(newindex.min(), newindex.max())))
+                newindex.sort()
+                
+                if binsize:
+                    numbins = int((maxrange - minrange) / binsize)
+                if not numbins:
+                    numbins = 10
 
+                histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[0], numbins=numbins, \
+                    defaultlimits=(minrange, maxrange))
+                if normed:
+                    histogram = histogram / sum(histogram)
+                
+                I = np.array(histogram)
+                for j in py.range(1, len(thesemoments)):
+                    histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[j], numbins=numbins, \
+                        defaultlimits=(minrange, maxrange))
+                    if normed:
+                        histogram = histogram / sum(histogram)
+                    I = np.vstack([I, histogram])
 
+                value = np.array([low_range + (intbinsize * 0.5)])
+                for index in py.range(1, len(histogram)):
+                    value = np.append(value, value[index-1] + intbinsize)
+
+                X, Y = np.meshgrid(moments, value)
+                surf = ax.plot_surface(X, Y, I.T, rstride=1, cstride=1, cmap=plt.cm.jet, \
+                    linewidth=0, antialiased=False)
+                fig.colorbar(surf, shrink=0.5, aspect=5)
+
+                ax.set_xlabel('time')
+                ax.set_ylabel(column)
+                
+
+            self.printto(name)
+            plt.close()
 
 
     def printto(self, figname):
@@ -568,67 +626,3 @@ class RedPanda:
             else:
                 name = '.'.join((figname, out))
                 plt.savefig(name)
-
-
-def meq_relfreq(df_dict, colname, l_limit, h_limit, step, numbins=10):
-    range_df = create_range(df_dict, colname, l_limit, h_limit, step)
-    rangeX = np.arange(l_limit, h_limit, step)
-    X = np.zeros((len(rangeX),numbins))
-    for x in range(len(rangeX)):
-        X[x] = rangeX[x]
-    Y = []
-    Z = []
-    for x in rangeX: 
-        relfreq, startpoint, binsize, extrap = stats.relfreq(range_df.loc[x].values, numbins=numbins, \
-                defaultreallimits=(min(range_df.loc[x]),max(range_df.loc[x])))
-        Yline = [startpoint]
-        Z.append(list(relfreq))
-        for _ in range(1, len(relfreq)):
-            next_y = Yline[-1] + binsize
-            Yline.append(next_y)
-        Y.append(Yline)
-    Y = np.array(Y)
-    Z = np.array(Z)
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    cset = ax.contourf(X, Y, Z, alpha=0.5)
-    #ax.clabel(cset, fontsize=9, inline=1)
-    ax.set_zlim3d(0, 1)
-    plt.show()
-    return (X, Y, Z)
-
-def meq_itemfreq(df_dict, colname, l_limit, h_limit, step):
-    range_df = create_range(df_dict, colname, l_limit, h_limit, step)
-    rangeX = np.arange(l_limit, h_limit, step)
-    X = np.zeros((len(rangeX),len(rangeX)))
-    for x in range(len(rangeX)):
-        X[x] = rangeX[x]
-    Y = []
-    Z = []
-    for x in rangeX: 
-        itemfreq = stats.itemfreq(range_df.loc[x].values)
-        return itemfreq
-        Y.append([y[0] for y in itemfreq])
-        Z.append([z[1] for z in itemfreq])
-    return (X, Y, Z)
-    Y = np.array(Y)
-    Z = np.array(Z)
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    cset = ax.contourf(X, Y, Z, cmap=cm.coolwarm)
-    ax.clabel(cset, fontsize=9, inline=1)
-
-def rel_pdf(self, df_dict, numbins=10):
-    to_return = np.array([])
-    for k,v in df_dict.iteritems():
-        to_return = np.append(to_return, [k].append(stats.relfreq(v, numbins=numbins)))
-    #plt.ion()
-    #fig = plt.figure()
-    #ax = fig.add_subplot(111, projection='3d')
-    #X, Y, Z = axes3d.get_test_data(0.1)
-    #ax.plot_wireframe(X, Y, Z, rstride=5, cstride=5)
-#
-#        #for angle in range(0, 360):
-#        #    ax.view_init(30, angle)
-    #plt.draw()
-    return to_return
