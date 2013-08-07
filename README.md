@@ -11,6 +11,11 @@ Come come ottenere il software:
 
 	git clone https://github.com/luca-dex/RedPanda.git
 	cd RedPanda
+
+Per l'installazione è importante che numpy e scipy vengano installati prima di intallare redpanda
+
+	sudo pip install numpy
+	sudo pip install scipy
 	sudo pip install .
 
 **Struttura per la parte di analisi dati**

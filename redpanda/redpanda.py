@@ -217,7 +217,7 @@ class RedPanda:
         self.row[label] = pd.Series(to_return)
         
 
-    def splot(self, columns, start, stop, merge=None):
+    def splot(self, columns, start, stop, merge=None, xkcd=None):
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -225,6 +225,8 @@ class RedPanda:
         if self.isSet:
             if merge:
                 plt.figure()
+                if xkcd:
+                    plt.xkcd()
                 plt.title('merged set')
                 for i, col in enumerate(columns):
                     for ds in self.data:
@@ -232,11 +234,17 @@ class RedPanda:
                         self.data[ds][col].truncate(before=start, after=stop).plot()
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                if xkcd:
+                    print ('xkcd style only work with merge=True!')
+                
                 for i, col in enumerate(columns):
                     name = '_'.join(('ds_col', col))
                     axes[i].set_title(name)
+                    
+                    
                     for ds in self.data:
                         self.data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])
+                        
             self.printto(name)
             plt.close()
         else:
@@ -253,7 +261,7 @@ class RedPanda:
             self.printto(name)
             plt.close()
 
-    def mplot(self, columns, start, stop, step=1, merge=None):
+    def mplot(self, columns, start, stop, step=1, merge=None, xkcd=None):
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -261,6 +269,8 @@ class RedPanda:
         if self.isSet:
             if merge:
                 plt.figure()
+                if xkcd:
+                    plt.xkcd()
                 name = 'mean_all_columns'
                 for col in columns:
                     thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
@@ -271,6 +281,8 @@ class RedPanda:
                 plt.title(name)
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                if xkcd:
+                    print ('xkcd style only work with merge=True!')
                 for i, col in enumerate(columns):
                     name = '_'.join(('mean', col))
                     thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
@@ -282,7 +294,7 @@ class RedPanda:
             self.printto(name)
             plt.close()
 
-    def sdplot(self, columns, start, stop, step=1, merge=None):
+    def sdplot(self, columns, start, stop, step=1, merge=None, xkcd=None):
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -290,6 +302,8 @@ class RedPanda:
         if self.isSet:
             if merge:
                 plt.figure()
+                if xkcd:
+                    plt.xkcd()
                 name = 'std_all_columns'
                 for col in columns:
                     thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
@@ -300,6 +314,8 @@ class RedPanda:
                 plt.title(name)
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                if xkcd:
+                    print ('xkcd style only work with merge=True!')
                 for i, col in enumerate(columns):
                     name = '_'.join(('std', col))
                     thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
@@ -312,7 +328,7 @@ class RedPanda:
             plt.close()
 
 
-    def msdplot(self, columns, start, stop, step=1, merge=None, errorbar=None, bardist=5):
+    def msdplot(self, columns, start, stop, step=1, merge=None, errorbar=None, bardist=5, xkcd=None):
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -320,6 +336,8 @@ class RedPanda:
         if self.isSet:
             if merge:
                 plt.figure()
+                if xkcd:
+                    plt.xkcd()
                 name = 'mean&std_all_columns'
                 for col in columns:
                     thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
@@ -342,6 +360,8 @@ class RedPanda:
                 plt.title(name)
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                if xkcd:
+                    print ('xkcd style only work with merge=True!')
                 for i, col in enumerate(columns):
                     name = '_'.join(('mean&std', col))
                     thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
@@ -365,13 +385,15 @@ class RedPanda:
             self.printto(name)
             plt.close()
 
-    def pdf(self, columns, value, merge=None, binsize=None, numbins=None, normed=False, fit=False, range=None):
+    def pdf(self, columns, value, merge=None, binsize=None, numbins=None, normed=False, fit=False, range=None, xkcd=None):
         value = float(value)
         if len(columns) == 1:
             merge = True
         if self.isSet:
             if merge:
                 plt.figure()
+                if xkcd:
+                    plt.xkcd()
                 name = 'pdf'
                 minrange = None
                 maxrange = None
@@ -406,6 +428,8 @@ class RedPanda:
                 plt.title(name)
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                if xkcd:
+                    print ('xkcd style only work with merge=True!')
                 for i, col in enumerate(columns):
                     name = '_'.join(('item_freq', col))
                     thisrow = '_'.join((str(value), str(col)))

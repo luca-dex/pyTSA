@@ -3,3 +3,6 @@
 *.ipynb
 *.pyc
 /build/
+/RedPanda.egg-info/
+/dist/
+
