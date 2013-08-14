@@ -17,7 +17,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
-    colid=None, ext=None, every=None, numfiles=None):
+    colid=None, ext=None, every=None, numfiles=None, hdf5=None):
     '''more than one file'''
     if not path.endswith('/'):
         path = path + '/'
@@ -39,7 +39,14 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     if colid and delimiter != ',':
         print('column selection work only with delimiter = \',\' (yet)')
 
+    # if hdf5 is None:
+    #     datadict = {}
+    # else:
+    #     datadict =  pd.HDFStore('redpanda.h5')  
+    # r = re.compile(r'[\W]+')
+
     datadict = {}
+    
     files = [f for f in os.listdir(path) if (os.path.isfile(path + f) )]
     if ext:
         badfiles = [f for f in os.listdir(path) if ((os.path.isfile(path + f) ) and not f.endswith(ext))]
@@ -67,6 +74,8 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     # skip dir, parse all file matching ext
     for filename in files:
         actualfile = os.path.join(path, filename)
+        # datadictname = r.sub('', filename)
+        # datadictname = 'f' + datadictname
 
         # import
         try:
@@ -155,6 +164,7 @@ class RedPanda:
         # range -> label:data (pandas df with index)
         self.range = {}
         self.row = {}
+        self.columns = self.data.items()[0][1].columns.values
 
     def createrange(self, label, colname, start, stop, step):
         """Select 1 column and create a range from start to stop"""
@@ -217,7 +227,9 @@ class RedPanda:
         self.row[label] = pd.Series(to_return)
         
 
-    def splot(self, columns, start, stop, merge=None, xkcd=None):
+    def splot(self, start, stop, columns=None, merge=None, xkcd=None):
+        if columns is None:
+            columns = self.columns
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -235,8 +247,8 @@ class RedPanda:
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                 if xkcd:
-                    print ('xkcd style only work with merge=True!')
-                
+                    plt.xkcd()
+
                 for i, col in enumerate(columns):
                     name = '_'.join(('ds_col', col))
                     axes[i].set_title(name)
@@ -246,6 +258,7 @@ class RedPanda:
                         self.data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])
                         
             self.printto(name)
+            plt.clf()
             plt.close()
         else:
             if merge:
@@ -261,7 +274,9 @@ class RedPanda:
             self.printto(name)
             plt.close()
 
-    def mplot(self, columns, start, stop, step=1, merge=None, xkcd=None):
+    def mplot(self, start, stop, columns=None, step=1, merge=None, xkcd=None):
+        if columns is None:
+            columns = self.columns
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -292,9 +307,12 @@ class RedPanda:
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
             self.printto(name)
+            plt.clf()
             plt.close()
 
-    def sdplot(self, columns, start, stop, step=1, merge=None, xkcd=None):
+    def sdplot(self, start, stop, columns=None, step=1, merge=None, xkcd=None):
+        if columns is None:
+            columns = self.columns
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -328,7 +346,9 @@ class RedPanda:
             plt.close()
 
 
-    def msdplot(self, columns, start, stop, step=1, merge=None, errorbar=None, bardist=5, xkcd=None):
+    def msdplot(self, start, stop, columns=None, step=1, merge=None, errorbar=None, bardist=5, xkcd=None):
+        if columns is None:
+            columns = self.columns
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -383,10 +403,14 @@ class RedPanda:
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
             self.printto(name)
+            plt.clf()
             plt.close()
 
-    def pdf(self, columns, value, merge=None, binsize=None, numbins=None, normed=False, fit=False, range=None, xkcd=None):
-        value = float(value)
+    def pdf(self, time, columns=None, merge=None, binsize=None, numbins=None, normed=False,\
+     fit=False, range=None, xkcd=None):
+        if columns is None:
+            columns = self.columns
+        value = float(time)
         if len(columns) == 1:
             merge = True
         if self.isSet:
@@ -449,12 +473,12 @@ class RedPanda:
                         else:
                             (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
                             y = mlab.normpdf(bins, mu, sigma)
-                            l = axes[i].plot(bins, y, 'r--', linewidth=2)
-
+                            l = axes[i].plot(bins, y, 'r--', linewidth = 2)
 
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
             self.printto(name)
+            plt.clf()
             plt.close()
 
     def pdf3d(self, column, moments, binsize=None, numbins=None, normed=False, fit=False, range=None, \
@@ -517,10 +541,13 @@ class RedPanda:
             ax.set_yticklabels(ytick_labels)
 
             self.printto(name)
+            plt.clf()
             plt.close()
 
-    def meq2d(self, columns, start, stop, step=1.0, binsize=None, numbins=None, normed=True, fit=False, range=None, \
-        vmax=None):
+    def meq2d(self, start, stop, columns=None, step=1.0, binsize=None, numbins=None, normed=True,\
+     fit=False, range=None, vmax=None):
+        if columns is None:
+            columns = self.columns
         step = float(step)
         moments = np.arange(start, stop, step)
         if self.isSet:
@@ -577,6 +604,7 @@ class RedPanda:
                     fig.colorbar(im, ax=axes[i])
 
             self.printto(name)
+            plt.clf()
             plt.close()
 
 
@@ -640,6 +668,7 @@ class RedPanda:
                 
 
             self.printto(name)
+            plt.clf()
             plt.close()
 
 
