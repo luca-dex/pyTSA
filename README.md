@@ -12,7 +12,11 @@ And via easy_install or pip:
 
 	sudo pip install .
 
-For more information and example click [here](https://github.com/luca-dex/RedPanda/wiki)
+For more information and examples click [here](https://github.com/luca-dex/RedPanda/wiki).
+
+There is also a [getting started](https://github.com/luca-dex/RedPanda/wiki/Getting-Started).
+
+
 
 
 
