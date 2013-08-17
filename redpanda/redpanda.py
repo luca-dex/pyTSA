@@ -164,7 +164,10 @@ class RedPanda:
         # range -> label:data (pandas df with index)
         self.range = {}
         self.row = {}
-        self.columns = self.data.items()[0][1].columns.values
+        if isSet:
+            self.columns = self.data.items()[0][1].columns.values.tolist()
+        else:
+            self.columns = self.data.columns.values.tolist()
 
     def createrange(self, label, colname, start, stop, step):
         """Select 1 column and create a range from start to stop"""
@@ -355,7 +358,7 @@ class RedPanda:
             merge = True
         if self.isSet:
             if merge:
-                plt.figure()
+                fig = plt.figure()
                 if xkcd:
                     plt.xkcd()
                 name = 'mean&std_all_columns'
@@ -374,9 +377,10 @@ class RedPanda:
                     else:
                         upper = mean + std
                         lower = mean - std
-                        upper.plot(style='k--')
-                        lower.plot(style='k--')
-                plt.legend(loc='best')
+                        upper.plot(style='k--', legend=False)
+                        lower.plot(style='k--', legend=False)
+                patches, labels = fig.get_axes()[0].get_legend_handles_labels()
+                fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
                 plt.title(name)
             else:
                 fig, axes = plt.subplots(nrows=len(columns), ncols=1)
@@ -398,10 +402,11 @@ class RedPanda:
                     else:
                         upper = mean + std
                         lower = mean - std
-                        upper.plot(style='k--', ax=axes[i])
-                        lower.plot(style='k--', ax=axes[i])
+                        upper.plot(style='k--', ax=axes[i], legend=False)
+                        lower.plot(style='k--', ax=axes[i], legend=False)
                     axes[i].set_title(name)
-                    axes[i].legend(loc='best')
+                    handles, labels = axes[i].get_legend_handles_labels()
+                    axes[i].legend([handles[0]], [labels[0]], loc='best')
             self.printto(name)
             plt.clf()
             plt.close()
