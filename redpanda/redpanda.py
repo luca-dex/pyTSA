@@ -72,6 +72,10 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     sys.stdout.write("\b" * (progressbarlen+1)) # return to start of line, after '['
 
     # skip dir, parse all file matching ext
+
+    timemin = 0.0
+    timemax = 0.0
+
     for filename in files:
         actualfile = os.path.join(path, filename)
         # datadictname = r.sub('', filename)
@@ -93,6 +97,15 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
             sys.stdout.write("\b" * (progressbarlen+2))
             print('Warning! In file', actualfile, 'a line starts with NaN')
             break
+
+        thismin = datadict[filename].index.values.min()
+        thismax = datadict[filename].index.values.max()
+
+        if thismin < timemin:
+            timemin = thismin
+
+        if thismax > timemax:
+            timemax = thismax
 
         counter += 1
         if biggerthanone:
@@ -123,7 +136,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     sys.stdout.write("\n")
 
     # return RedPanda Obj (isset = True)
-    return RedPanda(datadict, True)
+    return RedPanda(datadict, True, timemin, timemax)
 
 def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, every=None):
@@ -150,10 +163,10 @@ def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', sta
     source.close()
 
     # return RedPanda Obj (isset = False)
-    return RedPanda(timedata, None)
+    return RedPanda(timedata, False, timedata.index.values.min(), timedata.index.values.max())
 
 class RedPanda:
-    def __init__(self, data, isSet):
+    def __init__(self, data, isSet, timemin, timemax):
         # dataset or timeseries
         self.data = data
         # what's the type
@@ -164,6 +177,8 @@ class RedPanda:
         # range -> label:data (pandas df with index)
         self.range = {}
         self.row = {}
+        self.timemin = timemin
+        self.timemax = timemax
         if isSet:
             self.columns = self.data.items()[0][1].columns.values.tolist()
         else:
@@ -230,7 +245,11 @@ class RedPanda:
         self.row[label] = pd.Series(to_return)
         
 
-    def splot(self, start, stop, columns=None, merge=None, xkcd=None):
+    def splot(self, start=None, stop=None, columns=None, merge=None, xkcd=None):
+        if start is None:
+            start = self.timemin
+        if stop is None:
+            stop = self.timemax
         if columns is None:
             columns = self.columns
         start = float(start)
@@ -277,7 +296,11 @@ class RedPanda:
             self.printto(name)
             plt.close()
 
-    def mplot(self, start, stop, columns=None, step=1, merge=None, xkcd=None):
+    def mplot(self, start=None, stop=None, columns=None, step=1, merge=None, xkcd=None):
+        if start is None:
+            start = self.timemin
+        if stop is None:
+            stop = self.timemax
         if columns is None:
             columns = self.columns
         start = float(start)
@@ -313,7 +336,11 @@ class RedPanda:
             plt.clf()
             plt.close()
 
-    def sdplot(self, start, stop, columns=None, step=1, merge=None, xkcd=None):
+    def sdplot(self, start=None, stop=None, columns=None, step=1, merge=None, xkcd=None):
+        if start is None:
+            start = self.timemin
+        if stop is None:
+            stop = self.timemax
         if columns is None:
             columns = self.columns
         start = float(start)
@@ -349,7 +376,11 @@ class RedPanda:
             plt.close()
 
 
-    def msdplot(self, start, stop, columns=None, step=1, merge=None, errorbar=None, bardist=5, xkcd=None):
+    def msdplot(self, start=None, stop=None, columns=None, step=1, merge=None, errorbar=None, bardist=5, xkcd=None):
+        if start is None:
+            start = self.timemin
+        if stop is None:
+            stop = self.timemax
         if columns is None:
             columns = self.columns
         start = float(start)
@@ -451,7 +482,7 @@ class RedPanda:
                         else:
                             (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
                             y = mlab.normpdf(bins, mu, sigma)
-                            l = plt.plot(bins, y, 'r--', linewidth=2)
+                            plt.plot(bins, y, 'r--', linewidth=2)
 
                 plt.legend(loc='best')
                 plt.title(name)
@@ -478,7 +509,7 @@ class RedPanda:
                         else:
                             (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
                             y = mlab.normpdf(bins, mu, sigma)
-                            l = axes[i].plot(bins, y, 'r--', linewidth = 2)
+                            axes[i].plot(bins, y, 'r--', linewidth = 2)
 
                     axes[i].set_title(name)
                     axes[i].legend(loc='best')
@@ -549,8 +580,12 @@ class RedPanda:
             plt.clf()
             plt.close()
 
-    def meq2d(self, start, stop, columns=None, step=1.0, binsize=None, numbins=None, normed=True,\
-     fit=False, range=None, vmax=None):
+    def meq2d(self, start=None, stop=None, columns=None, step=1.0, binsize=None,\
+     numbins=None, normed=True, fit=False, range=None, vmax=None):
+        if start is None:
+            start = self.timemin
+        if stop is None:
+            stop = self.timemax
         if columns is None:
             columns = self.columns
         step = float(step)
@@ -614,8 +649,12 @@ class RedPanda:
 
 
 
-    def meq3d(self, column, start, stop, step=1.0, binsize=None, numbins=None, normed=True, fit=False, range=None, \
+    def meq3d(self, column, start=None, stop=None, step=1.0, binsize=None, numbins=None, normed=True, fit=False, range=None, \
             vmax=None):
+            if start is None:
+                start = self.timemin
+            if stop is None:
+                stop = self.timemax
             step = float(step)
             moments = np.arange(start, stop, step)
             if self.isSet:
