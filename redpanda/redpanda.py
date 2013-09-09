@@ -12,47 +12,68 @@ import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
+import tables as ts
 import sys
+import re
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None, numfiles=None, hdf5=None):
     '''more than one file'''
+
+    # check if pathname is correct
     if not path.endswith('/'):
         path = path + '/'
-    #microvalidation
+
+
+    #times check
     if start > stop:
         print('maybe start > stop ?\n')
+        raise ValueError
+
+
+    # check if len(colnames) and len(colis) are = 
     if colnames and colid:
         if len(colnames) != len(colid):
             print('colid and colnames must have same length!')
+            raise ValueError
     if colnames is None:
         col_pref = 'Y'
     else:
         col_pref = None
 
 
-    # if ext and not ext.startswith('.'):
-    #    ext = ''.join(('.', ext))
-
+    # check if delimiter is ok
     if colid and delimiter != ',':
         print('column selection work only with delimiter = \',\' (yet)')
+        raise ValueError
 
-    # if hdf5 is None:
-    #     datadict = {}
-    # else:
-    #     datadict =  pd.HDFStore('redpanda.h5')  
-    # r = re.compile(r'[\W]+')
+    # if hdf5 create a HDFStore object in 'w' mode
+    if hdf5 is None:
+        datadict = {}
+        hdf5name = None
+    else:
+        name = hdf5 + '.h5'
+        datadict =  pd.HDFStore(name, 'w')  
+        r = re.compile(r'[\W]+')
+        hdf5name = name 
 
-    datadict = {}
-    
+    # other usefull infos
+    timemin = 0.0
+    timemax = 0.0
+    fileindex = []
+
+    # Only not ending with
     files = [f for f in os.listdir(path) if (os.path.isfile(path + f) )]
     if ext:
         badfiles = [f for f in os.listdir(path) if ((os.path.isfile(path + f) ) and not f.endswith(ext))]
         files = [x for x in files if x not in badfiles]
     if numfiles:
         files = files[:numfiles]
+
+
+    # progressbar
     numberoffile = len(files)
     size = sum([os.path.getsize(path + f) for f in files]) / (1024**2)
     print ('Files to load: ', numberoffile, ' - Size: {:0.3f}'.format(size), 'Mb')
@@ -66,47 +87,48 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     else:
         biggerthanone = False
 
-
     sys.stdout.write("[%s]" % (" " * progressbarlen))
     sys.stdout.flush()
     sys.stdout.write("\b" * (progressbarlen+1)) # return to start of line, after '['
 
-    # skip dir, parse all file matching ext
 
-    timemin = 0.0
-    timemax = 0.0
+    # skip dir, parse all file matching ext
 
     for filename in files:
         actualfile = os.path.join(path, filename)
-        # datadictname = r.sub('', filename)
-        # datadictname = 'f' + datadictname
+        datadictname = filename
+        if hdf5:
+            datadictname = 'f' + r.sub('', datadictname)
+        fileindex.append(datadictname)
 
-        # import
+        # create a fake file and pd.read_csv!
         try:
             source = CommentedFile(open(actualfile, 'rb'), every=every, \
                 commentstring=commentstring, low_limit=start, high_limit=stop)
-            datadict[filename] = pd.read_csv(source, sep=delimiter, index_col=0, \
+            datadict[datadictname] = pd.read_csv(source, sep=delimiter, index_col=0, \
                 header=None, names=colnames, usecols=colid, prefix=col_pref)
             source.close()
 
+        # mmm somethings wrong here
         except ValueError:
             raise
             break
 
+        # maybe commentstring is worng
         except StopIteration:
             sys.stdout.write("\b" * (progressbarlen+2))
             print('Warning! In file', actualfile, 'a line starts with NaN')
             break
 
-        thismin = datadict[filename].index.values.min()
-        thismax = datadict[filename].index.values.max()
-
+        # range limit check
+        thismin = datadict[datadictname].index.values.min()
+        thismax = datadict[datadictname].index.values.max()
         if thismin < timemin:
             timemin = thismin
-
         if thismax > timemax:
             timemax = thismax
 
+        # progress bar 
         counter += 1
         if biggerthanone:
             if counter > stepcounter:
@@ -121,22 +143,19 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
                 stepcounter += atraitevery
                 traitcounter += 1
 
-
-
+    # always progress bar
     if counter == stepcounter:
         sys.stdout.write("=")
         sys.stdout.flush()
         traitcounter += 1
-
-
     if traitcounter < progressbarlen:
         sys.stdout.write("=")
         sys.stdout.flush()
-
     sys.stdout.write("\n")
 
     # return RedPanda Obj (isset = True)
-    return RedPanda(datadict, True, timemin, timemax)
+
+    return RedPanda(datadict, True, timemin, timemax, fileindex, hdf5name)
 
 def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, every=None):
@@ -165,40 +184,96 @@ def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', sta
     # return RedPanda Obj (isset = False)
     return RedPanda(timedata, False, timedata.index.values.min(), timedata.index.values.max())
 
-class RedPanda:
-    def __init__(self, data, isSet, timemin, timemax):
-        # dataset or timeseries
-        self.data = data
-        # what's the type
-        self.isSet = isSet
-        # start with default terminal (supported type are png, pdf, ps, eps and svg)
-        self.outputs = set()
-        self.outputs.add('view')
-        # range -> label:data (pandas df with index)
-        self.range = {}
-        self.row = {}
-        self.timemin = timemin
-        self.timemax = timemax
-        if isSet:
-            self.columns = self.data.items()[0][1].columns.values.tolist()
-        else:
-            self.columns = self.data.columns.values.tolist()
+def loadHdf5(path):
+    store = ts.openFile(path, 'r')
+    table = store.root.info.desc
+    isSet = table.attrs.isSet
+    timemin = table.attrs.timemin
+    timemax = table.attrs.timemax
+    fileindex = list(table.attrs.fileindex)
 
+    return RedPanda(store, isSet, timemin, timemax, fileindex, path, newRp = None)
+
+
+
+class RedPanda:
+    def __init__(self, data, isSet, timemin, timemax, fileindex=None, hdf5name = None, newRp = True):
+        # dataset or timeseries
+        self.__data = data
+        # what's the type
+        self.__isSet = isSet
+        # start with default terminal (supported type are png, pdf, ps, eps and svg)
+        self.__outputs = set()
+        self.__outputs.add('view')
+        # range -> label:data (pandas df with index)
+        self.__range = {}
+        self.__row = {}
+        self.__timemin = timemin
+        self.__timemax = timemax
+        self.__hdf5 = hdf5name
+
+        print('Default start value: ', self.__timemin)
+        print('Default stop value: ', self.__timemax)
+        print('You can overwrite these values using setTimemin() and setTimemax()')
+
+        if fileindex is not None:
+            self.__fileindex = fileindex
+
+        if isSet:
+            self.__columns = self.__data[self.__fileindex[0]].columns.values.tolist()
+        else:
+            self.__columns = self.__data.columns.values.tolist()
+
+        if hdf5name and newRp:
+            self.__data.close()
+            store = ts.openFile(hdf5name, 'a')
+            group = store.createGroup('/', 'info')
+            table = store.createTable(group, 'desc', RedPandaInfo)
+            table.attrs.isSet = self.__isSet
+            table.attrs.timemin = self.__isSet = self.__timemin
+            table.attrs.timemax = self.__isSet = self.__timemax
+            table.attrs.fileindex =  self.__fileindex
+            table.flush()
+            store.close()
+            
+
+    def getTimemin(self):
+        return self.__timemin
+
+    def getTimemax(self):
+        return self.__timemax
+
+    def getIndex(self):
+        return self.__fileindex
+
+    def getOutputs(self):
+        return list(self.__outputs)
+
+    def getColumns(self):
+        return self.__columns
+
+    def setTimemin(self, timemin):
+        self.__timemin = timemin
+
+    def setTimemax(self, timemax):
+        self.__timemax = timemax
+
+    
     def createrange(self, label, colname, start, stop, step):
         """Select 1 column and create a range from start to stop"""
-        if not self.isSet:
+        if not self.__isSet:
             print('createrange works only on dataset')
             return
         index = np.arange(start, stop, step)
         mean_df = pd.DataFrame(index=index)
-        for k,v in self.data.iteritems():
+        for k,v in self.__data.iteritems():
             mean_df.insert(0, k, self.get(v[colname], start, stop, step))
-        self.range[label] = mean_df
+        self.__range[label] = mean_df
 
     def addoutput(self, out):
         """select outputs from png, pdf, ps, eps and svg"""
         if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
-            self.outputs.add(out)
+            self.__outputs.add(out)
         else:
             print(out, 'not in outputs')
 
@@ -206,7 +281,7 @@ class RedPanda:
         """select outputs from png, pdf, ps, eps and svg"""
         if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
             try:
-                self.outputs.remove(out)
+                self.__outputs.remove(out)
             except:
                 print(out, 'not in outputs')
         else:
@@ -236,303 +311,332 @@ class RedPanda:
         value = float(index)
         to_return = np.array([])
         label = '_'.join((str(value), str(col)))
-        for k, ts in self.data.iteritems():
+        for k, ts in self.__data.iteritems():
             try:
                 fromthists = ts[col].truncate(after=value).tail(1).values[0]
             except:
                 fromthists = 0.0
             to_return = np.append(to_return, fromthists)
-        self.row[label] = pd.Series(to_return)
+        self.__row[label] = pd.Series(to_return)
         
 
     def splot(self, start=None, stop=None, columns=None, merge=None, xkcd=None):
+        if self.__hdf5:
+            self.__data = pd.HDFStore(self.__hdf5, 'r')
         if start is None:
-            start = self.timemin
+            start = self.__timemin
         if stop is None:
-            stop = self.timemax
+            stop = self.__timemax
         if columns is None:
-            columns = self.columns
+            columns = self.__columns
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
             merge = True
-        if self.isSet:
-            if merge:
-                plt.figure()
-                if xkcd:
-                    plt.xkcd()
-                plt.title('merged set')
-                for i, col in enumerate(columns):
-                    for ds in self.data:
-                        name = '_'.join(('ds_merge', ds, col))
-                        self.data[ds][col].truncate(before=start, after=stop).plot()
-            else:
-                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                if xkcd:
-                    plt.xkcd()
 
-                for i, col in enumerate(columns):
-                    name = '_'.join(('ds_col', col))
-                    axes[i].set_title(name)
+        def internalSplot():
+            if self.__isSet:
+                if merge:
+                    plt.figure()
+                    plt.title('merged set')
+                    for i, col in enumerate(columns):
+                        for ds in self.__fileindex:
+                            name = '_'.join(('ds_merge', ds, col, str(start), str(stop)))
+                            self.__data[ds][col].truncate(before=start, after=stop).plot()
+                else:
+                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     
-                    
-                    for ds in self.data:
-                        self.data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])
+
+                    for i, col in enumerate(columns):
+                        name = '_'.join(('ds_col', col, str(start), str(stop)))
+                        axes[i].set_title(name)
                         
+                        
+                        for ds in self.__fileindex:
+                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])       
+            else:
+                if merge:
+                    for col in columns:
+                        name = '_'.join(('ts', col, str(start), str(stop)))
+                        self.__data[col].truncate(before=start, after=stop).plot()
+                else: 
+                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    for i, col in enumerate(columns):
+                        name = '_'.join(('ds_col', col, str(start), str(stop)))
+                        axes[i].set_title(name)
+                        self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i])
             self.printto(name)
-            plt.clf()
-            plt.close()
+        
+        if (xkcd):
+            with plt.xkcd():
+                internalSplot()
         else:
-            if merge:
-                for col in columns:
-                    name = '_'.join(('ts', col))
-                    self.data[col].truncate(before=start, after=stop).plot()
-            else: 
-                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                for i, col in enumerate(columns):
-                    name = '_'.join(('ds_col', col))
-                    axes[i].set_title(name)
-                    self.data[col].truncate(before=start, after=stop).plot(ax=axes[i])
-            self.printto(name)
-            plt.close()
+            internalSplot()
 
-    def mplot(self, start=None, stop=None, columns=None, step=1, merge=None, xkcd=None):
+        
+        plt.close()
+        if self.__hdf5:
+            self.__data.close()
+
+    def mplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
+        xkcd=None):
         if start is None:
-            start = self.timemin
+            start = self.__timemin
         if stop is None:
-            stop = self.timemax
+            stop = self.__timemax
         if columns is None:
-            columns = self.columns
+            columns = self.__columns
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
             merge = True
-        if self.isSet:
-            if merge:
-                plt.figure()
-                if xkcd:
-                    plt.xkcd()
-                name = 'mean_all_columns'
-                for col in columns:
-                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                    if thisrange not in self.range:
-                        self.createrange(thisrange, col, start, stop, step)
-                    self.range[thisrange].mean(1).plot(label=col)
-                plt.legend(loc='best')
-                plt.title(name)
-            else:
-                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                if xkcd:
-                    print ('xkcd style only work with merge=True!')
-                for i, col in enumerate(columns):
-                    name = '_'.join(('mean', col))
-                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                    if thisrange not in self.range:
-                        self.createrange(thisrange, col, start, stop, step)
-                    self.range[thisrange].mean(1).plot(label=col, ax=axes[i])
-                    axes[i].set_title(name)
-                    axes[i].legend(loc='best')
-            self.printto(name)
-            plt.clf()
-            plt.close()
 
-    def sdplot(self, start=None, stop=None, columns=None, step=1, merge=None, xkcd=None):
+        def internalMplot():
+            if self.__isSet:
+                if merge:
+                    plt.figure()
+                    name = 'mean_all_columns'
+                    for col in columns:
+                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                        if thisrange not in self.__range:
+                            self.createrange(thisrange, col, start, stop, step)
+                        self.__range[thisrange].mean(1).plot(label=col)
+                    plt.legend(loc='best')
+                    plt.title(name)
+                else:
+                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    for i, col in enumerate(columns):
+                        name = '_'.join(('mean', col))
+                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                        if thisrange not in self.__range:
+                            self.createrange(thisrange, col, start, stop, step)
+                        self.__range[thisrange].mean(1).plot(label=col, ax=axes[i])
+                        axes[i].set_title(name)
+                        axes[i].legend(loc='best')
+                self.printto(name)
+
+        if (xkcd):
+            with plt.xkcd():
+                internalMplot()
+        else:
+            internalMplot()
+
+        plt.clf()
+        plt.close()
+
+    def sdplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
+        xkcd=None):
         if start is None:
-            start = self.timemin
+            start = self.__timemin
         if stop is None:
-            stop = self.timemax
+            stop = self.__timemax
         if columns is None:
-            columns = self.columns
+            columns = self.__columns
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
             merge = True
-        if self.isSet:
-            if merge:
-                plt.figure()
-                if xkcd:
-                    plt.xkcd()
-                name = 'std_all_columns'
-                for col in columns:
-                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                    if thisrange not in self.range:
-                        self.createrange(thisrange, col, start, stop, step)
-                    self.range[thisrange].std(1).plot(label=col)
-                plt.legend(loc='best')
-                plt.title(name)
-            else:
-                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                if xkcd:
-                    print ('xkcd style only work with merge=True!')
-                for i, col in enumerate(columns):
-                    name = '_'.join(('std', col))
-                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                    if thisrange not in self.range:
-                        self.createrange(thisrange, col, start, stop, step)
-                    self.range[thisrange].std(1).plot(label=col, ax=axes[i])
-                    axes[i].set_title(name)
-                    axes[i].legend(loc='best')
-            self.printto(name)
-            plt.close()
+
+        def internasSdplot():    
+            if self.__isSet:
+                if merge:
+                    plt.figure()
+                    name = 'std all columns'
+                    for col in columns:
+                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                        if thisrange not in self.__range:
+                            self.createrange(thisrange, col, start, stop, step)
+                        self.__range[thisrange].std(1).plot(label=col)
+                    plt.legend(loc='best')
+                    plt.title(name)
+                else:
+                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    for i, col in enumerate(columns):
+                        name = '_'.join(('std', col))
+                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                        if thisrange not in self.__range:
+                            self.createrange(thisrange, col, start, stop, step)
+                        self.__range[thisrange].std(1).plot(label=col, ax=axes[i])
+                        axes[i].set_title(name)
+                        axes[i].legend(loc='best')
+                self.printto(name)
+
+        if (xkcd):
+            with plt.xkcd():
+                internalSdplot()
+        else:
+            internalSdplot()
+
+        plt.close()
 
 
-    def msdplot(self, start=None, stop=None, columns=None, step=1, merge=None, errorbar=None, bardist=5, xkcd=None):
+    def msdplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
+        errorbar=None, bardist=5, xkcd=None):
         if start is None:
-            start = self.timemin
+            start = self.__timemin
         if stop is None:
-            stop = self.timemax
+            stop = self.__timemax
         if columns is None:
-            columns = self.columns
+            columns = self.__columns
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
             merge = True
-        if self.isSet:
-            if merge:
-                fig = plt.figure()
-                if xkcd:
-                    plt.xkcd()
-                name = 'mean&std_all_columns'
-                for col in columns:
-                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                    if thisrange not in self.range:
-                        self.createrange(thisrange, col, start, stop, step)
-                    mean = self.range[thisrange].mean(1)
-                    std = self.range[thisrange].std(1)
-                    mean.plot(label=col)
-                    if errorbar:
-                        xind = [t for i, t in enumerate(mean.index.values) if (i % bardist) == 0]
-                        yval = [t for i, t in enumerate(mean.values) if (i % bardist) == 0]
-                        yerr = [t for i, t in enumerate(std.values) if (i % bardist) == 0]
-                        plt.errorbar(xind, yval, yerr=yerr, fmt=None)
-                    else:
-                        upper = mean + std
-                        lower = mean - std
-                        upper.plot(style='k--', legend=False)
-                        lower.plot(style='k--', legend=False)
-                patches, labels = fig.get_axes()[0].get_legend_handles_labels()
-                fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
-                plt.title(name)
-            else:
-                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                if xkcd:
-                    print ('xkcd style only work with merge=True!')
-                for i, col in enumerate(columns):
-                    name = '_'.join(('mean&std', col))
-                    thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                    if thisrange not in self.range:
-                        self.createrange(thisrange, col, start, stop, step)
-                    mean = self.range[thisrange].mean(1)
-                    std = self.range[thisrange].std(1)
-                    mean.plot(label=col, ax=axes[i])
-                    if errorbar:
-                        xind = [t for j, t in enumerate(mean.index.values) if (j % bardist) == 0]
-                        yval = [t for j, t in enumerate(mean.values) if (j % bardist) == 0]
-                        yerr = [t for j, t in enumerate(std.values) if (j % bardist) == 0]
-                        axes[i].errorbar(xind, yval, yerr=yerr, fmt=None)
-                    else:
-                        upper = mean + std
-                        lower = mean - std
-                        upper.plot(style='k--', ax=axes[i], legend=False)
-                        lower.plot(style='k--', ax=axes[i], legend=False)
-                    axes[i].set_title(name)
-                    handles, labels = axes[i].get_legend_handles_labels()
-                    axes[i].legend([handles[0]], [labels[0]], loc='best')
-            self.printto(name)
-            plt.clf()
-            plt.close()
 
-    def pdf(self, time, columns=None, merge=None, binsize=None, numbins=None, normed=False,\
-     fit=False, range=None, xkcd=None):
+        def internalMsdplot():    
+            if self.__isSet:
+                if merge:
+                    fig = plt.figure()
+                    name = 'mean&std_all_columns'
+                    for col in columns:
+                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                        if thisrange not in self.__range:
+                            self.createrange(thisrange, col, start, stop, step)
+                        mean = self.__range[thisrange].mean(1)
+                        std = self.__range[thisrange].std(1)
+                        mean.plot(label=col)
+                        if errorbar:
+                            xind = [t for i, t in enumerate(mean.index.values) if (i % bardist) == 0]
+                            yval = [t for i, t in enumerate(mean.values) if (i % bardist) == 0]
+                            yerr = [t for i, t in enumerate(std.values) if (i % bardist) == 0]
+                            plt.errorbar(xind, yval, yerr=yerr, fmt=None)
+                        else:
+                            upper = mean + std
+                            lower = mean - std
+                            upper.plot(style='k--', legend=False)
+                            lower.plot(style='k--', legend=False)
+                    patches, labels = fig.get_axes()[0].get_legend_handles_labels()
+                    fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
+                    plt.title(name)
+                else:
+                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    for i, col in enumerate(columns):
+                        name = '_'.join(('mean&std', col))
+                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+                        if thisrange not in self.__range:
+                            self.createrange(thisrange, col, start, stop, step)
+                        mean = self.__range[thisrange].mean(1)
+                        std = self.__range[thisrange].std(1)
+                        mean.plot(label=col, ax=axes[i])
+                        if errorbar:
+                            xind = [t for j, t in enumerate(mean.index.values) if (j % bardist) == 0]
+                            yval = [t for j, t in enumerate(mean.values) if (j % bardist) == 0]
+                            yerr = [t for j, t in enumerate(std.values) if (j % bardist) == 0]
+                            axes[i].errorbar(xind, yval, yerr=yerr, fmt=None)
+                        else:
+                            upper = mean + std
+                            lower = mean - std
+                            upper.plot(style='k--', ax=axes[i], legend=False)
+                            lower.plot(style='k--', ax=axes[i], legend=False)
+                        axes[i].set_title(name)
+                        handles, labels = axes[i].get_legend_handles_labels()
+                        axes[i].legend([handles[0]], [labels[0]], loc='best')
+                self.printto(name)
+
+        if (xkcd):
+            with plt.xkcd():
+                internalMsdplot()
+        else:
+            internalMsdplot()
+
+        plt.clf()
+        plt.close()
+
+    def pdf(self, time, columns=None, merge=None, binsize=None, numbins=None, \
+        normed=False, fit=False, range=None, xkcd=None):
         if columns is None:
-            columns = self.columns
+            columns = self.__columns
         value = float(time)
         if len(columns) == 1:
             merge = True
-        if self.isSet:
-            if merge:
-                plt.figure()
-                if xkcd:
-                    plt.xkcd()
-                name = 'pdf'
-                minrange = None
-                maxrange = None
-                for col in columns:
-                    thisrow = '_'.join((str(value), str(col)))
-                    if thisrow not in self.row:
-                        self.getarow(value, col)
-                    if not minrange or self.row[thisrow].min() < minrange:
-                        minrange = self.row[thisrow].min()
-                    if not maxrange or self.row[thisrow].max() > maxrange:
-                        maxrange = self.row[thisrow].max()
-                print('range: ', minrange, ' - ', maxrange)
-                if binsize:
-                    numbins = int((maxrange - minrange) / binsize)
-                if not numbins:
-                    numbins = 10
 
-                for col in columns:  
-                    thisrow = '_'.join((str(value), str(col)))       
-                    n, bins, patches = plt.hist(self.row[thisrow].values, range=[minrange, maxrange], bins=numbins, \
-                        normed=normed, alpha=0.5, label=col)
-                    if fit:
-                        if not normed:
-                            print ('Fit only if normed')
-                            fit = False
-                        else:
-                            (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
-                            y = mlab.normpdf(bins, mu, sigma)
-                            plt.plot(bins, y, 'r--', linewidth=2)
-
-                plt.legend(loc='best')
-                plt.title(name)
-            else:
-                fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                if xkcd:
-                    print ('xkcd style only work with merge=True!')
-                for i, col in enumerate(columns):
-                    name = '_'.join(('item_freq', col))
-                    thisrow = '_'.join((str(value), str(col)))
-                    if thisrow not in self.row:
-                        self.getarow(value, col)
+        def internalPdf(time, binsize, numbins, normed, fit, range):    
+            if self.__isSet:
+                if merge:
+                    plt.figure()
+                    name = 'pdf'
+                    minrange = None
+                    maxrange = None
+                    for col in columns:
+                        thisrow = '_'.join((str(value), str(col)))
+                        if thisrow not in self.__row:
+                            self.getarow(value, col)
+                        if not minrange or self.__row[thisrow].min() < minrange:
+                            minrange = self.__row[thisrow].min()
+                        if not maxrange or self.__row[thisrow].max() > maxrange:
+                            maxrange = self.__row[thisrow].max()
+                    print('range: ', minrange, ' - ', maxrange)
                     if binsize:
-                        numbins = int((self.row[thisrow].max() - self.row[thisrow].min()) / binsize)
+                        numbins = int((maxrange - minrange) / binsize)
                     if not numbins:
                         numbins = 10
-                    n, bins, patches = axes[i].hist(self.row[thisrow].values, bins=numbins, range=range,\
-                        normed=normed, alpha=0.75, label=col)
-                    
-                    if fit:
-                        if not normed:
-                            print ('Fit only if normed')
-                            fit = False
-                        else:
-                            (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
-                            y = mlab.normpdf(bins, mu, sigma)
-                            axes[i].plot(bins, y, 'r--', linewidth = 2)
 
-                    axes[i].set_title(name)
-                    axes[i].legend(loc='best')
-            self.printto(name)
-            plt.clf()
-            plt.close()
+                    for col in columns:  
+                        thisrow = '_'.join((str(value), str(col)))       
+                        n, bins, patches = plt.hist(self.__row[thisrow].values, range=[minrange, maxrange], bins=numbins, \
+                            normed=normed, alpha=0.5, label=col)
+                        if fit:
+                            if not normed:
+                                print ('Fit only if normed')
+                                fit = False
+                            else:
+                                (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
+                                y = mlab.normpdf(bins, mu, sigma)
+                                plt.plot(bins, y, 'r--', linewidth=2)
 
-    def pdf3d(self, column, moments, binsize=None, numbins=None, normed=False, fit=False, range=None, \
-        height=None):
+                    plt.legend(loc='best')
+                    plt.title(name)
+                else:
+                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    for i, col in enumerate(columns):
+                        name = '_'.join(('item_freq', col))
+                        thisrow = '_'.join((str(value), str(col)))
+                        if thisrow not in self.__row:
+                            self.getarow(value, col)
+                        if binsize:
+                            numbins = int((self.__row[thisrow].max() - self.__row[thisrow].min()) / binsize)
+                        if not numbins:
+                            numbins = 10
+                        n, bins, patches = axes[i].hist(self.__row[thisrow].values, bins=numbins, range=range,\
+                            normed=normed, alpha=0.75, label=col)
+                        
+                        if fit:
+                            if not normed:
+                                print ('Fit only if normed')
+                                fit = False
+                            else:
+                                (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
+                                y = mlab.normpdf(bins, mu, sigma)
+                                axes[i].plot(bins, y, 'r--', linewidth = 2)
+
+                        axes[i].set_title(name)
+                        axes[i].legend(loc='best')
+                self.printto(name)
+
+        if (xkcd):
+            with plt.xkcd():
+                internalPdf(time, binsize, numbins, normed, fit, range)
+        else:
+            internalPdf(time, binsize, numbins, normed, fit, range)                
+        
+        plt.clf()
+        plt.close()
+
+    def pdf3d(self, column, moments, binsize=None, numbins=None, normed=False, fit=False, height=None):
         moments = [float(x) for x in moments]
         moments.sort()
-        if self.isSet:
+        if self.__isSet:
             name = 'pdf'
             minrange = None
             maxrange = None
             for moment in moments:
                 thisrow = '_'.join((str(moment), str(column)))
-                if thisrow not in self.row:
+                if thisrow not in self.__row:
                     self.getarow(moment, column)
-                if not minrange or self.row[thisrow].min() < minrange:
-                    minrange = self.row[thisrow].min()
-                if not maxrange or self.row[thisrow].max() > maxrange:
-                    maxrange = self.row[thisrow].max()
+                if not minrange or self.__row[thisrow].min() < minrange:
+                    minrange = self.__row[thisrow].min()
+                if not maxrange or self.__row[thisrow].max() > maxrange:
+                    maxrange = self.__row[thisrow].max()
             print('range: ', minrange, ' - ', maxrange)
             if binsize:
                 numbins = int((maxrange - minrange) / binsize)
@@ -544,7 +648,7 @@ class RedPanda:
 
             for i, moment in enumerate(moments):
                 thisrow = '_'.join((str(moment), str(column)))
-                histogram, low_range, binsize, extrapoints = stats.histogram(self.row[thisrow].values, \
+                histogram, low_range, binsize, extrapoints = stats.histogram(self.__row[thisrow].values, \
                     numbins=numbins, defaultlimits=(minrange, maxrange))
                 newx = np.array([low_range + (binsize * 0.5)])
                 for index in py.range(1, len(histogram)):
@@ -561,7 +665,7 @@ class RedPanda:
                         print ('Fit only if normed')
                         fit = False
                     else:
-                        (mu, sigma) = stats.norm.fit(self.row[thisrow].values)
+                        (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
                         gauss = mlab.normpdf(newx, mu, sigma)
                         ax.plot(newx, gauss, zs=i, zdir='y', c='r', ls='--', lw=2)
 
@@ -581,33 +685,33 @@ class RedPanda:
             plt.close()
 
     def meq2d(self, start=None, stop=None, columns=None, step=1.0, binsize=None,\
-     numbins=None, normed=True, fit=False, range=None, vmax=None):
+     numbins=None, normed=True, vmax=None):
         if start is None:
-            start = self.timemin
+            start = self.__timemin
         if stop is None:
-            stop = self.timemax
+            stop = self.__timemax
         if columns is None:
-            columns = self.columns
+            columns = self.__columns
         step = float(step)
         moments = np.arange(start, stop, step)
-        if self.isSet:
+        if self.__isSet:
             fig, axes = plt.subplots(nrows=len(columns), ncols=1)
             for i, column in enumerate(columns):
-                name = 'meq'
+                name = 'meq2d'
                 minrange = None
                 maxrange = None
                 newindex = np.array([])
                 thesemoments = []
                 for moment in moments:
                     thisrow = '_'.join((str(moment), str(column)))
-                    if thisrow not in self.row:
+                    if thisrow not in self.__row:
                         self.getarow(moment, column)
-                    thesemoments.append(self.row[thisrow])
-                    if not minrange or self.row[thisrow].min() < minrange:
-                        minrange = self.row[thisrow].min()
-                    if not maxrange or self.row[thisrow].max() > maxrange:
-                        maxrange = self.row[thisrow].max()
-                    newindex = np.append(newindex, self.row[thisrow].index.values)
+                    thesemoments.append(self.__row[thisrow])
+                    if not minrange or self.__row[thisrow].min() < minrange:
+                        minrange = self.__row[thisrow].min()
+                    if not maxrange or self.__row[thisrow].max() > maxrange:
+                        maxrange = self.__row[thisrow].max()
+                    newindex = np.append(newindex, self.__row[thisrow].index.values)
                 
                 newindex = np.unique(np.append(newindex, np.arange(newindex.min(), newindex.max())))
                 newindex.sort()
@@ -649,33 +753,32 @@ class RedPanda:
 
 
 
-    def meq3d(self, column, start=None, stop=None, step=1.0, binsize=None, numbins=None, normed=True, fit=False, range=None, \
-            vmax=None):
+    def meq3d(self, column, start=None, stop=None, step=1.0, binsize=None, numbins=None, normed=True, vmax=None):
             if start is None:
-                start = self.timemin
+                start = self.__timemin
             if stop is None:
-                stop = self.timemax
+                stop = self.__timemax
             step = float(step)
             moments = np.arange(start, stop, step)
-            if self.isSet:
+            if self.__isSet:
                 fig = plt.figure()
                 ax = Axes3D(fig)
                 
-                name = 'meq'
+                name = 'meq3d'
                 minrange = None
                 maxrange = None
                 newindex = np.array([])
                 thesemoments = []
                 for moment in moments:
                     thisrow = '_'.join((str(moment), str(column)))
-                    if thisrow not in self.row:
+                    if thisrow not in self.__row:
                         self.getarow(moment, column)
-                    thesemoments.append(self.row[thisrow])
-                    if not minrange or self.row[thisrow].min() < minrange:
-                        minrange = self.row[thisrow].min()
-                    if not maxrange or self.row[thisrow].max() > maxrange:
-                        maxrange = self.row[thisrow].max()
-                    newindex = np.append(newindex, self.row[thisrow].index.values)
+                    thesemoments.append(self.__row[thisrow])
+                    if not minrange or self.__row[thisrow].min() < minrange:
+                        minrange = self.__row[thisrow].min()
+                    if not maxrange or self.__row[thisrow].max() > maxrange:
+                        maxrange = self.__row[thisrow].max()
+                    newindex = np.append(newindex, self.__row[thisrow].index.values)
                 
                 newindex = np.unique(np.append(newindex, np.arange(newindex.min(), newindex.max())))
                 newindex.sort()
@@ -717,9 +820,12 @@ class RedPanda:
 
 
     def printto(self, figname):
-        for out in self.outputs:
+        for out in self.__outputs:
             if out == 'view':
                 plt.show()
             else:
                 name = '.'.join((figname, out))
                 plt.savefig(name)
+
+class RedPandaInfo(ts.IsDescription):
+    pass

@@ -19,11 +19,11 @@ setup(
     ],
 
     # metadata for upload to PyPI
-    author = "L.De Sano",
+    author = "L. De Sano",
     author_email = "l.desano@campus.unimib.it",
     description = "Time Series analysis with pandas",
     license = "LICENSE.txt",
     keywords = "timeseries pandas bio",
-    url = "https://github.com/luca-dex/RedPanda",   
+    url = "https://github.com/luca-dex/RedPanda"   
     
 )
