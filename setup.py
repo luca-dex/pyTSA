@@ -1,8 +1,8 @@
 from setuptools import setup
 setup(
-    name = "RedPanda",
-    version = "0.1.5",
-    packages=['redpanda'],
+    name = "pyTSA",
+    version = "0.1.6",
+    packages=['pytsa'],
 
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
@@ -19,11 +19,11 @@ setup(
     ],
 
     # metadata for upload to PyPI
-    author = "L. De Sano",
+    author = "L. De Sano, G. Caravagna",
     author_email = "l.desano@campus.unimib.it",
     description = "Time Series analysis with pandas",
     license = "LICENSE.txt",
     keywords = "timeseries pandas bio",
-    url = "https://github.com/luca-dex/RedPanda"   
+    url = "https://github.com/luca-dex/pyTSA"   
     
 )
