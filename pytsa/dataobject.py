@@ -17,13 +17,6 @@ import sys
 import re
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
-import pydoc as doc
-
-def help(arg = None):
-    if arg is None:
-        dir()
-    else:
-        doc.help(arg)
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None, numfiles=None, hdf5=None):
@@ -215,7 +208,7 @@ def loadHdf5(path):
 
 
 
-class RedPanda:
+class DataObject:
     def __init__(self, data, isSet, timemin, timemax, fileindex=None, hdf5name = None, newRp = True):
         # dataset or timeseries
         self.__data = data

@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from .pytsa import *
+from .dataobject import *
