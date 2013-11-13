@@ -17,10 +17,29 @@ import sys
 import re
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
+import pydoc as doc
+
+def help(arg = None):
+    if arg is None:
+        dir()
+    else:
+        doc.help(arg)
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None, numfiles=None, hdf5=None):
-    '''more than one file'''
+    """Return a RedPanda object from a set of time series.
+
+    Keyword arguments:
+    path -- where the file is located, in the form '/myworkingdir/timeseries.ext' (required)
+    commentstring -- the symbol that indicates a comment line like '#' or '//' (default None)
+    colnames -- columns names, in the form ['t', 'col1', 'col2']. If not set the name will be X1, X2 and so on, excluding time axis. (default None)
+    delimiter -- a regex. Default is whitespace. (default [\s\t]+)
+    start -- first row to import based on time axis
+    stop -- last row to import based on time axis
+    ext -- extension of the files to be imported, like data or .txt (default None)
+    every -- percentage of rows to be loaded, equally distributed over the entire file. 0 is no rows, 1 is the entire file. If Default every row will be loaded (default None)
+    numfiles -- in a folder you can load only numfiles files. Files are chosen randomly. (default None)
+    """
 
     # check if pathname is correct
     if not path.endswith('/'):
@@ -214,7 +233,8 @@ class RedPanda:
 
         print('Default start value: ', self.__timemin)
         print('Default stop value: ', self.__timemax)
-        print('You can overwrite these values using setTimemin() and setTimemax()')
+        print('pyTSA data object successfully created, use function \'help()\' \
+            to see a list of functions that you can call on this object.')
 
         if fileindex is not None:
             self.__fileindex = fileindex
