@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division
@@ -20,18 +21,22 @@ from commentedfile import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None, numfiles=None, hdf5=None):
-    """Return a RedPanda object from a set of time series.
+    """Return a pytsa DataObject object from a set of time series.
+
+    Arguments:
+
+    path string : where the folder is located, in the form '/myworkingdir/tsfolder' (required)
 
     Keyword arguments:
-    path -- where the file is located, in the form '/myworkingdir/timeseries.ext' (required)
-    commentstring -- the symbol that indicates a comment line like '#' or '//' (default None)
-    colnames -- columns names, in the form ['t', 'col1', 'col2']. If not set the name will be X1, X2 and so on, excluding time axis. (default None)
-    delimiter -- a regex. Default is whitespace. (default [\s\t]+)
-    start -- first row to import based on time axis
-    stop -- last row to import based on time axis
-    ext -- extension of the files to be imported, like data or .txt (default None)
-    every -- percentage of rows to be loaded, equally distributed over the entire file. 0 is no rows, 1 is the entire file. If Default every row will be loaded (default None)
-    numfiles -- in a folder you can load only numfiles files. Files are chosen randomly. (default None)
+    
+    commentstring string (default None) : the symbol that indicates a comment line like '#' or '//'
+    colnames array-like (default None) : columns names, in the form ['t', 'col1', 'col2']. If not set the name will be X1, X2 and so on, excluding time axis.
+    delimiter string (default [\s\\t]+) : a regex. Default is whitespace.
+    start float : first row to import based on time axis
+    stop float : last row to import based on time axis
+    ext string (default None) : extension of the files to be imported, like data or .txt
+    every float range 0-1 (default None) : percentage of rows to be loaded, equally distributed over the entire file. 0 is no rows, 1 is the entire file. If Default every row will be loaded
+    numfiles int (default None) : in a folder you can load only numfiles files. Files are chosen randomly.
     """
 
     # check if pathname is correct
@@ -165,13 +170,26 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         sys.stdout.flush()
     sys.stdout.write("\n")
 
-    # return RedPanda Obj (isset = True)
+    # return DataObject (isset = True)
 
-    return RedPanda(datadict, True, timemin, timemax, fileindex, hdf5name)
+    return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name)
 
 def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, every=None):
-    '''just one file'''
+    """Return a pytsa DataObject object from a single timeseries.
+
+    Arguments:
+
+    path string : where the file is located, in the form '/myworkingdir/timeseries.ext' (required)
+
+    Keyword Arguments:
+
+    commentstring string (default None) : the symbol that indicates a comment line like '#' or '//'
+    colnames array-like (default None) : columns names, in the forma ['t', 'col1', 'col2']. If not set the name will be X1, X2 and so on, excluding time axis.
+    delimiter string (default [\s\\t]+) : a regex. Default is whitespace.
+    start float : first row to import based on time axis
+    stop float : last row to import based on time axis
+    """
     
     # microvalidation
     if start > stop:
@@ -193,8 +211,8 @@ def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', sta
         header=None, names=colnames, usecols=colid, prefix=col_pref)
     source.close()
 
-    # return RedPanda Obj (isset = False)
-    return RedPanda(timedata, False, timedata.index.values.min(), timedata.index.values.max())
+    # return DataObject Obj (isset = False)
+    return DataObject(timedata, False, timedata.index.values.min(), timedata.index.values.max())
 
 def loadHdf5(path):
     store = ts.openFile(path, 'r')
@@ -204,7 +222,7 @@ def loadHdf5(path):
     timemax = table.attrs.timemax
     fileindex = list(table.attrs.fileindex)
 
-    return RedPanda(store, isSet, timemin, timemax, fileindex, path, newRp = None)
+    return DataObject(store, isSet, timemin, timemax, fileindex, path, newRp = None)
 
 
 
@@ -251,29 +269,87 @@ class DataObject:
             
 
     def getTimemin(self):
+        """Get current start time.
+
+        To get this information you have to do this:
+
+        >>> dataset.getTimemin()
+        0.0"""
         return self.__timemin
 
     def getTimemax(self):
+        """Get current stop time.
+
+         To get this information you have to do this:
+
+        >>> dataset.getTimemax()
+        55.0"""
         return self.__timemax
 
     def getIndex(self):
+        """Names of the files. 
+
+        To get this information you have to do this:
+        
+        >>> timeseries.getIndex()
+        [’timeS-1.data’,
+        ’timeS-2.data’,
+        ’timeS-3.data’]"""
         return self.__fileindex
 
     def getOutputs(self):
+        """List of Active Outputs
+
+        To get information about active outputs you have to do this:
+
+        >>> dataset.getOutputs()
+        [’view’, ’pdf’]"""
         return list(self.__outputs)
 
     def getColumns(self):
+        """Names of the columns. 
+
+        To get information about the names of the columns you have to do this:
+        
+        >>> timeseries.getColumns()
+        [’X1’, ’X2’]"""
         return self.__columns
 
     def setTimemin(self, timemin):
+        """Set new start time.
+
+        Arguments:
+
+        timemin int: 
+        
+        Usage:
+        
+        >>> dataset.setTimemax(15.0)"""
         self.__timemin = timemin
 
     def setTimemax(self, timemax):
+        """Set new start time.
+
+        Arguments:
+
+        timemax int: 
+        
+        Usage:
+        
+        >>> dataset.setTimemax(55.0)"""
         self.__timemax = timemax
 
     
     def createrange(self, label, colname, start, stop, step):
-        """Select 1 column and create a range from start to stop"""
+        """Select a column and create a range from start to stop.
+
+        Arguments:
+
+        label string : name of the range. It will be used as key in a dictionary
+        colname string : name of the column
+        start float: the initial time
+        stop float: the final time
+        step float: This parameter indicates the discretization factor to be used to generate the graph"""
         if not self.__isSet:
             print('createrange works only on dataset')
             return
@@ -284,14 +360,28 @@ class DataObject:
         self.__range[label] = mean_df
 
     def addoutput(self, out):
-        """select outputs from png, pdf, ps, eps and svg"""
+        """Add a new output type.
+
+        Arguments:
+        out string: select outputs from png, pdf, ps, eps and svg
+
+        To add a new output to the output list you have to do this:
+
+        >>> dataset.addOutput('eps')"""
         if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
             self.__outputs.add(out)
         else:
             print(out, 'not in outputs')
 
     def deloutput(self, out):
-        """select outputs from png, pdf, ps, eps and svg"""
+        """Delete an output from output list.
+
+        Arguments:
+        out string: select outputs from png, pdf, ps, eps and svg
+
+        To remove an output from the output list you have to do this:
+
+        >>> dataset.delOutput('svg')"""
         if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
             try:
                 self.__outputs.remove(out)
