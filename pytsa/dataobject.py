@@ -21,7 +21,8 @@ from commentedfile import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None, numfiles=None, hdf5=None):
-    """Return a pytsa DataObject object from a set of time series.
+    """
+    Return a pytsa DataObject object from a set of time series.
 
     Arguments:
 
@@ -176,7 +177,8 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
 def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, every=None):
-    """Return a pytsa DataObject object from a single timeseries.
+    """
+    Return a pytsa DataObject object from a single timeseries.
 
     Arguments:
 
@@ -269,7 +271,8 @@ class DataObject:
             
 
     def getTimemin(self):
-        """Get current start time.
+        """
+        Get current start time.
 
         To get this information you have to do this:
 
@@ -278,7 +281,8 @@ class DataObject:
         return self.__timemin
 
     def getTimemax(self):
-        """Get current stop time.
+        """
+        Get current stop time.
 
          To get this information you have to do this:
 
@@ -287,7 +291,8 @@ class DataObject:
         return self.__timemax
 
     def getIndex(self):
-        """Names of the files. 
+        """
+        Names of the files. 
 
         To get this information you have to do this:
         
@@ -307,7 +312,8 @@ class DataObject:
         return list(self.__outputs)
 
     def getColumns(self):
-        """Names of the columns. 
+        """
+        Names of the columns. 
 
         To get information about the names of the columns you have to do this:
         
@@ -316,7 +322,8 @@ class DataObject:
         return self.__columns
 
     def setTimemin(self, timemin):
-        """Set new start time.
+        """
+        Set new start time.
 
         Arguments:
 
@@ -328,7 +335,8 @@ class DataObject:
         self.__timemin = timemin
 
     def setTimemax(self, timemax):
-        """Set new start time.
+        """
+        Set new start time.
 
         Arguments:
 
@@ -341,7 +349,8 @@ class DataObject:
 
     
     def createrange(self, label, colname, start, stop, step):
-        """Select a column and create a range from start to stop.
+        """
+        Select a column and create a range from start to stop.
 
         Arguments:
 
@@ -360,7 +369,8 @@ class DataObject:
         self.__range[label] = mean_df
 
     def addoutput(self, out):
-        """Add a new output type.
+        """
+        Add a new output type.
 
         Arguments:
         out string: select outputs from png, pdf, ps, eps and svg
@@ -374,7 +384,8 @@ class DataObject:
             print(out, 'not in outputs')
 
     def deloutput(self, out):
-        """Delete an output from output list.
+        """
+        Delete an output from output list.
 
         Arguments:
         out string: select outputs from png, pdf, ps, eps and svg
@@ -424,6 +435,22 @@ class DataObject:
         
 
     def splot(self, start=None, stop=None, columns=None, merge=None, xkcd=None):
+        """
+        Print a single time series or a set of time series.
+
+        Keyword arguments:
+
+        start float (default Timemin) : The initial time 
+        stop float (default Timemax) : The final time
+        columns array-like : columns names, in the form ['X1', 'X2']. If not set all the columns will be considered
+        merge boolean (default None) : If default one column per axis, if True overlaps the axes
+        xkcd boolean (default None) : If you want xkcd-style
+
+        The following code is an example of splot():
+
+        >>> timeseries.splot(stop = 50, merge = True)
+
+        >>> dataset.splot(stop = 100)"""
         if self.__hdf5:
             self.__data = pd.HDFStore(self.__hdf5, 'r')
         if start is None:
@@ -483,6 +510,26 @@ class DataObject:
 
     def mplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
         xkcd=None):
+        """
+        Mean of a dataset.
+
+        mplot() is used to plot the mean of a set of time series. You can select a single
+        column or a set of columns and also merge them. It does not work (obviously) on single time series. 
+        Picks an observation from start to stop every step elements.
+
+        Keyword arguments:
+
+        start number (default Timemin) : The initial time
+        stop number (default Timemax) : The final time
+        step number (default 1) : Used in createRange()
+        columns array-like (default None) : columns names, in the form ['X1', 'X2']. If not set all the columns will be considered
+        merge boolean (default None) : If default one column per axis, if True overlaps the axes
+        xkcd boolean (default None) : If you want xkcd-style
+
+        The following code is an example of mplot():
+
+        >>> dataset.mplot(start = 0, stop = 80)
+        >>> dataset.mplot(start = 0, stop = 80, merge = True)"""
         if start is None:
             start = self.__timemin
         if stop is None:
@@ -529,6 +576,28 @@ class DataObject:
 
     def sdplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
         xkcd=None):
+        """
+        Standard Deviation of a dataset.
+
+        sdplot() is used to plot the standard deviation of a set of time series. 
+        You can select a single column or a set of columns and also merge them. 
+        It does not work (obviously) on single time series.
+        Picks an observation from start to stop every step elements.
+
+        Keyword arguments:
+
+        start number (default Timemin) : The initial time
+        stop number (default Timemax) : The final time
+        step number (default 1) : Used in createRange()
+        columns array-like (default None) : columns names, in the form ['X1', 'X2']. If not set all the columns will be considered
+        merge boolean (default None) : If default one column per axis, if True overlaps the axes
+        xkcd boolean (default None) : If you want xkcd-style
+
+        The following code is an example of sdplot():
+
+        >>> dataset.sdplot(stop = 50)
+        
+        >>> dataset.sdplot(stop = 90, merge = True)"""
         if start is None:
             start = self.__timemin
         if stop is None:
@@ -575,6 +644,25 @@ class DataObject:
 
     def msdplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
         errorbar=None, bardist=5, xkcd=None):
+        """
+        Mean with Standard Deviation.
+
+        msdplot() is used to plot the mean and the standard deviation of a set of time series on the same image. 
+        You can select a single column or a set of columns and also merge them. It doen not work (obviously) on single time series.
+        Picks an observation from start to stop every step elements.
+
+        start number (default Timemin) : The initial time
+        stop number (default Timemax) : The final time
+        step number (default 1) : Used in createRange()
+        columns array-like (defaul None): columns names, in the form ['X1', 'X2']. If not set all the columns will be considered
+        merge boolean (defaul None) : If default one column per axis, if True overlaps the axes
+        xkcd boolean (default None) : If you want xkcd-style
+
+        The following code is an example of msdplot() :
+
+        >>> dataset.msdplot(stop = 90, errorbar = True, bardist = 15)
+
+        >>> dataset.msdplot(stop = 110, merge = True)"""
         if start is None:
             start = self.__timemin
         if stop is None:
@@ -647,6 +735,25 @@ class DataObject:
 
     def pdf(self, time, columns=None, merge=None, binsize=None, numbins=None, \
         normed=False, fit=False, range=None, xkcd=None):
+        """
+        Probability Density Function (PDF).
+
+        pdf() is used to plot the PDF histogram of a set of time series. 
+        pdf() calculates the probability density function of a set of time series in a precise time instant.
+
+        Arguments:
+
+        time number : The time instant
+
+        Keyword arguments:
+
+        columns array-like (default None) : columns names, in the form [’X1’, ’X2’]. If not set all the columns will be considered
+        merge boolean (default None) : If default one column per axis, if True overlaps the axes
+        binsize number (default None) : Size of bins
+        numbins number (default 1) : Number of bins, works if binsize not set.
+        normed boolean (defaul None) : If True histogram will be scaled in range 0.0 - 1.0
+        fit boolean (defaul None) : If True fits the histrogram with a gaussian, works if normed
+        xkcd boolean (defaul None) : If you want xkcd-style"""
         if columns is None:
             columns = self.__columns
         value = float(time)
@@ -726,6 +833,27 @@ class DataObject:
         plt.close()
 
     def pdf3d(self, column, moments, binsize=None, numbins=None, normed=False, fit=False, height=None):
+        """
+        Probability Density Function 3D.
+
+        Calculates the probability density function of a set of time series in an array of time instants
+
+        Arguments:
+
+        column string : column name, in the form 'X1'.
+        time  array-like : The time instants in the form ['10', '22.5', '50']
+
+        Keyword arguments:
+
+        binsize number (default None) : Size of bins
+        numbins number (default 10) : Number of bins, works if binsize not set
+        normed boolean (default None) : If True histogram will be scaled in range 0.0 - 1.0
+        fit boolean (default None) : If True fits the histrogram with a gaussian, works if normed
+        height boolean (default None) : Cuts the upper part of the drawing area at height on the Z-axis
+
+        The following code is an example of pdf3d():
+
+        >>> dataset.pdf3d('X1', [10, 20, 30])"""
         moments = [float(x) for x in moments]
         moments.sort()
         if self.__isSet:
@@ -788,7 +916,27 @@ class DataObject:
             plt.close()
 
     def meq2d(self, start=None, stop=None, columns=None, step=1.0, binsize=None,\
-     numbins=None, normed=True, vmax=None):
+        numbins=None, normed=True, vmax=None):
+        """
+        Master Equation 2D.
+
+        Keyword arguments:
+
+        start number (default Timemin) : The initial time
+        stop number (default Timemax) : The final time
+        step numebr (default 1) : Used in createRange().
+        columns array-like (default None) : columns names, in the form ['X1', 'X2']. If not set all the columns will be considered.
+        binsize number (default None) : Size of bins
+        numbins number (default 10) : Number of bins, works if binsize not set
+        normed boolean (default None) : If True histogram will be scaled in range 0.0 - 1.0
+        fit boolean (default None) : If True fits the histrogram with a gaussian, works if normed
+        vmax number (default None) : Max value displayed on color bar
+
+        The following code is an example of meq2d():
+
+        >>> dataset.meq2d(stop=150)
+
+        >>> dataset.meq2d(columns=['X2'], stop=200, numbins=30)"""
         if start is None:
             start = self.__timemin
         if stop is None:
@@ -857,69 +1005,92 @@ class DataObject:
 
 
     def meq3d(self, column, start=None, stop=None, step=1.0, binsize=None, numbins=None, normed=True, vmax=None):
-            if start is None:
-                start = self.__timemin
-            if stop is None:
-                stop = self.__timemax
-            step = float(step)
-            moments = np.arange(start, stop, step)
-            if self.__isSet:
-                fig = plt.figure()
-                ax = Axes3D(fig)
-                
-                name = 'meq3d'
-                minrange = None
-                maxrange = None
-                newindex = np.array([])
-                thesemoments = []
-                for moment in moments:
-                    thisrow = '_'.join((str(moment), str(column)))
-                    if thisrow not in self.__row:
-                        self.getarow(moment, column)
-                    thesemoments.append(self.__row[thisrow])
-                    if not minrange or self.__row[thisrow].min() < minrange:
-                        minrange = self.__row[thisrow].min()
-                    if not maxrange or self.__row[thisrow].max() > maxrange:
-                        maxrange = self.__row[thisrow].max()
-                    newindex = np.append(newindex, self.__row[thisrow].index.values)
-                
-                newindex = np.unique(np.append(newindex, np.arange(newindex.min(), newindex.max())))
-                newindex.sort()
-                
-                if binsize:
-                    numbins = int((maxrange - minrange) / binsize)
-                if not numbins:
-                    numbins = 10
+        """
+        Master Equation 3D.
 
-                histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[0], numbins=numbins, \
+        Calculates the Master Equation. Uses a 3D surface to display it.
+
+        Arguments:
+
+        column string : column name, in the form 'X1'
+
+        Keyword arguments:
+
+        start number (default Timemin) : The initial time
+        stop number (default Timemax) : The final time
+        step number (default 1) : Used in createRange()
+        binsize number (default None) : Size of bins
+        numbins number (default 10) : Number of bins, works if binsize not set
+        normed boolean (default None) : If True histogram will be scaled in range 0.0 - 1.0
+
+        The following code is an example of meq2d():
+
+        >>> dataset.meq3d('X1', stop = 50)
+
+        >>> dataset.meq3d('X1', start = 10, stop = 100, numbins = 30)"""
+        if start is None:
+            start = self.__timemin
+        if stop is None:
+            stop = self.__timemax
+        step = float(step)
+        moments = np.arange(start, stop, step)
+        if self.__isSet:
+            fig = plt.figure()
+            ax = Axes3D(fig)
+            
+            name = 'meq3d'
+            minrange = None
+            maxrange = None
+            newindex = np.array([])
+            thesemoments = []
+            for moment in moments:
+                thisrow = '_'.join((str(moment), str(column)))
+                if thisrow not in self.__row:
+                    self.getarow(moment, column)
+                thesemoments.append(self.__row[thisrow])
+                if not minrange or self.__row[thisrow].min() < minrange:
+                    minrange = self.__row[thisrow].min()
+                if not maxrange or self.__row[thisrow].max() > maxrange:
+                    maxrange = self.__row[thisrow].max()
+                newindex = np.append(newindex, self.__row[thisrow].index.values)
+            
+            newindex = np.unique(np.append(newindex, np.arange(newindex.min(), newindex.max())))
+            newindex.sort()
+            
+            if binsize:
+                numbins = int((maxrange - minrange) / binsize)
+            if not numbins:
+                numbins = 10
+
+            histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[0], numbins=numbins, \
+                defaultlimits=(minrange, maxrange))
+            if normed:
+                histogram = histogram / sum(histogram)
+            
+            I = np.array(histogram)
+            for j in py.range(1, len(thesemoments)):
+                histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[j], numbins=numbins, \
                     defaultlimits=(minrange, maxrange))
                 if normed:
                     histogram = histogram / sum(histogram)
-                
-                I = np.array(histogram)
-                for j in py.range(1, len(thesemoments)):
-                    histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[j], numbins=numbins, \
-                        defaultlimits=(minrange, maxrange))
-                    if normed:
-                        histogram = histogram / sum(histogram)
-                    I = np.vstack([I, histogram])
+                I = np.vstack([I, histogram])
 
-                value = np.array([low_range + (intbinsize * 0.5)])
-                for index in py.range(1, len(histogram)):
-                    value = np.append(value, value[index-1] + intbinsize)
+            value = np.array([low_range + (intbinsize * 0.5)])
+            for index in py.range(1, len(histogram)):
+                value = np.append(value, value[index-1] + intbinsize)
 
-                X, Y = np.meshgrid(moments, value)
-                surf = ax.plot_surface(X, Y, I.T, rstride=1, cstride=1, cmap=plt.cm.jet, \
-                    linewidth=0, antialiased=False)
-                fig.colorbar(surf, shrink=0.5, aspect=5)
+            X, Y = np.meshgrid(moments, value)
+            surf = ax.plot_surface(X, Y, I.T, rstride=1, cstride=1, cmap=plt.cm.jet, \
+                linewidth=0, antialiased=False)
+            fig.colorbar(surf, shrink=0.5, aspect=5)
 
-                ax.set_xlabel('time')
-                ax.set_ylabel(column)
-                
+            ax.set_xlabel('time')
+            ax.set_ylabel(column)
+            
 
-            self.printto(name)
-            plt.clf()
-            plt.close()
+        self.printto(name)
+        plt.clf()
+        plt.close()
 
 
     def printto(self, figname):
