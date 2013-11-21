@@ -116,15 +116,14 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     # skip dir, parse all file matching ext
 
     queue = multiprocessing.Queue()
-
-    # bisogna rifare il loop!
-
     process = multiprocessing.cpu_count()
+    chunksNumber = int( len(files) / process)
+    chunksList = chunks(files, chunksNumber)
 
-    for fileindex in chunks(files, process):
-
-        p = ImportLooper(fileindex, path, queue, re, every, start, stop)
-        p.start()
+    for fileindex in chunksList:
+        looper = ImportLooper(fileindex, path, queue, r, every, start, stop, \
+            commentstring, delimiter, colnames, colid, col_pref)
+        looper.start()
 
             
 
@@ -133,6 +132,21 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
     fileindex = []
     for _ in files:
+        k, w = queue.get()
+        datadict[k] = w
+
+        # range limit check
+        thismin = w.index.values.min()
+        thismax = w.index.values.max()
+        if thismin < timemin:
+            timemin = thismin
+        if thismax > timemax:
+            timemax = thismax
+
+        fileindex.append(k)
+
+        # progress bar
+
         counter += 1
         if biggerthanone:
             if counter > stepcounter:
@@ -146,9 +160,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
                 sys.stdout.flush()
                 stepcounter += atraitevery
                 traitcounter += 1
-        k, w = queue.get()
-        datadict[k] = w
-        fileindex.append(k)
+        
 
     # always progress bar
     if counter == stepcounter:
@@ -240,7 +252,7 @@ class DataObject:
 
         print('Default start value: ', self.__timemin)
         print('Default stop value: ', self.__timemax)
-        print('pyTSA data object successfully created, use function \'help()\' \
+        print('pyTSA data object successfully created, use function \'help()\' \n \
             to see a list of functions that you can call on this object.')
 
         if fileindex is not None:
