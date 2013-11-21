@@ -16,8 +16,10 @@ import matplotlib.mlab as mlab
 import tables as ts
 import sys
 import re
+import multiprocessing
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
+from importLooper import *
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None, numfiles=None, hdf5=None):
@@ -71,6 +73,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     if hdf5 is None:
         datadict = {}
         hdf5name = None
+        r = None
     else:
         name = hdf5 + '.h5'
         datadict =  pd.HDFStore(name, 'w')  
@@ -80,7 +83,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     # other usefull infos
     timemin = 0.0
     timemax = 0.0
-    fileindex = []
+    
 
     # Only not ending with
     files = [f for f in os.listdir(path) if (os.path.isfile(path + f) )]
@@ -112,41 +115,38 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
     # skip dir, parse all file matching ext
 
-    for filename in files:
-        actualfile = os.path.join(path, filename)
-        datadictname = filename
-        if hdf5:
-            datadictname = 'f' + r.sub('', datadictname)
-        fileindex.append(datadictname)
+    queue = multiprocessing.Queue()
+    process = multiprocessing.cpu_count()
+    chunksNumber = int( len(files) / process)
+    chunksList = chunks(files, chunksNumber)
 
-        # create a fake file and pd.read_csv!
-        try:
-            source = CommentedFile(open(actualfile, 'rb'), every=every, \
-                commentstring=commentstring, low_limit=start, high_limit=stop)
-            datadict[datadictname] = pd.read_csv(source, sep=delimiter, index_col=0, \
-                header=None, names=colnames, usecols=colid, prefix=col_pref)
-            source.close()
+    for fileindex in chunksList:
+        looper = ImportLooper(fileindex, path, queue, r, every, start, stop, \
+            commentstring, delimiter, colnames, colid, col_pref)
+        looper.start()
 
-        # mmm somethings wrong here
-        except ValueError:
-            raise
-            break
+            
 
-        # maybe commentstring is worng
-        except StopIteration:
-            sys.stdout.write("\b" * (progressbarlen+2))
-            print('Warning! In file', actualfile, 'a line starts with NaN')
-            break
+   
+    # return DataObject (isset = True)
+
+    fileindex = []
+    for _ in files:
+        k, w = queue.get()
+        datadict[k] = w
 
         # range limit check
-        thismin = datadict[datadictname].index.values.min()
-        thismax = datadict[datadictname].index.values.max()
+        thismin = w.index.values.min()
+        thismax = w.index.values.max()
         if thismin < timemin:
             timemin = thismin
         if thismax > timemax:
             timemax = thismax
 
-        # progress bar 
+        fileindex.append(k)
+
+        # progress bar
+
         counter += 1
         if biggerthanone:
             if counter > stepcounter:
@@ -160,6 +160,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
                 sys.stdout.flush()
                 stepcounter += atraitevery
                 traitcounter += 1
+        
 
     # always progress bar
     if counter == stepcounter:
@@ -171,7 +172,6 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
         sys.stdout.flush()
     sys.stdout.write("\n")
 
-    # return DataObject (isset = True)
 
     return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name)
 
@@ -226,6 +226,12 @@ def loadHdf5(path):
 
     return DataObject(store, isSet, timemin, timemax, fileindex, path, newRp = None)
 
+def chunks(l, n):
+    """ Yield successive n-sized chunks from l.
+    """
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+
 
 
 class DataObject:
@@ -246,7 +252,7 @@ class DataObject:
 
         print('Default start value: ', self.__timemin)
         print('Default stop value: ', self.__timemax)
-        print('pyTSA data object successfully created, use function \'help()\' \
+        print('pyTSA data object successfully created, use function \'help()\' \n \
             to see a list of functions that you can call on this object.')
 
         if fileindex is not None:
