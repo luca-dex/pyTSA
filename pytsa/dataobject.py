@@ -20,6 +20,8 @@ import multiprocessing
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
 from importLooper import *
+from dataSampler import *
+from itertools import izip_longest
 
 def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
     colid=None, ext=None, every=None, numfiles=None, hdf5=None):
@@ -232,6 +234,10 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
+def grouper(n, iterable):
+    "grouper(3, 'abcdefg') --> ('a','b','c'), ('d','e','f'), ('g', None, None)"
+    return izip_longest(*[iter(iterable)]*n)
+
 
 
 class DataObject:
@@ -370,8 +376,24 @@ class DataObject:
             return
         index = np.arange(start, stop, step)
         mean_df = pd.DataFrame(index=index)
+
+        queueIN = multiprocessing.JoinableQueue()
+        queueOUT = multiprocessing.Queue()
+        process = multiprocessing.cpu_count()
+        
         for k,v in self.__data.iteritems():
-            mean_df.insert(0, k, self.get(v[colname], start, stop, step))
+            queueIN.put((k, v))
+
+        for ts in range(process):
+            sampler = DataSampler(queueIN, queueOUT, start, stop, step, colname)
+            sampler.start()
+
+        queueIN.join()
+
+        while not queueOUT.empty():
+            k, v = queueOUT.get()
+            mean_df.insert(0, k, v)
+
         self.__range[label] = mean_df
 
     def addoutput(self, out):
