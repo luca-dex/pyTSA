@@ -406,7 +406,7 @@ class DataObject:
         To add a new output to the output list you have to do this:
 
         >>> dataset.addOutput('eps')"""
-        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
+        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view', 'txt']:
             self.__outputs.add(out)
         else:
             print(out, 'not in outputs')
@@ -578,6 +578,8 @@ class DataObject:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
+                        if 'txt' in self.__outputs:
+                            self.printFromSeries(self.__range[thisrange].mean(1), thisrange)    
                         self.__range[thisrange].mean(1).plot(label=col)
                     plt.legend(loc='best')
                     plt.title(name)
@@ -588,6 +590,8 @@ class DataObject:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
+                        if 'txt' in self.__outputs:
+                            self.printFromSeries(self.__range[thisrange].mean(1), thisrange)
                         self.__range[thisrange].mean(1).plot(label=col, ax=axes[i])
                         axes[i].set_title(name)
                         axes[i].legend(loc='best')
@@ -1125,9 +1129,21 @@ class DataObject:
         for out in self.__outputs:
             if out == 'view':
                 plt.show()
+            elif out == 'txt':
+                pass
             else:
                 name = '.'.join((figname, out))
                 plt.savefig(name)
+
+    @staticmethod
+    def printFromSeries(series, name):
+        filename = name + '.data'
+        firstrow = '# ' + name
+        with open(filename, 'w') as data:
+            data.write(firstrow)
+            data.write('\n')
+            data.write(series.to_string())
+
 
 class RedPandaInfo(ts.IsDescription):
     pass

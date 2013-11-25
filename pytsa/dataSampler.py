@@ -1,4 +1,4 @@
-import Queue
+from Queue import Empty
 from multiprocessing import Process
 
 class DataSampler(Process):
@@ -16,7 +16,7 @@ class DataSampler(Process):
         while True:
             try:
                 k,v = self.queueIN.get()
-            except Queue.Empty:
+            except Empty:
                 break
             else:
                 sampled = self.get(v[self.colname], self.tmin, self.tmax, self.step)
