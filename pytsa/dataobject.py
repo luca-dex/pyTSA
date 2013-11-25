@@ -117,24 +117,26 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
     # skip dir, parse all file matching ext
 
-    queue = multiprocessing.Queue()
+    queueIN = multiprocessing.JoinableQueue()
+    queueOUT = multiprocessing.Queue()
     process = multiprocessing.cpu_count()
-    chunksNumber = int( len(files) / process)
-    chunksList = chunks(files, chunksNumber)
+    for f in files:
+        queueIN.put(f)
 
-    for fileindex in chunksList:
-        looper = ImportLooper(fileindex, path, queue, r, every, start, stop, \
+
+    for _ in range(process):
+        looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
             commentstring, delimiter, colnames, colid, col_pref)
         looper.start()
-
-            
-
    
     # return DataObject (isset = True)
 
     fileindex = []
-    for _ in files:
-        k, w = queue.get()
+
+    queueIN.join()
+
+    while not queueOUT.empty():
+        k, w = queueOUT.get()
         datadict[k] = w
 
         # range limit check
@@ -384,7 +386,7 @@ class DataObject:
         for k,v in self.__data.iteritems():
             queueIN.put((k, v))
 
-        for ts in range(process):
+        for _ in range(process):
             sampler = DataSampler(queueIN, queueOUT, start, stop, step, colname)
             sampler.start()
 
