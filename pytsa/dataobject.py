@@ -117,25 +117,25 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
     # skip dir, parse all file matching ext
 
-    queueIN = multiprocessing.JoinableQueue()
+    queueIN = multiprocessing.Queue()
     queueOUT = multiprocessing.Queue()
     process = multiprocessing.cpu_count()
     for f in files:
         queueIN.put(f)
 
+    # proc = []
 
     for _ in range(process):
         looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
             commentstring, delimiter, colnames, colid, col_pref)
+        # proc.append(looper)
         looper.start()
    
     # return DataObject (isset = True)
 
     fileindex = []
 
-    queueIN.join()
-
-    while not queueOUT.empty():
+    for _ in files:
         k, w = queueOUT.get()
         datadict[k] = w
 
@@ -164,7 +164,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
                 sys.stdout.flush()
                 stepcounter += atraitevery
                 traitcounter += 1
-        
+    
 
     # always progress bar
     if counter == stepcounter:
@@ -379,20 +379,19 @@ class DataObject:
         index = np.arange(start, stop, step)
         mean_df = pd.DataFrame(index=index)
 
-        queueIN = multiprocessing.JoinableQueue()
+        queueIN = multiprocessing.Queue()
         queueOUT = multiprocessing.Queue()
         process = multiprocessing.cpu_count()
         
         for k,v in self.__data.iteritems():
             queueIN.put((k, v))
 
+
         for _ in range(process):
             sampler = DataSampler(queueIN, queueOUT, start, stop, step, colname)
             sampler.start()
 
-        queueIN.join()
-
-        while not queueOUT.empty():
+        for _ in self.__data.iteritems():
             k, v = queueOUT.get()
             mean_df.insert(0, k, v)
 
@@ -568,6 +567,7 @@ class DataObject:
             columns = self.__columns
         start = float(start)
         stop = float(stop)
+        step = float(step)
         if len(columns) == 1:
             merge = True
 
@@ -576,28 +576,42 @@ class DataObject:
                 if merge:
                     plt.figure()
                     name = 'mean_all_columns'
+                    if 'txt' in self.__outputs:
+                        filename = '_'.join((name, str(columns[0]), str(columns[-1])))
+                        filecolumns = ' '.join(columns)
+                        filetitle = '# mean al columns \n# time ' + filecolumns
+                        filedata = []
+                        filedata.append(np.arange(start, stop, step))
                     for col in columns:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
                         if 'txt' in self.__outputs:
-                            self.printFromSeries(self.__range[thisrange].mean(1), thisrange)    
+                            filedata.append(self.__range[thisrange].mean(1).values)
                         self.__range[thisrange].mean(1).plot(label=col)
                     plt.legend(loc='best')
                     plt.title(name)
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    if 'txt' in self.__outputs:
+                        filename = '_'.join(('mean_all_columns', str(columns[0]), str(columns[-1])))
+                        filecolumns = ' '.join(columns)
+                        filetitle = '# mean al columns \n# time ' + filecolumns
+                        filedata = []
+                        filedata.append(np.arange(start, stop, step))
                     for i, col in enumerate(columns):
                         name = '_'.join(('mean', col))
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
                         if 'txt' in self.__outputs:
-                            self.printFromSeries(self.__range[thisrange].mean(1), thisrange)
+                            filedata.append(self.__range[thisrange].mean(1).values)
                         self.__range[thisrange].mean(1).plot(label=col, ax=axes[i])
                         axes[i].set_title(name)
                         axes[i].legend(loc='best')
                 self.printto(name)
+                if 'txt' in self.__outputs:
+                    self.printFromSeries(filename, filetitle, filedata)
 
         if (xkcd):
             with plt.xkcd():
@@ -640,32 +654,53 @@ class DataObject:
             columns = self.__columns
         start = float(start)
         stop = float(stop)
+        step = float(step)
         if len(columns) == 1:
             merge = True
 
-        def internasSdplot():    
+        def internalSdplot():    
             if self.__isSet:
                 if merge:
                     plt.figure()
-                    name = 'std all columns'
+                    name = 'std_all_columns'
+                    if 'txt' in self.__outputs:
+                        filename = '_'.join((name, str(columns[0]), str(columns[-1])))
+                        filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
+                        filetitle = '# mean al columns \n# time ' + filecolumns
+                        filedata = []
+                        filedata.append(np.arange(start, stop, step))
                     for col in columns:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
+                        if 'txt' in self.__outputs:
+                            filedata.append(self.__range[thisrange].mean(1).values)
+                            filedata.append(self.__range[thisrange].std(1).values)
                         self.__range[thisrange].std(1).plot(label=col)
                     plt.legend(loc='best')
                     plt.title(name)
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    if 'txt' in self.__outputs:
+                        filename = '_'.join(('std_all_columns', str(columns[0]), str(columns[-1])))
+                        filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
+                        filetitle = '# mean al columns \n# time ' + filecolumns
+                        filedata = []
+                        filedata.append(np.arange(start, stop, step))
                     for i, col in enumerate(columns):
                         name = '_'.join(('std', col))
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
+                        if 'txt' in self.__outputs:
+                            filedata.append(self.__range[thisrange].mean(1).values)
+                            filedata.append(self.__range[thisrange].std(1).values)
                         self.__range[thisrange].std(1).plot(label=col, ax=axes[i])
                         axes[i].set_title(name)
                         axes[i].legend(loc='best')
                 self.printto(name)
+                if 'txt' in self.__outputs:
+                    self.printFromSeries(filename, filetitle, filedata)
 
         if (xkcd):
             with plt.xkcd():
@@ -1138,13 +1173,17 @@ class DataObject:
                 plt.savefig(name)
 
     @staticmethod
-    def printFromSeries(series, name):
+    def printFromSeries(name, title, data):
         filename = name + '.data'
-        firstrow = '# ' + name
-        with open(filename, 'w') as data:
-            data.write(firstrow)
-            data.write('\n')
-            data.write(series.to_string())
+        with open(filename, 'w') as f:
+            f.write(title)
+            f.write('\n')
+            for row in zip(*data):
+                cols = [c for c in row]
+                for col in cols:
+                    f.write(str(col))
+                    f.write('\t')
+                f.write('\n')
 
 
 class RedPandaInfo(ts.IsDescription):

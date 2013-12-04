@@ -9,20 +9,17 @@ class DataSampler(Process):
         self.tmax = tmax
         self.step = step
         self.colname = colname
-        
+        self.killReceived = False
         super(DataSampler, self).__init__()
 
     def run(self):
-        while True:
+        while not self.killReceived:
             try:
                 k,v = self.queueIN.get()
             except Empty:
                 break
-            else:
-                sampled = self.get(v[self.colname], self.tmin, self.tmax, self.step)
-                self.queueOUT.put((k, sampled))
-                self.queueIN.task_done()
-
+            sampled = self.get(v[self.colname], self.tmin, self.tmax, self.step)
+            self.queueOUT.put((k, sampled))
 
     @staticmethod
     def get(df, l_limit, h_limit, step):
@@ -38,7 +35,7 @@ class DataSampler(Process):
             try:
                 last_value = df.truncate(before=start, after=now).tail(1).values[0]
             except:
-                pass
+                last_value = to_return[-1]
             to_return.append(last_value)
             start = start + step
             now = now + step
