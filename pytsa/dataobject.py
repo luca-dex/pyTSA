@@ -123,15 +123,14 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     for f in files:
         queueIN.put(f)
 
-    # proc = []
+    proc = []
 
     for _ in range(process):
         looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
             commentstring, delimiter, colnames, colid, col_pref)
-        # proc.append(looper)
         looper.start()
+        proc.append(looper)
    
-    # return DataObject (isset = True)
 
     fileindex = []
 
@@ -164,6 +163,12 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
                 sys.stdout.flush()
                 stepcounter += atraitevery
                 traitcounter += 1
+
+    for p in proc:
+        p.terminate()
+
+    for p in proc:
+        p.join()
     
 
     # always progress bar
@@ -386,14 +391,22 @@ class DataObject:
         for k,v in self.__data.iteritems():
             queueIN.put((k, v))
 
+        proc = []
 
         for _ in range(process):
             sampler = DataSampler(queueIN, queueOUT, start, stop, step, colname)
             sampler.start()
+            proc.append(sampler)
 
         for _ in self.__data.iteritems():
             k, v = queueOUT.get()
             mean_df.insert(0, k, v)
+
+        for p in proc:
+            p.terminate()
+
+        for p in proc:
+            p.join()
 
         self.__range[label] = mean_df
 
@@ -609,9 +622,9 @@ class DataObject:
                         self.__range[thisrange].mean(1).plot(label=col, ax=axes[i])
                         axes[i].set_title(name)
                         axes[i].legend(loc='best')
-                self.printto(name)
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
+                self.printto(name)
 
         if (xkcd):
             with plt.xkcd():
@@ -698,9 +711,9 @@ class DataObject:
                         self.__range[thisrange].std(1).plot(label=col, ax=axes[i])
                         axes[i].set_title(name)
                         axes[i].legend(loc='best')
-                self.printto(name)
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
+                self.printto(name)
 
         if (xkcd):
             with plt.xkcd():
@@ -747,11 +760,20 @@ class DataObject:
             if self.__isSet:
                 if merge:
                     fig = plt.figure()
-                    name = 'mean&std_all_columns'
+                    name = 'mean_std_all_columns'
+                    if 'txt' in self.__outputs:
+                        filename = '_'.join((name, str(columns[0]), str(columns[-1])))
+                        filecolumns = ' '.join(columns)
+                        filetitle = '# mean std all columns \n# time ' + filecolumns
+                        filedata = []
+                        filedata.append(np.arange(start, stop, step))
                     for col in columns:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
+                        if 'txt' in self.__outputs:
+                            filedata.append(self.__range[thisrange].mean(1).values)
+                            filedata.append(self.__range[thisrange].std(1).values)
                         mean = self.__range[thisrange].mean(1)
                         std = self.__range[thisrange].std(1)
                         mean.plot(label=col)
@@ -770,6 +792,12 @@ class DataObject:
                     plt.title(name)
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    if 'txt' in self.__outputs:
+                        filename = '_'.join(('mean_std_all_columns', str(columns[0]), str(columns[-1])))
+                        filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
+                        filetitle = '# mean std all columns \n# time ' + filecolumns
+                        filedata = []
+                        filedata.append(np.arange(start, stop, step))
                     for i, col in enumerate(columns):
                         name = '_'.join(('mean&std', col))
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
@@ -777,6 +805,9 @@ class DataObject:
                             self.createrange(thisrange, col, start, stop, step)
                         mean = self.__range[thisrange].mean(1)
                         std = self.__range[thisrange].std(1)
+                        if 'txt' in self.__outputs:
+                            filedata.append(mean.values)
+                            filedata.append(std.values)
                         mean.plot(label=col, ax=axes[i])
                         if errorbar:
                             xind = [t for j, t in enumerate(mean.index.values) if (j % bardist) == 0]
@@ -791,6 +822,8 @@ class DataObject:
                         axes[i].set_title(name)
                         handles, labels = axes[i].get_legend_handles_labels()
                         axes[i].legend([handles[0]], [labels[0]], loc='best')
+                if 'txt' in self.__outputs:
+                    self.printFromSeries(filename, filetitle, filedata)
                 self.printto(name)
 
         if (xkcd):
