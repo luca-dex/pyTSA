@@ -1,2 +1,5 @@
 v0.1.0, 05.04.2013 -- Initial release.
 v0.1.1, 04.06.2013 -- Renamed to RedPanda. Now with task!
+v0.1.6, 01.11.2013 -- Renamed to pyTSA.
+v0.1.7, 21.11.2013 -- Timeseries are imported using a multiprocess script based on the number of cpu
+v0.1.8, __.11.2013 -- New output type addes: text

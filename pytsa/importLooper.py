@@ -2,13 +2,14 @@ import os
 import pandas as pd
 from multiprocessing import Process
 from commentedfile import *
+from Queue import Empty
 
 class ImportLooper(Process):
-    def __init__(self, fileindex, path, queue, re, every, tmin, tmax, commentstring, \
+    def __init__(self, path, queueIN, queueOUT, re, every, tmin, tmax, commentstring, \
         delimiter, colnames, colid, col_pref):
-        self.fileindex = fileindex
         self.path = path
-        self.queue = queue
+        self.queueIN = queueIN
+        self.queueOUT = queueOUT
         self.re = re
         self.every = every
         self.tmin = tmin
@@ -18,9 +19,16 @@ class ImportLooper(Process):
         self.colnames = colnames
         self.colid = colid
         self.col_pref = col_pref
+        self.killReceived = False
         super(ImportLooper, self).__init__()
+
     def run(self):
-        for filename in self.fileindex:
+        while not self.killReceived:
+            try:
+                filename = self.queueIN.get()
+            except Empty:
+                break
+            
             actualfile = os.path.join(self.path, filename)
             datadictname = filename
             if self.re:
@@ -45,4 +53,7 @@ class ImportLooper(Process):
                 sys.stdout.write("\b" * (progressbarlen+2))
                 print('Warning! In file', actualfile, 'a line starts with NaN')
 
-            self.queue.put((datadictname, toReturn))
+            self.queueOUT.put((datadictname, toReturn))
+
+
+            
