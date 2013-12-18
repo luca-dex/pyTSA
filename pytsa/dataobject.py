@@ -753,6 +753,7 @@ class DataObject:
             columns = self.__columns
         start = float(start)
         stop = float(stop)
+        step = float(step)
         if len(columns) == 1:
             merge = True
 
