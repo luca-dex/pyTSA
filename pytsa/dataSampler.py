@@ -2,7 +2,14 @@ from Queue import Empty
 from multiprocessing import Process
 
 class DataSampler(Process):
-    def __init__(self, queueIN, queueOUT, tmin, tmax, step, colname):
+    def __init__(self, 
+                 queueIN, 
+                 queueOUT, 
+                 tmin, 
+                 tmax, 
+                 step, 
+                 colname):
+    
         self.queueIN = queueIN
         self.queueOUT = queueOUT
         self.tmin = tmin
