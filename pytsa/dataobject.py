@@ -67,9 +67,11 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
 
     # check if delimiter is ok
+    convert_comma = None
     if colid and delimiter != ',':
-        print('column selection work only with delimiter = \',\' (yet)')
-        raise ValueError
+        convert_comma = True
+        delimiter = ','
+        #raise ValueError('column selection work only with delimiter = \',\' (yet)')
 
     # if hdf5 create a HDFStore object in 'w' mode
     if hdf5 is None:
@@ -127,7 +129,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
     for _ in range(process):
         looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
-            commentstring, delimiter, colnames, colid, col_pref)
+            commentstring, delimiter, colnames, colid, col_pref, convert_comma)
         looper.start()
         proc.append(looper)
    
@@ -866,7 +868,7 @@ class DataObject:
             if self.__isSet:
                 if merge:
                     plt.figure()
-                    name = 'pdf'
+                    name = '_'.join(('pdf', str(time)))
                     minrange = None
                     maxrange = None
                     for col in columns:
@@ -901,7 +903,7 @@ class DataObject:
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     for i, col in enumerate(columns):
-                        name = '_'.join(('item_freq', col))
+                        name = '_'.join(('item_freq', str(time), col))
                         thisrow = '_'.join((str(value), str(col)))
                         if thisrow not in self.__row:
                             self.getarow(value, col)
