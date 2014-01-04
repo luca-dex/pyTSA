@@ -537,37 +537,37 @@ class DataObject:
             merge = True
 
         def internalSplot():
+            name = 'Simple Plot'
             if self.__isSet:
                 if merge:
                     plt.figure()
-                    plt.title('merged set')
+                    name = name + ' ' + ' '.join(columns)
                     for i, col in enumerate(columns):
                         for ds in self.__fileindex:
-                            name = '_'.join(('ds_merge', ds, col, str(start), str(stop)))
-                            self.__data[ds][col].truncate(before=start, after=stop).plot()
+                            figname = '_'.join(('ds_merge', ds, col, str(start), str(stop)))
+                            self.__data[ds][col].truncate(before=start, after=stop).plot(color=np.random.rand(3,1))
                 else:
+
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     
 
                     for i, col in enumerate(columns):
-                        name = '_'.join(('ds_col', col, str(start), str(stop)))
-                        axes[i].set_title(name)
+                        figname = '_'.join(('ds_col', col, str(start), str(stop)))
                         
                         
                         for ds in self.__fileindex:
-                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])       
+                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i], color=np.random.rand(3,1))       
             else:
                 if merge:
                     for col in columns:
-                        name = '_'.join(('ts', col, str(start), str(stop)))
-                        self.__data[col].truncate(before=start, after=stop).plot()
+                        figname = '_'.join(('ts', col, str(start), str(stop)))
+                        self.__data[col].truncate(before=start, after=stop).plot(label=col, colormap='jet')
                 else: 
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     for i, col in enumerate(columns):
-                        name = '_'.join(('ds_col', col, str(start), str(stop)))
-                        axes[i].set_title(name)
-                        self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i])
-            self.printto(name)
+                        figname = '_'.join(('ds_col', col, str(start), str(stop)))
+                        self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i], label=col, colormap='jet')
+            self.printto(figname, name)
         
         if (xkcd):
             with plt.xkcd():
@@ -1125,7 +1125,7 @@ class DataObject:
         if self.__isSet:
             fig, axes = plt.subplots(nrows=len(columns), ncols=1)
             for i, column in enumerate(columns):
-                name = 'meq2d'
+                name = 'heatmap'
                 minrange = None
                 maxrange = None
                 newindex = np.array([])
@@ -1174,6 +1174,7 @@ class DataObject:
                     im = axes[i].imshow(I.T, aspect='auto', interpolation='nearest', \
                         extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
                     fig.colorbar(im, ax=axes[i])
+
 
             self.printto(name)
             plt.clf()
@@ -1224,7 +1225,7 @@ class DataObject:
             fig = plt.figure()
             ax = Axes3D(fig)
             
-            name = 'meq3d'
+            name = 'surface'
             minrange = None
             maxrange = None
             newindex = np.array([])
@@ -1279,9 +1280,11 @@ class DataObject:
         plt.close()
 
 
-    def printto(self, figname):
+    def printto(self, figname, name = None):
         for out in self.__outputs:
             if out == 'view':
+                if name:
+                    plt.suptitle(name)
                 plt.show()
             elif out == 'txt':
                 pass
