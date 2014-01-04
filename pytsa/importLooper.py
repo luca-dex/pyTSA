@@ -3,7 +3,7 @@ import pandas as pd
 from multiprocessing import Process
 from commentedfile import *
 from Queue import Empty
-import StringIO
+import cStringIO
 
 class ImportLooper(Process):
     def __init__(self, 
@@ -59,7 +59,7 @@ class ImportLooper(Process):
                     temp_string = ""
                     for r in source:
                         temp_string = temp_string + r + '\n'
-                    toReturn = pd.read_csv(StringIO.StringIO(temp_string), sep=self.delimiter, index_col=0, \
+                    toReturn = pd.read_csv(cStringIO.StringIO(temp_string), sep=self.delimiter, index_col=0, \
                         header=None, names=self.colnames, usecols=self.colid, prefix=self.col_pref)
                 else:
                     toReturn = pd.read_csv(source, sep=self.delimiter, index_col=0, \
