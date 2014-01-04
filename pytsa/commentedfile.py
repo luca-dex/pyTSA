@@ -1,7 +1,13 @@
 class CommentedFile(file):
     """ this class skips comment lines. comment lines start with any of the symbols in commentstring """
-    def __init__(self, f, commentstring=None, low_limit=-float('inf'), high_limit=float('inf'), \
-        every=None, convert_comma=None):
+    def __init__(self, 
+                 f, 
+                 commentstring=None, 
+                 low_limit=-float('inf'), 
+                 high_limit=float('inf'), 
+                 every=None, 
+                 convert_comma=None):
+    
         self.f = f
         if commentstring is None:
             self.comments = '\n'

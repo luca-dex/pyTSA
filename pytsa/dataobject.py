@@ -23,8 +23,17 @@ from importLooper import *
 from dataSampler import *
 from itertools import izip_longest
 
-def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
-    colid=None, ext=None, every=None, numfiles=None, hdf5=None):
+def dataset(path, 
+            commentstring=None, 
+            colnames=None, 
+            delimiter='[\s\t]+', 
+            start=-float('inf'), 
+            stop=float('inf'), 
+            colid=None, 
+            ext=None, 
+            every=None, 
+            numfiles=None, 
+            hdf5=None):
     """
     Return a pytsa DataObject object from a set of time series.
 
@@ -39,6 +48,7 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
     delimiter string (default [\s\\t]+) : a regex. Default is whitespace.
     start float : first row to import based on time axis
     stop float : last row to import based on time axis
+    colid array-like (default None) : columns to import. Must have same length of colnames. First column has to be included. 
     ext string (default None) : extension of the files to be imported, like data or .txt
     every float range 0-1 (default None) : percentage of rows to be loaded, equally distributed over the entire file. 0 is no rows, 1 is the entire file. If Default every row will be loaded
     numfiles int (default None) : in a folder you can load only numfiles files. Files are chosen randomly.
@@ -51,15 +61,13 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
     #times check
     if start > stop:
-        print('maybe start > stop ?\n')
-        raise ValueError
+        raise ValueError('start > stop... Somethings wrong here?\n')
 
 
     # check if len(colnames) and len(colis) are = 
     if colnames and colid:
         if len(colnames) != len(colid):
-            print('colid and colnames must have same length!')
-            raise ValueError
+            raise ValueError('colid and colnames must have same length!')
     if colnames is None:
         col_pref = 'Y'
     else:
@@ -186,8 +194,14 @@ def dataset(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=
 
     return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name)
 
-def timeseries(path, commentstring=None, colnames=None, delimiter='[\s\t]+', start=-float('inf'), stop=float('inf'), \
-    colid=None, every=None):
+def timeseries(path, 
+               commentstring=None, 
+               colnames=None, 
+               delimiter='[\s\t]+', 
+               start=-float('inf'), 
+               stop=float('inf'), 
+               colid=None, 
+               every=None):
     """
     Return a pytsa DataObject object from a single timeseries.
 
@@ -250,7 +264,15 @@ def grouper(n, iterable):
 
 
 class DataObject:
-    def __init__(self, data, isSet, timemin, timemax, fileindex=None, hdf5name = None, newRp = True):
+    def __init__(self, 
+                 data, 
+                 isSet, 
+                 timemin, 
+                 timemax, 
+                 fileindex=None, 
+                 hdf5name = None, 
+                 newRp = True):
+
         # dataset or timeseries
         self.__data = data
         # what's the type
@@ -478,7 +500,13 @@ class DataObject:
         self.__row[label] = pd.Series(to_return)
         
 
-    def splot(self, start=None, stop=None, columns=None, merge=None, xkcd=None):
+    def splot(self, 
+              start=None, 
+              stop=None, 
+              columns=None, 
+              merge=None, 
+              xkcd=None):
+
         """
         Print a single time series or a set of time series.
 
@@ -552,8 +580,14 @@ class DataObject:
         if self.__hdf5:
             self.__data.close()
 
-    def mplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
-        xkcd=None):
+    def mplot(self, 
+              start=None, 
+              stop=None, 
+              columns=None, 
+              step=1, 
+              merge=None, 
+              xkcd=None):
+
         """
         Mean of a dataset.
 
@@ -637,8 +671,14 @@ class DataObject:
         plt.clf()
         plt.close()
 
-    def sdplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
-        xkcd=None):
+    def sdplot(self, 
+               start=None, 
+               stop=None, 
+               columns=None, 
+               step=1, 
+               merge=None, 
+               xkcd=None):
+
         """
         Standard Deviation of a dataset.
 
@@ -726,8 +766,16 @@ class DataObject:
         plt.close()
 
 
-    def msdplot(self, start=None, stop=None, columns=None, step=1, merge=None, \
-        errorbar=None, bardist=5, xkcd=None):
+    def msdplot(self, 
+                start=None, 
+                stop=None, 
+                columns=None, 
+                step=1, 
+                merge=None, 
+                errorbar=None, 
+                bardist=5, 
+                xkcd=None):
+
         """
         Mean with Standard Deviation.
 
@@ -837,8 +885,17 @@ class DataObject:
         plt.clf()
         plt.close()
 
-    def pdf(self, time, columns=None, merge=None, binsize=None, numbins=None, \
-        normed=False, fit=False, range=None, xkcd=None):
+    def pdf(self, 
+            time, 
+            columns=None, 
+            merge=None, 
+            binsize=None, 
+            numbins=None, 
+            normed=False, 
+            fit=False, 
+            range=None, 
+            xkcd=None):
+
         """
         Probability Density Function (PDF).
 
@@ -936,7 +993,15 @@ class DataObject:
         plt.clf()
         plt.close()
 
-    def pdf3d(self, column, moments, binsize=None, numbins=None, normed=False, fit=False, height=None):
+    def pdf3d(self, 
+              column, 
+              moments, 
+              binsize=None, 
+              numbins=None, 
+              normed=False, 
+              fit=False, 
+              height=None):
+
         """
         Probability Density Function 3D.
 
@@ -1019,8 +1084,16 @@ class DataObject:
             plt.clf()
             plt.close()
 
-    def meq2d(self, start=None, stop=None, columns=None, step=1.0, binsize=None,\
-        numbins=None, normed=True, vmax=None):
+    def meq2d(self, 
+              start=None, 
+              stop=None, 
+              columns=None, 
+              step=1.0, 
+              binsize=None, 
+              numbins=None, 
+              normed=True, 
+              vmax=None):
+
         """
         Master Equation 2D.
 
@@ -1108,7 +1181,16 @@ class DataObject:
 
 
 
-    def meq3d(self, column, start=None, stop=None, step=1.0, binsize=None, numbins=None, normed=True, vmax=None):
+    def meq3d(self, 
+              column, 
+              start=None, 
+              stop=None, 
+              step=1.0, 
+              binsize=None, 
+              numbins=None, 
+              normed=True, 
+              vmax=None):
+
         """
         Master Equation 3D.
 
