@@ -505,7 +505,8 @@ class DataObject:
               stop=None, 
               columns=None, 
               merge=None, 
-              xkcd=None):
+              xkcd=None,
+              numfiles=None):
 
         """
         Print a single time series or a set of time series.
@@ -516,6 +517,7 @@ class DataObject:
         stop float (default Timemax) : The final time
         columns array-like : columns names, in the form ['X1', 'X2']. If not set all the columns will be considered
         merge boolean (default None) : If default one column per axis, if True overlaps the axes
+        numfiles int (default None) : Display only first numfiles file
         xkcd boolean (default None) : If you want xkcd-style
 
         The following code is an example of splot():
@@ -537,37 +539,46 @@ class DataObject:
             merge = True
 
         def internalSplot():
+            name = 'Simple Plot'
             if self.__isSet:
+                name = name + ' ' + ' '.join(columns)
                 if merge:
                     plt.figure()
-                    plt.title('merged set')
                     for i, col in enumerate(columns):
+                        drawn = 0
                         for ds in self.__fileindex:
-                            name = '_'.join(('ds_merge', ds, col, str(start), str(stop)))
-                            self.__data[ds][col].truncate(before=start, after=stop).plot()
+                            figname = '_'.join(('ds_merge', ds, col, str(start), str(stop)))
+                            self.__data[ds][col].truncate(before=start, after=stop).plot(color=np.random.rand(3,1))
+                            drawn += 1
+                            if numfiles and drawn == numfiles:
+                                break
                 else:
+
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     
 
                     for i, col in enumerate(columns):
-                        name = '_'.join(('ds_col', col, str(start), str(stop)))
-                        axes[i].set_title(name)
-                        
-                        
+                        figname = '_'.join(('ds_col', col, str(start), str(stop)))  
+                        drawn = 0
                         for ds in self.__fileindex:
-                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i])       
+                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i], color=np.random.rand(3,1))  
+                            drawn += 1
+                            if numfiles and drawn == numfiles:
+                                break
+
             else:
                 if merge:
                     for col in columns:
-                        name = '_'.join(('ts', col, str(start), str(stop)))
-                        self.__data[col].truncate(before=start, after=stop).plot()
+                        figname = '_'.join(('ts', col, str(start), str(stop)))
+                        self.__data[col].truncate(before=start, after=stop).plot(label=col)
+                    plt.legend(loc='best')
                 else: 
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     for i, col in enumerate(columns):
-                        name = '_'.join(('ds_col', col, str(start), str(stop)))
-                        axes[i].set_title(name)
-                        self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i])
-            self.printto(name)
+                        figname = '_'.join(('ds_col', col, str(start), str(stop)))
+                        self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i], label=col)
+                        axes[i].legend(loc='best')
+            self.printto(figname, name)
         
         if (xkcd):
             with plt.xkcd():
@@ -1000,7 +1011,7 @@ class DataObject:
               numbins=None, 
               normed=False, 
               fit=False, 
-              height=None):
+              vmax=None):
 
         """
         Probability Density Function 3D.
@@ -1018,7 +1029,7 @@ class DataObject:
         numbins number (default 10) : Number of bins, works if binsize not set
         normed boolean (default None) : If True histogram will be scaled in range 0.0 - 1.0
         fit boolean (default None) : If True fits the histrogram with a gaussian, works if normed
-        height boolean (default None) : Cuts the upper part of the drawing area at height on the Z-axis
+        vmax float (default None) : Cuts the upper part of the drawing area at vmax on the Z-axis
 
         The following code is an example of pdf3d():
 
@@ -1069,8 +1080,8 @@ class DataObject:
                         gauss = mlab.normpdf(newx, mu, sigma)
                         ax.plot(newx, gauss, zs=i, zdir='y', c='r', ls='--', lw=2)
 
-            if height:
-                ax.set_zlim3d(0, height)
+            if vmax:
+                ax.set_zlim3d(0, vmax)
 
             ax.set_xlabel(column)
             ax.set_ylabel('moments')
@@ -1106,7 +1117,6 @@ class DataObject:
         binsize number (default None) : Size of bins
         numbins number (default 10) : Number of bins, works if binsize not set
         normed boolean (default None) : If True histogram will be scaled in range 0.0 - 1.0
-        fit boolean (default None) : If True fits the histrogram with a gaussian, works if normed
         vmax number (default None) : Max value displayed on color bar
 
         The following code is an example of meq2d():
@@ -1123,9 +1133,10 @@ class DataObject:
         step = float(step)
         moments = np.arange(start, stop, step)
         if self.__isSet:
+            figname = 'Heatmap' + ' ' + ' '.join(columns)
+            name = 'heatmap' + '_'.join(columns) + '_' + str(start) + '_' + str(stop)
             fig, axes = plt.subplots(nrows=len(columns), ncols=1)
             for i, column in enumerate(columns):
-                name = 'meq2d'
                 minrange = None
                 maxrange = None
                 newindex = np.array([])
@@ -1173,9 +1184,11 @@ class DataObject:
                 else:    
                     im = axes[i].imshow(I.T, aspect='auto', interpolation='nearest', \
                         extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
-                    fig.colorbar(im, ax=axes[i])
+                    cbar = fig.colorbar(im, ax=axes[i])
+                    cbar.set_label('probability')
 
-            self.printto(name)
+
+            self.printto(name, figname)
             plt.clf()
             plt.close()
 
@@ -1224,7 +1237,8 @@ class DataObject:
             fig = plt.figure()
             ax = Axes3D(fig)
             
-            name = 'meq3d'
+            figname = 'Surface ' + column 
+            name = 'surface_' + column + '_' + str(start) + '_' + str(stop)
             minrange = None
             maxrange = None
             newindex = np.array([])
@@ -1248,6 +1262,9 @@ class DataObject:
             if not numbins:
                 numbins = 10
 
+            #14 coherenche check
+            numbins += 1
+
             histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[0], numbins=numbins, \
                 defaultlimits=(minrange, maxrange))
             if normed:
@@ -1268,20 +1285,23 @@ class DataObject:
             X, Y = np.meshgrid(moments, value)
             surf = ax.plot_surface(X, Y, I.T, rstride=1, cstride=1, cmap=plt.cm.jet, \
                 linewidth=0, antialiased=False)
-            fig.colorbar(surf, shrink=0.5, aspect=5)
+            cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
+            cbar.set_label('probability')
 
             ax.set_xlabel('time')
             ax.set_ylabel(column)
             
 
-        self.printto(name)
+        self.printto(name, figname)
         plt.clf()
         plt.close()
 
 
-    def printto(self, figname):
+    def printto(self, figname, name = None):
         for out in self.__outputs:
             if out == 'view':
+                if name:
+                    plt.suptitle(name)
                 plt.show()
             elif out == 'txt':
                 pass
