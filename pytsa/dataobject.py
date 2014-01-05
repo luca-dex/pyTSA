@@ -1262,6 +1262,9 @@ class DataObject:
             if not numbins:
                 numbins = 10
 
+            #14 coherenche check
+            numbins += 1
+
             histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[0], numbins=numbins, \
                 defaultlimits=(minrange, maxrange))
             if normed:
