@@ -1184,7 +1184,8 @@ class DataObject:
                 else:    
                     im = axes[i].imshow(I.T, aspect='auto', interpolation='nearest', \
                         extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
-                    fig.colorbar(im, ax=axes[i])
+                    cbar = fig.colorbar(im, ax=axes[i])
+                    cbar.set_label('probability')
 
 
             self.printto(name, figname)
@@ -1281,7 +1282,8 @@ class DataObject:
             X, Y = np.meshgrid(moments, value)
             surf = ax.plot_surface(X, Y, I.T, rstride=1, cstride=1, cmap=plt.cm.jet, \
                 linewidth=0, antialiased=False)
-            fig.colorbar(surf, shrink=0.5, aspect=5)
+            cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
+            cbar.set_label('probability')
 
             ax.set_xlabel('time')
             ax.set_ylabel(column)
