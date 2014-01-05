@@ -1117,7 +1117,6 @@ class DataObject:
         binsize number (default None) : Size of bins
         numbins number (default 10) : Number of bins, works if binsize not set
         normed boolean (default None) : If True histogram will be scaled in range 0.0 - 1.0
-        fit boolean (default None) : If True fits the histrogram with a gaussian, works if normed
         vmax number (default None) : Max value displayed on color bar
 
         The following code is an example of meq2d():
@@ -1134,9 +1133,10 @@ class DataObject:
         step = float(step)
         moments = np.arange(start, stop, step)
         if self.__isSet:
+            figname = 'Heatmap' + ' ' + ' '.join(columns)
+            name = 'heatmap' + '_'.join(columns) + '_' + str(start) + '_' + str(stop)
             fig, axes = plt.subplots(nrows=len(columns), ncols=1)
             for i, column in enumerate(columns):
-                name = 'heatmap'
                 minrange = None
                 maxrange = None
                 newindex = np.array([])
@@ -1187,7 +1187,7 @@ class DataObject:
                     fig.colorbar(im, ax=axes[i])
 
 
-            self.printto(name)
+            self.printto(name, figname)
             plt.clf()
             plt.close()
 
@@ -1236,7 +1236,8 @@ class DataObject:
             fig = plt.figure()
             ax = Axes3D(fig)
             
-            name = 'surface'
+            figname = 'Surface ' + column 
+            name = 'surface_' + column + '_' + str(start) + '_' + str(stop)
             minrange = None
             maxrange = None
             newindex = np.array([])
@@ -1286,7 +1287,7 @@ class DataObject:
             ax.set_ylabel(column)
             
 
-        self.printto(name)
+        self.printto(name, figname)
         plt.clf()
         plt.close()
 
