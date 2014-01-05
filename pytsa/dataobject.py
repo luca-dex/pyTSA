@@ -517,6 +517,7 @@ class DataObject:
         stop float (default Timemax) : The final time
         columns array-like : columns names, in the form ['X1', 'X2']. If not set all the columns will be considered
         merge boolean (default None) : If default one column per axis, if True overlaps the axes
+        numfiles int (default None) : Display only first numfiles file
         xkcd boolean (default None) : If you want xkcd-style
 
         The following code is an example of splot():
@@ -1010,7 +1011,7 @@ class DataObject:
               numbins=None, 
               normed=False, 
               fit=False, 
-              height=None):
+              vmax=None):
 
         """
         Probability Density Function 3D.
@@ -1028,7 +1029,7 @@ class DataObject:
         numbins number (default 10) : Number of bins, works if binsize not set
         normed boolean (default None) : If True histogram will be scaled in range 0.0 - 1.0
         fit boolean (default None) : If True fits the histrogram with a gaussian, works if normed
-        height boolean (default None) : Cuts the upper part of the drawing area at height on the Z-axis
+        vmax float (default None) : Cuts the upper part of the drawing area at vmax on the Z-axis
 
         The following code is an example of pdf3d():
 
@@ -1079,8 +1080,8 @@ class DataObject:
                         gauss = mlab.normpdf(newx, mu, sigma)
                         ax.plot(newx, gauss, zs=i, zdir='y', c='r', ls='--', lw=2)
 
-            if height:
-                ax.set_zlim3d(0, height)
+            if vmax:
+                ax.set_zlim3d(0, vmax)
 
             ax.set_xlabel(column)
             ax.set_ylabel('moments')
