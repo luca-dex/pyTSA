@@ -16,6 +16,7 @@ import matplotlib.mlab as mlab
 import tables as ts
 import sys
 import re
+import time
 import multiprocessing
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
@@ -135,6 +136,8 @@ def dataset(path,
 
     proc = []
 
+    tstart = time.time()
+
     for _ in range(process):
         looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
             commentstring, delimiter, colnames, colid, col_pref, convert_comma)
@@ -191,8 +194,10 @@ def dataset(path,
         sys.stdout.flush()
     sys.stdout.write("\n")
 
+    tstop = time.time()
+    t = tstop - tstart
 
-    return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name)
+    return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name, t = t)
 
 def timeseries(path, 
                commentstring=None, 
@@ -271,7 +276,8 @@ class DataObject:
                  timemax, 
                  fileindex=None, 
                  hdf5name = None, 
-                 newRp = True):
+                 newRp = True,
+                 t = None):
 
         # dataset or timeseries
         self.__data = data
@@ -287,11 +293,6 @@ class DataObject:
         self.__timemax = timemax
         self.__hdf5 = hdf5name
 
-        print('Default start value: ', self.__timemin)
-        print('Default stop value: ', self.__timemax)
-        print('pyTSA data object successfully created, use function \'help()\' \n \
-            to see a list of functions that you can call on this object.')
-
         if fileindex is not None:
             self.__fileindex = fileindex
 
@@ -299,6 +300,29 @@ class DataObject:
             self.__columns = self.__data[self.__fileindex[0]].columns.values.tolist()
         else:
             self.__columns = self.__data.columns.values.tolist()
+        
+        if t:
+            print('loaded ', len(self.__fileindex), ' files in ', round(t, 2), ' s')
+        print('pyTSA data object successfully created, use function \'help()\' \nto see a list of functions that you can call on this object.\n')
+        print('Default start value: ', round(self.__timemin, 6))
+        print('Default stop value:  ', round(self.__timemax, 6))
+        if(self.__isSet):
+            print('\nComplete details for each column loaded:')
+            for col in self.__columns:
+                vmin = []
+                vmax = []
+                vmed = []
+                vstd = []
+                for ds in self.__fileindex:
+                    vmin.append(self.__data[ds][col].min())
+                    vmax.append(self.__data[ds][col].max())
+                    vmed.append(self.__data[ds][col].mean())
+                    vstd.append(self.__data[ds][col].std())
+                print('\nColumn: ', col)
+                print('min:  ', round(min(vmin), 6))
+                print('max:  ', round(max(vmax), 6))
+                print('mean: ', round(np.mean(vmed), 6))
+                print('std:  ', round(np.mean(vstd), 6))
 
         if hdf5name and newRp:
             self.__data.close()
