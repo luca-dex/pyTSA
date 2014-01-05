@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(
     name = "pyTSA",
-    version = "0.1.9",
+    version = "0.1.10",
     packages=['pytsa'],
 
     # Project uses reStructuredText, so ensure that the docutils get
