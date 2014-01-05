@@ -505,7 +505,8 @@ class DataObject:
               stop=None, 
               columns=None, 
               merge=None, 
-              xkcd=None):
+              xkcd=None,
+              numfiles=None):
 
         """
         Print a single time series or a set of time series.
@@ -539,34 +540,43 @@ class DataObject:
         def internalSplot():
             name = 'Simple Plot'
             if self.__isSet:
+                name = name + ' ' + ' '.join(columns)
                 if merge:
                     plt.figure()
-                    name = name + ' ' + ' '.join(columns)
                     for i, col in enumerate(columns):
+                        drawn = 0
                         for ds in self.__fileindex:
                             figname = '_'.join(('ds_merge', ds, col, str(start), str(stop)))
                             self.__data[ds][col].truncate(before=start, after=stop).plot(color=np.random.rand(3,1))
+                            drawn += 1
+                            if numfiles and drawn == numfiles:
+                                break
                 else:
 
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     
 
                     for i, col in enumerate(columns):
-                        figname = '_'.join(('ds_col', col, str(start), str(stop)))
-                        
-                        
+                        figname = '_'.join(('ds_col', col, str(start), str(stop)))  
+                        drawn = 0
                         for ds in self.__fileindex:
-                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i], color=np.random.rand(3,1))       
+                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i], color=np.random.rand(3,1))  
+                            drawn += 1
+                            if numfiles and drawn == numfiles:
+                                break
+
             else:
                 if merge:
                     for col in columns:
                         figname = '_'.join(('ts', col, str(start), str(stop)))
-                        self.__data[col].truncate(before=start, after=stop).plot(label=col, colormap='jet')
+                        self.__data[col].truncate(before=start, after=stop).plot(label=col)
+                    plt.legend(loc='best')
                 else: 
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     for i, col in enumerate(columns):
                         figname = '_'.join(('ds_col', col, str(start), str(stop)))
-                        self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i], label=col, colormap='jet')
+                        self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i], label=col)
+                        axes[i].legend(loc='best')
             self.printto(figname, name)
         
         if (xkcd):
