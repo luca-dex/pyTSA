@@ -589,6 +589,7 @@ class DataObject:
                             drawn += 1
                             if numfiles and drawn == numfiles:
                                 break
+                    fig.tight_layout()
 
             else:
                 if merge:
@@ -602,6 +603,7 @@ class DataObject:
                         figname = '_'.join(('ds_col', col, str(start), str(stop)))
                         self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i], label=col)
                         axes[i].legend(loc='best')
+                    fig.tight_layout()
             self.printto(filename, figname, 'traces/')
         
         if (xkcd):
@@ -690,6 +692,7 @@ class DataObject:
                             filedata.append(self.__range[thisrange].mean(1).values)
                         self.__range[thisrange].mean(1).plot(label=col, ax=axes[i])
                         axes[i].legend(loc='best')
+                    fig.tight_layout()
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -782,6 +785,7 @@ class DataObject:
                             filedata.append(self.__range[thisrange].std(1).values)
                         self.__range[thisrange].std(1).plot(label=col, ax=axes[i])
                         axes[i].legend(loc='best')
+                    fig.tight_layout()
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -898,6 +902,7 @@ class DataObject:
                             lower.plot(style='k--', ax=axes[i], legend=False)
                         handles, labels = axes[i].get_legend_handles_labels()
                         axes[i].legend([handles[0]], [labels[0]], loc='best')
+                    fig.tight_layout()
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -1008,6 +1013,7 @@ class DataObject:
                                 axes[i].plot(bins, y, 'r--', linewidth = 2)
 
                         axes[i].legend(loc='best')
+                    fig.tight_layout()
                 self.printto(filename, figname, 'p-density/')
 
         if (xkcd):
@@ -1203,6 +1209,7 @@ class DataObject:
                         extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
                     cbar = fig.colorbar(im, ax=axes[i])
                     cbar.set_label('probability')
+            fig.tight_layout()
 
 
             self.printto(filename, figname, 'm-equation/')
