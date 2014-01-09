@@ -657,10 +657,10 @@ class DataObject:
 
         def internalMplot():
             if self.__isSet:
-                figname = 'mean all columns'
+                figname = 'mean'
                 if merge:
                     plt.figure()
-                    filename = '_'.join((name, str(columns[0]), str(columns[-1]), str(start), str(stop)))
+                    filename = '_'.join(('mean_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
@@ -676,7 +676,7 @@ class DataObject:
                     plt.legend(loc='best')
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    filename = '_'.join(('mean_all_columns', str(columns[0]), str(columns[-1]), str(start), str(stop)))
+                    filename = '_'.join(('mean', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
@@ -692,7 +692,7 @@ class DataObject:
                         axes[i].legend(loc='best')
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
-                self.printto(filename, figname, 'averanges/')
+                self.printto(filename, figname, 'averages/')
 
         if (xkcd):
             with plt.xkcd():
@@ -747,11 +747,11 @@ class DataObject:
 
         def internalSdplot():    
             if self.__isSet:
+                figname = 'standard deviation'
                 if merge:
                     plt.figure()
-                    name = 'std_all_columns'
+                    filename = '_'.join(('std_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
-                        filename = '_'.join((name, str(columns[0]), str(columns[-1])))
                         filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -765,17 +765,15 @@ class DataObject:
                             filedata.append(self.__range[thisrange].std(1).values)
                         self.__range[thisrange].std(1).plot(label=col)
                     plt.legend(loc='best')
-                    plt.title(name)
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    filename = '_'.join(('std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
-                        filename = '_'.join(('std_all_columns', str(columns[0]), str(columns[-1])))
                         filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
                         filedata.append(np.arange(start, stop, step))
                     for i, col in enumerate(columns):
-                        name = '_'.join(('std', col))
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
@@ -783,11 +781,10 @@ class DataObject:
                             filedata.append(self.__range[thisrange].mean(1).values)
                             filedata.append(self.__range[thisrange].std(1).values)
                         self.__range[thisrange].std(1).plot(label=col, ax=axes[i])
-                        axes[i].set_title(name)
                         axes[i].legend(loc='best')
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
-                self.printto(name)
+                self.printto(filename, figname, 'averages/')
 
         if (xkcd):
             with plt.xkcd():
@@ -840,11 +837,11 @@ class DataObject:
 
         def internalMsdplot():    
             if self.__isSet:
+                figname = 'mean and standard deviation'
                 if merge:
                     fig = plt.figure()
-                    name = 'mean_std_all_columns'
+                    filename = '_'.join(('mean_std_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
-                        filename = '_'.join((name, str(columns[0]), str(columns[-1])))
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
@@ -871,17 +868,15 @@ class DataObject:
                             lower.plot(style='k--', legend=False)
                     patches, labels = fig.get_axes()[0].get_legend_handles_labels()
                     fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
-                    plt.title(name)
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    filename = '_'.join(('mean_std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
-                        filename = '_'.join(('mean_std_all_columns', str(columns[0]), str(columns[-1])))
                         filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
                         filedata.append(np.arange(start, stop, step))
                     for i, col in enumerate(columns):
-                        name = '_'.join(('mean&std', col))
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
@@ -901,12 +896,11 @@ class DataObject:
                             lower = mean - std
                             upper.plot(style='k--', ax=axes[i], legend=False)
                             lower.plot(style='k--', ax=axes[i], legend=False)
-                        axes[i].set_title(name)
                         handles, labels = axes[i].get_legend_handles_labels()
                         axes[i].legend([handles[0]], [labels[0]], loc='best')
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
-                self.printto(name)
+                self.printto(filename, figname, 'averages/')
 
         if (xkcd):
             with plt.xkcd():
@@ -947,6 +941,7 @@ class DataObject:
         normed boolean (defaul None) : If True histogram will be scaled in range 0.0 - 1.0
         fit boolean (defaul None) : If True fits the histrogram with a gaussian, works if normed
         xkcd boolean (defaul None) : If you want xkcd-style"""
+        time = float(time)
         if columns is None:
             columns = self.__columns
         value = float(time)
@@ -955,9 +950,10 @@ class DataObject:
 
         def internalPdf(time, binsize, numbins, normed, fit, range):    
             if self.__isSet:
+                figname = 'probability density function'
                 if merge:
+                    filename = '_'.join(('pdf_merge', str(columns[0]), str(columns[-1]), str(time)))
                     plt.figure()
-                    name = '_'.join(('pdf', str(time)))
                     minrange = None
                     maxrange = None
                     for col in columns:
@@ -988,11 +984,10 @@ class DataObject:
                                 plt.plot(bins, y, 'r--', linewidth=2)
 
                     plt.legend(loc='best')
-                    plt.title(name)
                 else:
+                    filename = '_'.join(('pdf', str(columns[0]), str(columns[-1]), str(time)))
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
                     for i, col in enumerate(columns):
-                        name = '_'.join(('item_freq', str(time), col))
                         thisrow = '_'.join((str(value), str(col)))
                         if thisrow not in self.__row:
                             self.getarow(value, col)
@@ -1012,9 +1007,8 @@ class DataObject:
                                 y = mlab.normpdf(bins, mu, sigma)
                                 axes[i].plot(bins, y, 'r--', linewidth = 2)
 
-                        axes[i].set_title(name)
                         axes[i].legend(loc='best')
-                self.printto(name)
+                self.printto(filename, figname, 'p-density/')
 
         if (xkcd):
             with plt.xkcd():
@@ -1057,8 +1051,9 @@ class DataObject:
         >>> dataset.pdf3d('X1', [10, 20, 30])"""
         moments = [float(x) for x in moments]
         moments.sort()
+        figname = 'probability density function'
+        filename = '_'.join(('pdf_3d', column, str(moments[0]), str(moments[-1])))
         if self.__isSet:
-            name = 'pdf'
             minrange = None
             maxrange = None
             for moment in moments:
@@ -1112,7 +1107,7 @@ class DataObject:
             ax.set_yticks(yticks)
             ax.set_yticklabels(ytick_labels)
 
-            self.printto(name)
+            self.printto(filename, figname, 'p-density/')
             plt.clf()
             plt.close()
 
@@ -1153,9 +1148,10 @@ class DataObject:
             columns = self.__columns
         step = float(step)
         moments = np.arange(start, stop, step)
+        
+        figname = 'Heatmap' + ' ' + ' '.join(columns)
+        filename = '_'.join(('heatmap', columns[0], columns[-1], str(start), str(stop)))
         if self.__isSet:
-            figname = 'Heatmap' + ' ' + ' '.join(columns)
-            name = 'heatmap' + '_'.join(columns) + '_' + str(start) + '_' + str(stop)
             fig, axes = plt.subplots(nrows=len(columns), ncols=1)
             for i, column in enumerate(columns):
                 minrange = None
@@ -1209,7 +1205,7 @@ class DataObject:
                     cbar.set_label('probability')
 
 
-            self.printto(name, figname)
+            self.printto(filename, figname, 'm-equation/')
             plt.clf()
             plt.close()
 
@@ -1254,12 +1250,12 @@ class DataObject:
             stop = self.__timemax
         step = float(step)
         moments = np.arange(start, stop, step)
+        figname = 'Surface ' + column 
+        filename = '_'.join(('surface', column, str(start), str(stop)))
         if self.__isSet:
             fig = plt.figure()
             ax = Axes3D(fig)
             
-            figname = 'Surface ' + column 
-            name = 'surface_' + column + '_' + str(start) + '_' + str(stop)
             minrange = None
             maxrange = None
             newindex = np.array([])
@@ -1313,16 +1309,16 @@ class DataObject:
             ax.set_ylabel(column)
             
 
-        self.printto(name, figname)
+        self.printto(filename, figname, 'm-equation/')
         plt.clf()
         plt.close()
 
 
     def printto(self, filename, figname = None, path = ''):
+        if figname:
+            plt.suptitle(figname)
         for out in self.__outputs:
             if out == 'view':
-                if figname:
-                    plt.suptitle(figname)
                 plt.show()
             elif out == 'txt':
                 pass
