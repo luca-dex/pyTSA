@@ -292,6 +292,7 @@ class DataObject:
         self.__timemin = timemin
         self.__timemax = timemax
         self.__hdf5 = hdf5name
+        self.__fpath = ''
 
         if fileindex is not None:
             self.__fileindex = fileindex
@@ -563,15 +564,15 @@ class DataObject:
             merge = True
 
         def internalSplot():
-            name = 'Simple Plot'
+            figname = 'Simple Plot'
             if self.__isSet:
-                name = name + ' ' + ' '.join(columns)
+                figname = figname + ' ' + ' '.join(columns)
                 if merge:
+                    filename = '_'.join(('ds_merge', columns[0], columns[-1], str(start), str(stop)))
                     plt.figure()
                     for i, col in enumerate(columns):
                         drawn = 0
                         for ds in self.__fileindex:
-                            figname = '_'.join(('ds_merge', ds, col, str(start), str(stop)))
                             self.__data[ds][col].truncate(before=start, after=stop).plot(color=np.random.rand(3,1))
                             drawn += 1
                             if numfiles and drawn == numfiles:
@@ -579,10 +580,9 @@ class DataObject:
                 else:
 
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    
+                    filename = '_'.join(('ds', columns[0], columns[-1], str(start), str(stop)))
 
-                    for i, col in enumerate(columns):
-                        figname = '_'.join(('ds_col', col, str(start), str(stop)))  
+                    for i, col in enumerate(columns): 
                         drawn = 0
                         for ds in self.__fileindex:
                             self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i], color=np.random.rand(3,1))  
@@ -602,7 +602,7 @@ class DataObject:
                         figname = '_'.join(('ds_col', col, str(start), str(stop)))
                         self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i], label=col)
                         axes[i].legend(loc='best')
-            self.printto(figname, name)
+            self.printto(filename, figname, 'traces/')
         
         if (xkcd):
             with plt.xkcd():
@@ -657,11 +657,11 @@ class DataObject:
 
         def internalMplot():
             if self.__isSet:
+                figname = 'mean all columns'
                 if merge:
                     plt.figure()
-                    name = 'mean_all_columns'
+                    filename = '_'.join((name, str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
-                        filename = '_'.join((name, str(columns[0]), str(columns[-1])))
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -674,28 +674,25 @@ class DataObject:
                             filedata.append(self.__range[thisrange].mean(1).values)
                         self.__range[thisrange].mean(1).plot(label=col)
                     plt.legend(loc='best')
-                    plt.title(name)
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    filename = '_'.join(('mean_all_columns', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
-                        filename = '_'.join(('mean_all_columns', str(columns[0]), str(columns[-1])))
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
                         filedata.append(np.arange(start, stop, step))
                     for i, col in enumerate(columns):
-                        name = '_'.join(('mean', col))
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
                         if 'txt' in self.__outputs:
                             filedata.append(self.__range[thisrange].mean(1).values)
                         self.__range[thisrange].mean(1).plot(label=col, ax=axes[i])
-                        axes[i].set_title(name)
                         axes[i].legend(loc='best')
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
-                self.printto(name)
+                self.printto(filename, figname, 'averanges/')
 
         if (xkcd):
             with plt.xkcd():
@@ -1321,17 +1318,20 @@ class DataObject:
         plt.close()
 
 
-    def printto(self, figname, name = None):
+    def printto(self, filename, figname = None, path = ''):
         for out in self.__outputs:
             if out == 'view':
-                if name:
-                    plt.suptitle(name)
+                if figname:
+                    plt.suptitle(figname)
                 plt.show()
             elif out == 'txt':
                 pass
             else:
-                name = '.'.join((figname, out))
-                plt.savefig(name)
+                fig = '.'.join((filename, out))
+                if not os.path.isdir(path):
+                    os.makedirs(path)
+                fname = path + fig
+                plt.savefig(fname)
 
     @staticmethod
     def printFromSeries(name, title, data):
