@@ -579,7 +579,10 @@ class DataObject:
                                 break
                 else:
 
+
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    h = (4 * len(columns)) +1
+                    fig.set_size_inches(8, h)
                     filename = '_'.join(('ds', columns[0], columns[-1], str(start), str(stop)))
 
                     for i, col in enumerate(columns): 
@@ -589,7 +592,7 @@ class DataObject:
                             drawn += 1
                             if numfiles and drawn == numfiles:
                                 break
-                    fig.tight_layout()
+                    fig.tight_layout(rect = [0, 0, 1, 0.95])
 
             else:
                 if merge:
@@ -603,7 +606,7 @@ class DataObject:
                         figname = '_'.join(('ds_col', col, str(start), str(stop)))
                         self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i], label=col)
                         axes[i].legend(loc='best')
-                    fig.tight_layout()
+                    fig.tight_layout(rect = [0, 0, 1, 0.95])
             self.printto(filename, figname, 'traces/')
         
         if (xkcd):
@@ -678,6 +681,9 @@ class DataObject:
                     plt.legend(loc='best')
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    h = (4 * len(columns)) +1
+                    fig.set_size_inches(8, h)
+                    fig.subplots_adjust(wspace = 1)
                     filename = '_'.join(('mean', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join(columns)
@@ -692,7 +698,7 @@ class DataObject:
                             filedata.append(self.__range[thisrange].mean(1).values)
                         self.__range[thisrange].mean(1).plot(label=col, ax=axes[i])
                         axes[i].legend(loc='best')
-                    fig.tight_layout()
+                    fig.tight_layout(rect = [0, 0, 1, 0.95])
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -770,6 +776,9 @@ class DataObject:
                     plt.legend(loc='best')
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    h = (4 * len(columns)) + 1
+                    fig.set_size_inches(8, h)
+                    fig.subplots_adjust(wspace = 1)
                     filename = '_'.join(('std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
@@ -785,7 +794,7 @@ class DataObject:
                             filedata.append(self.__range[thisrange].std(1).values)
                         self.__range[thisrange].std(1).plot(label=col, ax=axes[i])
                         axes[i].legend(loc='best')
-                    fig.tight_layout()
+                    fig.tight_layout(rect = [0, 0, 1, 0.95])
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -836,6 +845,7 @@ class DataObject:
             columns = self.__columns
         start = float(start)
         stop = float(stop)
+        step = float(step)
         if len(columns) == 1:
             merge = True
 
@@ -874,6 +884,8 @@ class DataObject:
                     fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
                 else:
                     fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+                    h = (4 * len(columns)) + 1
+                    fig.set_size_inches(8, h)
                     filename = '_'.join(('mean_std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
@@ -902,7 +914,7 @@ class DataObject:
                             lower.plot(style='k--', ax=axes[i], legend=False)
                         handles, labels = axes[i].get_legend_handles_labels()
                         axes[i].legend([handles[0]], [labels[0]], loc='best')
-                    fig.tight_layout()
+                    fig.tight_layout(rect = [0, 0, 1, 0.95])
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -1013,7 +1025,7 @@ class DataObject:
                                 axes[i].plot(bins, y, 'r--', linewidth = 2)
 
                         axes[i].legend(loc='best')
-                    fig.tight_layout()
+                    fig.tight_layout(rect = [0, 0, 1, 0.95])
                 self.printto(filename, figname, 'p-density/')
 
         if (xkcd):
@@ -1159,6 +1171,8 @@ class DataObject:
         filename = '_'.join(('heatmap', columns[0], columns[-1], str(start), str(stop)))
         if self.__isSet:
             fig, axes = plt.subplots(nrows=len(columns), ncols=1)
+            h = (4 * len(columns)) + 1
+            fig.set_size_inches(8, h)
             for i, column in enumerate(columns):
                 minrange = None
                 maxrange = None
@@ -1209,7 +1223,7 @@ class DataObject:
                         extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
                     cbar = fig.colorbar(im, ax=axes[i])
                     cbar.set_label('probability')
-            fig.tight_layout()
+            fig.tight_layout(rect = [0, 0, 1, 0.95])
 
 
             self.printto(filename, figname, 'm-equation/')
