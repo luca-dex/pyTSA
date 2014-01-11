@@ -556,8 +556,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        if columns is None:
-            columns = self.__columns
+        columns = self.columnsCheck(columns)
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -652,8 +651,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        if columns is None:
-            columns = self.__columns
+        columns = self.columnsCheck(columns)
         start = float(start)
         stop = float(stop)
         step = float(step)
@@ -746,8 +744,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        if columns is None:
-            columns = self.__columns
+        columns = self.columnsCheck(columns)
         start = float(start)
         stop = float(stop)
         step = float(step)
@@ -841,8 +838,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        if columns is None:
-            columns = self.__columns
+        columns = self.columnsCheck(columns)
         start = float(start)
         stop = float(stop)
         step = float(step)
@@ -959,8 +955,7 @@ class DataObject:
         fit boolean (defaul None) : If True fits the histrogram with a gaussian, works if normed
         xkcd boolean (defaul None) : If you want xkcd-style"""
         time = float(time)
-        if columns is None:
-            columns = self.__columns
+        columns = self.columnsCheck(columns)
         value = float(time)
         if len(columns) == 1:
             merge = True
@@ -1162,8 +1157,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        if columns is None:
-            columns = self.__columns
+        columns = self.columnsCheck(columns)
         step = float(step)
         moments = np.arange(start, stop, step)
         
@@ -1362,6 +1356,17 @@ class DataObject:
                     f.write(str(col))
                     f.write('\t')
                 f.write('\n')
+
+    def columnsCheck(self, col):
+        if col is None:
+            return self.__columns
+        if isinstance(col, str):
+            col = col.split()
+        for c in col:
+            if c not in self.__columns:
+                error = 'Column ' + c + ' not in columns'
+                raise ValueError(error)
+        return col
 
 
 class RedPandaInfo(ts.IsDescription):
