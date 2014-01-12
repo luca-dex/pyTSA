@@ -531,7 +531,10 @@ class DataObject:
               columns=None, 
               merge=None, 
               xkcd=None,
-              numfiles=None):
+              numfiles=None,
+              layout=None,
+              hsize = 4,
+              wsize = 8):
 
         """
         Print a single time series or a set of time series.
@@ -556,7 +559,11 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
+        if layout and merge:
+            raise ValueError('Layout and merge is not a good idea')
         columns = self.columnsCheck(columns)
+        if layout is None:
+            layout = (len(columns), 1)
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -578,19 +585,25 @@ class DataObject:
                                 break
                 else:
 
-
-                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    h = (4 * len(columns)) +1
-                    fig.set_size_inches(8, h)
+                    r, c = layout
+                    if (r * c) < len(columns):
+                        raise ValueError('too columns to represent')
+                    fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                    h = (hsize * r) +1
+                    w = (wsize * c)
+                    fig.set_size_inches(w, h)
                     filename = '_'.join(('ds', columns[0], columns[-1], str(start), str(stop)))
 
-                    for i, col in enumerate(columns): 
-                        drawn = 0
-                        for ds in self.__fileindex:
-                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i], color=np.random.rand(3,1))  
-                            drawn += 1
-                            if numfiles and drawn == numfiles:
-                                break
+                    actualCol = 0
+                    for i in range(r):
+                        for j in range(c):
+                            drawn = 0
+                            for ds in self.__fileindex:
+                                self.__data[ds][columns[actualCol]].truncate(before=start, after=stop).plot(ax=axes[i][j], color=np.random.rand(3,1))  
+                                drawn += 1
+                                if numfiles and drawn == numfiles:
+                                    break
+                            actualCol += 1
                     fig.tight_layout(rect = [0, 0, 1, 0.95])
 
             else:
