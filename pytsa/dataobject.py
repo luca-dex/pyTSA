@@ -596,7 +596,11 @@ class DataObject:
 
                     actualCol = 0
                     for i in range(r):
+                        if actualCol >= len(columns):
+                            break
                         for j in range(c):
+                            if actualCol >= len(columns):
+                                break
                             drawn = 0
                             for ds in self.__fileindex:
                                 self.__data[ds][columns[actualCol]].truncate(before=start, after=stop).plot(ax=axes[i][j], color=np.random.rand(3,1))  
