@@ -531,7 +531,10 @@ class DataObject:
               columns=None, 
               merge=None, 
               xkcd=None,
-              numfiles=None):
+              numfiles=None,
+              layout=None,
+              hsize = 4,
+              wsize = 8):
 
         """
         Print a single time series or a set of time series.
@@ -556,7 +559,11 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
+        if layout and merge:
+            raise ValueError('Layout and merge is not a good idea')
         columns = self.columnsCheck(columns)
+        if layout is None:
+            layout = (len(columns), 1)
         start = float(start)
         stop = float(stop)
         if len(columns) == 1:
@@ -578,19 +585,29 @@ class DataObject:
                                 break
                 else:
 
-
-                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    h = (4 * len(columns)) +1
-                    fig.set_size_inches(8, h)
+                    r, c = layout
+                    if (r * c) < len(columns):
+                        raise ValueError('too columns to represent')
+                    fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                    h = (hsize * r) +1
+                    w = (wsize * c)
+                    fig.set_size_inches(w, h)
                     filename = '_'.join(('ds', columns[0], columns[-1], str(start), str(stop)))
 
-                    for i, col in enumerate(columns): 
-                        drawn = 0
-                        for ds in self.__fileindex:
-                            self.__data[ds][col].truncate(before=start, after=stop).plot(ax=axes[i], color=np.random.rand(3,1))  
-                            drawn += 1
-                            if numfiles and drawn == numfiles:
+                    actualCol = 0
+                    for i in range(r):
+                        if actualCol >= len(columns):
+                            break
+                        for j in range(c):
+                            if actualCol >= len(columns):
                                 break
+                            drawn = 0
+                            for ds in self.__fileindex:
+                                self.__data[ds][columns[actualCol]].truncate(before=start, after=stop).plot(ax=axes[i][j], color=np.random.rand(3,1))  
+                                drawn += 1
+                                if numfiles and drawn == numfiles:
+                                    break
+                            actualCol += 1
                     fig.tight_layout(rect = [0, 0, 1, 0.95])
 
             else:
@@ -625,7 +642,10 @@ class DataObject:
               columns=None, 
               step=1, 
               merge=None, 
-              xkcd=None):
+              xkcd=None,
+              layout=None,
+              hsize = 4,
+              wsize = 8):
 
         """
         Mean of a dataset.
@@ -651,7 +671,11 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
+        if layout and merge:
+            raise ValueError('Layout and merge is not a good idea')
         columns = self.columnsCheck(columns)
+        if layout is None:
+            layout = (len(columns), 1)
         start = float(start)
         stop = float(stop)
         step = float(step)
@@ -678,25 +702,42 @@ class DataObject:
                         self.__range[thisrange].mean(1).plot(label=col)
                     plt.legend(loc='best')
                 else:
-                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    h = (4 * len(columns)) +1
-                    fig.set_size_inches(8, h)
-                    fig.subplots_adjust(wspace = 1)
+                    r, c = layout
+                    if (r * c) < len(columns):
+                        raise ValueError('too columns to represent')
+                    fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                    h = (hsize * r) +1
+                    w = (wsize * c)
+                    fig.set_size_inches(w, h)
                     filename = '_'.join(('mean', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
                         filedata.append(np.arange(start, stop, step))
-                    for i, col in enumerate(columns):
-                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                        if thisrange not in self.__range:
-                            self.createrange(thisrange, col, start, stop, step)
-                        if 'txt' in self.__outputs:
-                            filedata.append(self.__range[thisrange].mean(1).values)
-                        self.__range[thisrange].mean(1).plot(label=col, ax=axes[i])
-                        axes[i].legend(loc='best')
+
+                    # plot block
+                    actualCol = 0
+                    for i in range(r):
+                        if actualCol >= len(columns):
+                            break
+                        for j in range(c):
+                            if actualCol >= len(columns):
+                                break
+                            thisrange = '_'.join((str(start), str(stop), str(step), str(columns[actualCol])))
+                            if thisrange not in self.__range:
+                                self.createrange(thisrange, columns[actualCol], start, stop, step)
+                            if 'txt' in self.__outputs:
+                                filedata.append(self.__range[thisrange].mean(1).values)
+                            self.__range[thisrange].mean(1).plot(label=columns[actualCol], ax=axes[i][j])
+                            axes[i][j].legend(loc='best')
+                            actualCol += 1
                     fig.tight_layout(rect = [0, 0, 1, 0.95])
+
+
+
+
+
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -716,7 +757,10 @@ class DataObject:
                columns=None, 
                step=1, 
                merge=None, 
-               xkcd=None):
+               xkcd=None,
+               layout=None,
+               hsize = 4,
+               wsize = 8):
 
         """
         Standard Deviation of a dataset.
@@ -744,7 +788,11 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
+        if layout and merge:
+            raise ValueError('Layout and merge is not a good idea')
         columns = self.columnsCheck(columns)
+        if layout is None:
+            layout = (len(columns), 1)
         start = float(start)
         stop = float(stop)
         step = float(step)
@@ -772,26 +820,40 @@ class DataObject:
                         self.__range[thisrange].std(1).plot(label=col)
                     plt.legend(loc='best')
                 else:
-                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    h = (4 * len(columns)) + 1
-                    fig.set_size_inches(8, h)
-                    fig.subplots_adjust(wspace = 1)
+                    r, c = layout
+                    if (r * c) < len(columns):
+                        raise ValueError('too columns to represent')
+                    fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                    h = (hsize * r) +1
+                    w = (wsize * c)
+                    fig.set_size_inches(w, h)
                     filename = '_'.join(('std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
-                        filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
+                        filecolumns = ' '.join([cl + '_mean ' + cl + '_std' for cl in columns])
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
                         filedata.append(np.arange(start, stop, step))
-                    for i, col in enumerate(columns):
-                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                        if thisrange not in self.__range:
-                            self.createrange(thisrange, col, start, stop, step)
-                        if 'txt' in self.__outputs:
-                            filedata.append(self.__range[thisrange].mean(1).values)
-                            filedata.append(self.__range[thisrange].std(1).values)
-                        self.__range[thisrange].std(1).plot(label=col, ax=axes[i])
-                        axes[i].legend(loc='best')
+
+                    # graphics block
+                    actualCol = 0
+                    for i in range(r):
+                        if actualCol >= len(columns):
+                            break
+                        for j in range(c):
+                            if actualCol >= len(columns):
+                                break
+                            thisrange = '_'.join((str(start), str(stop), str(step), str(columns[actualCol])))
+                            if thisrange not in self.__range:
+                                self.createrange(thisrange, columns[actualCol], start, stop, step)
+                            if 'txt' in self.__outputs:
+                                filedata.append(self.__range[thisrange].mean(1).values)
+                                filedata.append(self.__range[thisrange].std(1).values)
+                            self.__range[thisrange].std(1).plot(label=columns[actualCol], ax=axes[i][j])
+                            axes[i][j].legend(loc='best')
+                            actualCol += 1
+
                     fig.tight_layout(rect = [0, 0, 1, 0.95])
+
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -813,7 +875,10 @@ class DataObject:
                 merge=None, 
                 errorbar=None, 
                 bardist=5, 
-                xkcd=None):
+                xkcd=None,
+                layout=None,
+                hsize = 4,
+                wsize = 8):
 
         """
         Mean with Standard Deviation.
@@ -838,7 +903,11 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
+        if layout and merge:
+            raise ValueError('Layout and merge is not a good idea')
         columns = self.columnsCheck(columns)
+        if layout is None:
+            layout = (len(columns), 1)
         start = float(start)
         stop = float(stop)
         step = float(step)
@@ -879,37 +948,51 @@ class DataObject:
                     patches, labels = fig.get_axes()[0].get_legend_handles_labels()
                     fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
                 else:
-                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    h = (4 * len(columns)) + 1
-                    fig.set_size_inches(8, h)
+                    r, c = layout
+                    if (r * c) < len(columns):
+                        raise ValueError('too columns to represent')
+                    fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                    h = (hsize * r) +1
+                    w = (wsize * c)
+                    fig.set_size_inches(w, h)
                     filename = '_'.join(('mean_std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
-                        filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
+                        filecolumns = ' '.join([cl + '_mean ' + cl + '_std' for cl in columns])
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
                         filedata.append(np.arange(start, stop, step))
-                    for i, col in enumerate(columns):
-                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                        if thisrange not in self.__range:
-                            self.createrange(thisrange, col, start, stop, step)
-                        mean = self.__range[thisrange].mean(1)
-                        std = self.__range[thisrange].std(1)
-                        if 'txt' in self.__outputs:
-                            filedata.append(mean.values)
-                            filedata.append(std.values)
-                        mean.plot(label=col, ax=axes[i])
-                        if errorbar:
-                            xind = [t for j, t in enumerate(mean.index.values) if (j % bardist) == 0]
-                            yval = [t for j, t in enumerate(mean.values) if (j % bardist) == 0]
-                            yerr = [t for j, t in enumerate(std.values) if (j % bardist) == 0]
-                            axes[i].errorbar(xind, yval, yerr=yerr, fmt=None)
-                        else:
-                            upper = mean + std
-                            lower = mean - std
-                            upper.plot(style='k--', ax=axes[i], legend=False)
-                            lower.plot(style='k--', ax=axes[i], legend=False)
-                        handles, labels = axes[i].get_legend_handles_labels()
-                        axes[i].legend([handles[0]], [labels[0]], loc='best')
+
+                    # graphics block    
+                    actualCol = 0
+                    for i in range(r):
+                        if actualCol >= len(columns):
+                            break
+                        for j in range(c):
+                            if actualCol >= len(columns):
+                                break
+                            thisrange = '_'.join((str(start), str(stop), str(step), str(columns[actualCol])))
+                            if thisrange not in self.__range:
+                                self.createrange(thisrange, columns[actualCol], start, stop, step)
+                            mean = self.__range[thisrange].mean(1)
+                            std = self.__range[thisrange].std(1)
+                            if 'txt' in self.__outputs:
+                                filedata.append(mean.values)
+                                filedata.append(std.values)
+                            mean.plot(label=columns[actualCol], ax=axes[i][j])
+                            if errorbar:
+                                xind = [t for j, t in enumerate(mean.index.values) if (j % bardist) == 0]
+                                yval = [t for j, t in enumerate(mean.values) if (j % bardist) == 0]
+                                yerr = [t for j, t in enumerate(std.values) if (j % bardist) == 0]
+                                axes[i][j].errorbar(xind, yval, yerr=yerr, fmt=None)
+                            else:
+                                upper = mean + std
+                                lower = mean - std
+                                upper.plot(style='k--', ax=axes[i][j], legend=False)
+                                lower.plot(style='k--', ax=axes[i][j], legend=False)
+                            handles, labels = axes[i][j].get_legend_handles_labels()
+                            axes[i][j].legend([handles[0]], [labels[0]], loc='best')
+                            actualCol += 1
+
                     fig.tight_layout(rect = [0, 0, 1, 0.95])
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
@@ -933,7 +1016,10 @@ class DataObject:
             normed=False, 
             fit=False, 
             range=None, 
-            xkcd=None):
+            xkcd=None,
+            layout=None,
+            hsize = 4,
+            wsize = 8):
 
         """
         Probability Density Function (PDF).
@@ -956,11 +1042,16 @@ class DataObject:
         xkcd boolean (defaul None) : If you want xkcd-style"""
         time = float(time)
         columns = self.columnsCheck(columns)
+        if layout is None:
+            layout = (len(columns), 1)
         value = float(time)
         if len(columns) == 1:
             merge = True
 
-        def internalPdf(time, binsize, numbins, normed, fit, range):    
+        if numbins is None:
+            numbins = 10
+
+        def internalPdf(nbins):    
             if self.__isSet:
                 figname = 'probability density function'
                 if merge:
@@ -977,19 +1068,17 @@ class DataObject:
                         if not maxrange or self.__row[thisrow].max() > maxrange:
                             maxrange = self.__row[thisrow].max()
                     print('range: ', minrange, ' - ', maxrange)
+                    
                     if binsize:
-                        numbins = int((maxrange - minrange) / binsize)
-                    if not numbins:
-                        numbins = 10
+                        nbins = int((maxrange - minrange) / binsize)
 
                     for col in columns:  
                         thisrow = '_'.join((str(value), str(col)))       
-                        n, bins, patches = plt.hist(self.__row[thisrow].values, range=[minrange, maxrange], bins=numbins, \
+                        n, bins, patches = plt.hist(self.__row[thisrow].values, range=[minrange, maxrange], bins=nbins, \
                             normed=normed, alpha=0.5, label=col)
                         if fit:
                             if not normed:
-                                print ('Fit only if normed')
-                                fit = False
+                                raise ValueError('Fit only if normed')
                             else:
                                 (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
                                 y = mlab.normpdf(bins, mu, sigma)
@@ -998,36 +1087,49 @@ class DataObject:
                     plt.legend(loc='best')
                 else:
                     filename = '_'.join(('pdf', str(columns[0]), str(columns[-1]), str(time)))
-                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    for i, col in enumerate(columns):
-                        thisrow = '_'.join((str(value), str(col)))
-                        if thisrow not in self.__row:
-                            self.getarow(value, col)
-                        if binsize:
-                            numbins = int((self.__row[thisrow].max() - self.__row[thisrow].min()) / binsize)
-                        if not numbins:
-                            numbins = 10
-                        n, bins, patches = axes[i].hist(self.__row[thisrow].values, bins=numbins, range=range,\
-                            normed=normed, alpha=0.75, label=col)
-                        
-                        if fit:
-                            if not normed:
-                                print ('Fit only if normed')
-                                fit = False
-                            else:
-                                (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
-                                y = mlab.normpdf(bins, mu, sigma)
-                                axes[i].plot(bins, y, 'r--', linewidth = 2)
+                    r, c = layout
+                    if (r * c) < len(columns):
+                        raise ValueError('too columns to represent')
+                    fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                    h = (hsize * r) +1
+                    w = (wsize * c)
+                    fig.set_size_inches(w, h)
 
-                        axes[i].legend(loc='best')
+                    # graphics block    
+                    actualCol = 0
+                    for i in py.range(r):
+                        if actualCol >= len(columns):
+                            break
+                        for j in py.range(c):
+                            if actualCol >= len(columns):
+                                break
+                            thisrow = '_'.join((str(value), str(columns[actualCol])))
+                            if thisrow not in self.__row:
+                                self.getarow(value, columns[actualCol])
+                            if binsize:
+                                nbins = int((self.__row[thisrow].max() - self.__row[thisrow].min()) / binsize)
+                            n, bins, patches = axes[i][j].hist(self.__row[thisrow].values, bins=nbins, range=range,\
+                                normed=normed, alpha=0.75, label=columns[actualCol])
+                            
+                            if fit:
+                                if not normed:
+                                    raise ValueError('Fit only if normed')
+                                else:
+                                    (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
+                                    y = mlab.normpdf(bins, mu, sigma)
+                                    axes[i][j].plot(bins, y, 'r--', linewidth = 2)
+
+                            axes[i][j].legend(loc='best')
+                            actualCol += 1
+
                     fig.tight_layout(rect = [0, 0, 1, 0.95])
                 self.printto(filename, figname, 'p-density/')
 
         if (xkcd):
             with plt.xkcd():
-                internalPdf(time, binsize, numbins, normed, fit, range)
+                internalPdf(numbins)
         else:
-            internalPdf(time, binsize, numbins, normed, fit, range)                
+            internalPdf(numbins)                
         
         plt.clf()
         plt.close()
@@ -1132,7 +1234,9 @@ class DataObject:
               binsize=None, 
               numbins=None, 
               normed=True, 
-              vmax=None):
+              vmax=None,
+              hsize = 4,
+              wsize = 8):
 
         """
         Master Equation 2D.
@@ -1153,29 +1257,47 @@ class DataObject:
         >>> dataset.meq2d(stop=150)
 
         >>> dataset.meq2d(columns=['X2'], stop=200, numbins=30)"""
+
+        # layour has been removed from parameters
+        layout = None
+        
         if start is None:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
         columns = self.columnsCheck(columns)
+        if layout is None:
+            layout = (len(columns), 1)
         step = float(step)
         moments = np.arange(start, stop, step)
         
         figname = 'Heatmap' + ' ' + ' '.join(columns)
         filename = '_'.join(('heatmap', columns[0], columns[-1], str(start), str(stop)))
         if self.__isSet:
-            fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-            h = (4 * len(columns)) + 1
-            fig.set_size_inches(8, h)
-            for i, column in enumerate(columns):
+            r, c = layout
+            if (r * c) < len(columns):
+                raise ValueError('too columns to represent')
+            fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+            h = (hsize * r) +1
+            w = (wsize * c)
+            fig.set_size_inches(w, h)
+
+            # graphics block    
+            actualCol = 0
+            for q in py.range(r):
+                if actualCol >= len(columns):
+                    break
+                for j in py.range(c):
+                    if actualCol >= len(columns):
+                        break
                 minrange = None
                 maxrange = None
                 newindex = np.array([])
                 thesemoments = []
                 for moment in moments:
-                    thisrow = '_'.join((str(moment), str(column)))
+                    thisrow = '_'.join((str(moment), str(columns[actualCol])))
                     if thisrow not in self.__row:
-                        self.getarow(moment, column)
+                        self.getarow(moment, columns[actualCol])
                     thesemoments.append(self.__row[thisrow])
                     if not minrange or self.__row[thisrow].min() < minrange:
                         minrange = self.__row[thisrow].min()
@@ -1197,8 +1319,8 @@ class DataObject:
                     histogram = histogram / sum(histogram)
                 
                 I = np.array(histogram)
-                for j in py.range(1, len(thesemoments)):
-                    histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[j], numbins=numbins, \
+                for k in py.range(1, len(thesemoments)):
+                    histogram, low_range, intbinsize, extrapoints = stats.histogram(thesemoments[k], numbins=numbins, \
                         defaultlimits=(minrange, maxrange))
                     if normed:
                         histogram = histogram / sum(histogram)
@@ -1208,17 +1330,14 @@ class DataObject:
                 for index in py.range(1, len(histogram)):
                     value = np.append(value, value[index-1] + intbinsize)
 
-                if len(columns) == 1:
-                    im = axes.imshow(I.T, aspect='auto', interpolation='nearest', \
-                        extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
-                    fig.colorbar(im, ax=axes)
-                else:    
-                    im = axes[i].imshow(I.T, aspect='auto', interpolation='nearest', \
-                        extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
-                    cbar = fig.colorbar(im, ax=axes[i])
-                    cbar.set_label('probability')
-            fig.tight_layout(rect = [0, 0, 1, 0.95])
 
+                im = axes[q][j].imshow(I.T, aspect='auto', interpolation='nearest', \
+                    extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
+                cbar = fig.colorbar(im, ax=axes[q][j])
+                cbar.set_label('probability')
+                actualCol += 1
+
+            fig.tight_layout(rect = [0, 0, 1, 0.95])
 
             self.printto(filename, figname, 'm-equation/')
             plt.clf()
