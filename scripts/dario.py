@@ -13,11 +13,13 @@ PDFTIMES = [5, 10, 25, 50, 75, 100]
 MEQTIME_FROM = 0
 MEQTIME_TO = 100
 
-# NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'X', 'Y']
-NAMES = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8']
+COLID = range(9)
+COLNAMES = ['t', 'A', 'B', 'C', 'D', 'E', 'F', 'X', 'Y']
+NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'X', 'Y']
+#NAMES = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8']
 
 ####### Load the dataset
-t = tsa.dataset(FOLDER, commentstring='#')
+t = tsa.dataset(FOLDER, commentstring='#', colid=COLID, colnames=COLNAMES)
 
 ####### Set up the output terminal
 t.deloutput('view')
