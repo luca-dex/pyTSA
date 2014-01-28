@@ -101,8 +101,8 @@ def dataset(path,
     # Only not ending with
     files = [f for f in os.listdir(path) if (os.path.isfile(path + f) )]
     if ext:
-        badfiles = [f for f in os.listdir(path) if ((os.path.isfile(path + f) ) and ext not in f)]
-        files = [x for x in files if x not in badfiles]
+        #badfiles = [f for f in os.listdir(path) if (ext not in f and os.path.isfile(path + f))]
+        files = [x for x in files if ext in x]
     if numfiles:
         files = files[:numfiles]
 
