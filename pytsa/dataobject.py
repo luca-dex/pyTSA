@@ -677,7 +677,13 @@ class DataObject:
         if self.__hdf5:
             self.__data.close()
 
-    def mplot(self, 
+    def mplot(self):
+        """
+        Just to prevent error...
+        """
+        raise NameError('Sorry sir, no more mplot(). Try use aplot()!')
+
+    def aplot(self, 
               start=None, 
               stop=None, 
               columns=None, 
@@ -689,9 +695,9 @@ class DataObject:
               wsize = 8):
 
         """
-        Mean of a dataset.
+        Average of a dataset.
 
-        mplot() is used to plot the mean of a set of time series. You can select a single
+        aplot() is used to plot the average of a set of time series. You can select a single
         column or a set of columns and also merge them. It does not work (obviously) on single time series. 
         Picks an observation from start to stop every step elements.
 
@@ -706,8 +712,8 @@ class DataObject:
 
         The following code is an example of mplot():
 
-        >>> dataset.mplot(start = 0, stop = 80)
-        >>> dataset.mplot(start = 0, stop = 80, merge = True)"""
+        >>> dataset.aplot(start = 0, stop = 80)
+        >>> dataset.aplot(start = 0, stop = 80, merge = True)"""
         if start is None:
             start = self.__timemin
         if stop is None:
