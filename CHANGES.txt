@@ -9,4 +9,5 @@ v0.1.10, 08.01.2014 -- Fix Issue #10 (https://github.com/luca-dex/pyTSA/issues/1
 v0.1.11, 09.01.2014 -- Tight layout
 v0.1.12, 11.01.2014 -- Fix Issue #6 (https://github.com/luca-dex/pyTSA/issues/6)
 v0.2.0, 12.01.2014 -- Grid layout
-v0.2.1, 20.01.2014 -- From file.endswith to file.find
+v0.2.1, 20.01.2014 -- From file.endswith to in
+v0.2.2, 13.01.2014 -- pdf smooth - xlabel and ylabel on splot
