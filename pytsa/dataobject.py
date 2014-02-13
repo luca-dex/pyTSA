@@ -534,7 +534,9 @@ class DataObject:
               numfiles=None,
               layout=None,
               hsize = 4,
-              wsize = 8):
+              wsize = 8,
+              xlabel = 'time',
+              ylabel = 'value'):
 
         """
         Print a single time series or a set of time series.
@@ -574,15 +576,19 @@ class DataObject:
             if self.__isSet:
                 figname = figname + ' ' + ' '.join(columns)
                 if merge:
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111) 
                     filename = '_'.join(('ds_merge', columns[0], columns[-1], str(start), str(stop)))
-                    plt.figure()
                     for i, col in enumerate(columns):
                         drawn = 0
                         for ds in self.__fileindex:
-                            self.__data[ds][col].truncate(before=start, after=stop).plot(color=np.random.rand(3,1))
+                            data = self.__data[ds][col].truncate(before=start, after=stop)
+                            data.plot(ax=ax, color=np.random.rand(3,1))
                             drawn += 1
                             if numfiles and drawn == numfiles:
                                 break
+                    ax.set_xlabel(xlabel)
+                    ax.set_ylabel(ylabel)
                 else:
 
                     r, c = layout
@@ -603,26 +609,61 @@ class DataObject:
                                 break
                             drawn = 0
                             for ds in self.__fileindex:
-                                self.__data[ds][columns[actualCol]].truncate(before=start, after=stop).plot(ax=axes[i][j], color=np.random.rand(3,1))  
+                                data = self.__data[ds][columns[actualCol]].truncate(before=start, after=stop)
+                                data.plot(ax=axes[i][j], color=np.random.rand(3,1))
+                                axes[i][j].set_xlabel('') 
                                 drawn += 1
                                 if numfiles and drawn == numfiles:
                                     break
                             actualCol += 1
                     fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    ax = fig.add_subplot(111, frame_on=False, visible=False)
+                    ax.set_xticks([]) 
+                    ax.set_yticks([]) 
+                    ax.set_xlabel(xlabel, labelpad=20)
+                    ax.set_ylabel(ylabel, labelpad=50)
 
             else:
+                figname = figname + ' ' + ' '.join(columns)
                 if merge:
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111) 
+                    filename = '_'.join(('ts_merge', columns[0], columns[-1], str(start), str(stop)))
                     for col in columns:
-                        figname = '_'.join(('ts', col, str(start), str(stop)))
-                        self.__data[col].truncate(before=start, after=stop).plot(label=col)
+                        data = self.__data[col].truncate(before=start, after=stop)
+                        data.plot(ax=ax, label=col)
                     plt.legend(loc='best')
+                    ax.set_xlabel(xlabel)
+                    ax.set_ylabel(ylabel)
                 else: 
-                    fig, axes = plt.subplots(nrows=len(columns), ncols=1)
-                    for i, col in enumerate(columns):
-                        figname = '_'.join(('ds_col', col, str(start), str(stop)))
-                        self.__data[col].truncate(before=start, after=stop).plot(ax=axes[i], label=col)
-                        axes[i].legend(loc='best')
-                    fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    filename = '_'.join(('ts', columns[0], columns[-1], str(start), str(stop)))
+                    r, c = layout
+                    if (r * c) < len(columns):
+                        raise ValueError('too columns to represent')
+                    fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                    h = (hsize * r) +1
+                    w = (wsize * c)
+                    fig.set_size_inches(w, h)
+                    actualCol = 0
+                    for i in range(r):
+                        if actualCol >= len(columns):
+                            break
+                        for j in range(c):
+                            if actualCol >= len(columns):
+                                break
+                            data = self.__data[columns[actualCol]].truncate(before=start, after=stop)
+                            data.plot(ax=axes[i][j], label=columns[actualCol])
+                            axes[i][j].legend(loc='best')
+                            axes[i][j].set_xlabel('')
+                            actualCol += 1
+
+                    fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+                    ax = fig.add_subplot(111, frame_on=False)
+                    ax.set_xticks([]) 
+                    ax.set_yticks([]) 
+                    ax.set_xlabel(xlabel, labelpad=20)
+                    ax.set_ylabel(ylabel, labelpad=50)
+                    
             self.printto(filename, figname, 'traces/')
         
         if (xkcd):
@@ -1081,8 +1122,9 @@ class DataObject:
                                 raise ValueError('Fit only if normed')
                             else:
                                 (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
-                                y = mlab.normpdf(bins, mu, sigma)
-                                plt.plot(bins, y, 'r--', linewidth=2)
+                                x = np.arange(minrange, maxrange, ((maxrange-minrange) / 100))
+                                y = mlab.normpdf(x, mu, sigma)
+                                plt.plot(x, y, 'r--', linewidth=2)
 
                     plt.legend(loc='best')
                 else:
@@ -1106,6 +1148,8 @@ class DataObject:
                             thisrow = '_'.join((str(value), str(columns[actualCol])))
                             if thisrow not in self.__row:
                                 self.getarow(value, columns[actualCol])
+                            minrange = self.__row[thisrow].min()
+                            maxrange = self.__row[thisrow].max()
                             if binsize:
                                 nbins = int((self.__row[thisrow].max() - self.__row[thisrow].min()) / binsize)
                             n, bins, patches = axes[i][j].hist(self.__row[thisrow].values, bins=nbins, range=range,\
@@ -1116,8 +1160,9 @@ class DataObject:
                                     raise ValueError('Fit only if normed')
                                 else:
                                     (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
-                                    y = mlab.normpdf(bins, mu, sigma)
-                                    axes[i][j].plot(bins, y, 'r--', linewidth = 2)
+                                    x = np.arange(minrange, maxrange, ((maxrange-minrange) / 100))
+                                    y = mlab.normpdf(x, mu, sigma)
+                                    axes[i][j].plot(x, y, 'r--', linewidth = 2)
 
                             axes[i][j].legend(loc='best')
                             actualCol += 1
