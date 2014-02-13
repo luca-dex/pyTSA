@@ -523,7 +523,29 @@ class DataObject:
                 fromthists = 0.0
             to_return = np.append(to_return, fromthists)
         self.__row[label] = pd.Series(to_return)
-        
+
+    def getacolumn(self, col, start, stop, step, filename = None):
+        '''
+        filename  -> dataset
+        !filename -> timeseries
+        '''
+        start = float(start)
+        stop = float(stop)
+        step = float(step)
+        if filename:
+            pass
+        else:
+            to_return = np.array([])
+            while start < stop:
+                try:
+                    value = self.__data[col].truncate(after=start).tail().values[0]
+                except:
+                    value = 0.0
+                to_return = np.append(to_return, value)
+                start += step
+        print(to_return)
+        return to_return
+
 
     def splot(self, 
               start=None, 
@@ -671,6 +693,140 @@ class DataObject:
                 internalSplot()
         else:
             internalSplot()
+
+        
+        plt.close()
+        if self.__hdf5:
+            self.__data.close()
+        
+
+    def phspace(self,
+                columns,
+                start=None, 
+                stop=None,
+                step=1,
+                xkcd=None,
+                numfiles=None,
+                layout=None,
+                hsize = 4,
+                wsize = 8,
+                xlabel = '',
+                ylabel = ''):
+
+        """
+        Print the phase space of 2 columns
+
+        Keyword arguments:
+
+        columns array-like : columns names, in the form ['X1', 'X2']. If not set all the columns will be considered
+        start float (default Timemin) : The initial time 
+        stop float (default Timemax) : The final time
+        numfiles int (default None) : Display only first numfiles file
+        xkcd boolean (default None) : If you want xkcd-style
+
+        The following code is an example of splot():
+
+        >>> timeseries.phspace(['X1', 'X2'], stop = 50)
+
+        >>> dataset.phspace(['X3', 'X5'], stop = 100)"""
+        if self.__hdf5:
+            self.__data = pd.HDFStore(self.__hdf5, 'r')
+        if start is None:
+            start = self.__timemin
+        if stop is None:
+            stop = self.__timemax
+        if layout and merge:
+            raise ValueError('Layout and merge is not a good idea')
+        columns = self.columnsCheck(columns)
+        if layout is None:
+            layout = (1, 1)
+            if len(columns) != 2:
+                raise ValueError('Columns must have length = 2')
+        start = float(start)
+        stop = float(stop)
+        step = float(step)
+
+        def internalPhspace():
+            figname = 'Phase Space'
+            if self.__isSet:
+
+                raise Exception('These aren\'t the droids you\'re looking for...')
+
+                figname = figname + ' ' + ' '.join(columns)
+
+                r, c = layout
+                if (r * c) < len(columns):
+                    raise ValueError('too columns to represent')
+                fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                h = (hsize * r) +1
+                w = (wsize * c)
+                fig.set_size_inches(w, h)
+                filename = '_'.join(('ds', columns[0], columns[-1], str(start), str(stop)))
+
+                actualCol = 0
+                for i in range(r):
+                    if actualCol >= len(columns):
+                        break
+                    for j in range(c):
+                        if actualCol >= len(columns):
+                            break
+                        drawn = 0
+                        for ds in self.__fileindex:
+                            data = self.__data[ds][columns[actualCol]].truncate(before=start, after=stop)
+                            data.plot(ax=axes[i][j], color=np.random.rand(3,1))
+                            axes[i][j].set_xlabel('') 
+                            drawn += 1
+                            if numfiles and drawn == numfiles:
+                                break
+                        actualCol += 1
+                fig.tight_layout(rect = [0, 0, 1, 0.95])
+                ax = fig.add_subplot(111, frame_on=False, visible=False)
+                ax.set_xticks([]) 
+                ax.set_yticks([]) 
+                ax.set_xlabel(xlabel, labelpad=20)
+                ax.set_ylabel(ylabel, labelpad=50)
+
+            else:
+                # dev version
+                figname = figname + ' ' + ' '.join(columns)
+                col = [columns]                
+                filename = '_'.join(('ts', columns[0], columns[-1], str(start), str(stop)))
+                r, c = layout
+                if (r * c) < len(col):
+                    raise ValueError('too phase space to represent')
+                fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
+                h = (hsize * r) +1
+                w = (wsize * c)
+                fig.set_size_inches(w, h)
+                actualCol = 0
+                for i in range(r):
+                    if actualCol >= len(col):
+                        break
+                    for j in range(c):
+                        if actualCol >= len(col):
+                            break
+                        c = col[actualCol]
+                        x = self.getacolumn(c[0], start, stop, step)
+                        y = self.getacolumn(c[1], start, stop, step)
+                        label = c[0] + ' ' + c[1]
+                        plt.plot(x, y, color=np.random.rand(3,1), axes=axes[i][j], label = label)
+                        axes[i][j].legend(loc='best')
+                        actualCol += 1
+
+                fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+                ax = fig.add_subplot(111, frame_on=False)
+                ax.set_xticks([]) 
+                ax.set_yticks([]) 
+                ax.set_xlabel(xlabel, labelpad=20)
+                ax.set_ylabel(ylabel, labelpad=50)
+                    
+            self.printto(filename, figname, 'traces/')
+        
+        if (xkcd):
+            with plt.xkcd():
+                internalPhspace()
+        else:
+            internalPhspace()
 
         
         plt.close()
