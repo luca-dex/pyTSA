@@ -532,10 +532,16 @@ class DataObject:
         start = float(start)
         stop = float(stop)
         step = float(step)
+        to_return = np.array([])
         if filename:
-            pass
+            while start < stop:
+                try:
+                    value = self.__data[filename][col].truncate(after=start).tail().values[0]
+                except:
+                    value = 0.0
+                to_return = np.append(to_return, value)
+                start += step
         else:
-            to_return = np.array([])
             while start < stop:
                 try:
                     value = self.__data[col].truncate(after=start).tail().values[0]
@@ -543,7 +549,6 @@ class DataObject:
                     value = 0.0
                 to_return = np.append(to_return, value)
                 start += step
-        print(to_return)
         return to_return
 
 
@@ -557,8 +562,9 @@ class DataObject:
               layout=None,
               hsize = 4,
               wsize = 8,
-              xlabel = 'time',
-              ylabel = 'value'):
+              xlabel = None,
+              ylabel = None,
+              title = None):
 
         """
         Print a single time series or a set of time series.
@@ -593,10 +599,13 @@ class DataObject:
         if len(columns) == 1:
             merge = True
 
-        def internalSplot():
+        if title is None:
             figname = 'Simple Plot'
+        else:
+            figname = title
+
+        def internalSplot():
             if self.__isSet:
-                figname = figname + ' ' + ' '.join(columns)
                 if merge:
                     fig = plt.figure()
                     ax = fig.add_subplot(111) 
@@ -609,8 +618,10 @@ class DataObject:
                             drawn += 1
                             if numfiles and drawn == numfiles:
                                 break
-                    ax.set_xlabel(xlabel)
-                    ax.set_ylabel(ylabel)
+                    if xlabel:
+                        ax.set_xlabel(xlabel)
+                    if ylabel:
+                        ax.set_ylabel(ylabel)
                 else:
 
                     r, c = layout
@@ -641,12 +652,13 @@ class DataObject:
                     fig.tight_layout(rect = [0, 0, 1, 0.95])
                     ax = fig.add_subplot(111, frame_on=False, visible=False)
                     ax.set_xticks([]) 
-                    ax.set_yticks([]) 
-                    ax.set_xlabel(xlabel, labelpad=20)
-                    ax.set_ylabel(ylabel, labelpad=50)
+                    ax.set_yticks([])
+                    if xlabel:
+                        ax.set_xlabel(xlabel, labelpad=20)
+                    if ylabel:
+                        ax.set_ylabel(ylabel, labelpad=40)
 
             else:
-                figname = figname + ' ' + ' '.join(columns)
                 if merge:
                     fig = plt.figure()
                     ax = fig.add_subplot(111) 
@@ -655,8 +667,10 @@ class DataObject:
                         data = self.__data[col].truncate(before=start, after=stop)
                         data.plot(ax=ax, label=col)
                     plt.legend(loc='best')
-                    ax.set_xlabel(xlabel)
-                    ax.set_ylabel(ylabel)
+                    if xlabel:
+                        ax.set_xlabel(xlabel)
+                    if ylabel:
+                        ax.set_ylabel(ylabel)
                 else: 
                     filename = '_'.join(('ts', columns[0], columns[-1], str(start), str(stop)))
                     r, c = layout
@@ -684,7 +698,7 @@ class DataObject:
                     ax.set_xticks([]) 
                     ax.set_yticks([]) 
                     ax.set_xlabel(xlabel, labelpad=20)
-                    ax.set_ylabel(ylabel, labelpad=50)
+                    ax.set_ylabel(ylabel, labelpad=40)
                     
             self.printto(filename, figname, 'traces/')
         
@@ -710,8 +724,9 @@ class DataObject:
                 layout=None,
                 hsize = 4,
                 wsize = 8,
-                xlabel = '',
-                ylabel = ''):
+                xlabel = None,
+                ylabel = None,
+                title = None):
 
         """
         Print the phase space of 2 columns
@@ -735,25 +750,22 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        if layout and merge:
-            raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = self.columnsPhSpCheck(columns)
         if layout is None:
-            layout = (1, 1)
-            if len(columns) != 2:
-                raise ValueError('Columns must have length = 2')
+            layout = (len(columns), 1)
+
+        if title is None:
+            figname = 'Phase Space'
+        else:
+            figname = title
+
         start = float(start)
         stop = float(stop)
         step = float(step)
 
         def internalPhspace():
-            figname = 'Phase Space'
+            
             if self.__isSet:
-
-                raise Exception('These aren\'t the droids you\'re looking for...')
-
-                figname = figname + ' ' + ' '.join(columns)
-
                 r, c = layout
                 if (r * c) < len(columns):
                     raise ValueError('too columns to represent')
@@ -761,7 +773,7 @@ class DataObject:
                 h = (hsize * r) +1
                 w = (wsize * c)
                 fig.set_size_inches(w, h)
-                filename = '_'.join(('ds', columns[0], columns[-1], str(start), str(stop)))
+                filename = '_'.join(('ds_phspace', str(start), str(stop)))
 
                 actualCol = 0
                 for i in range(r):
@@ -771,28 +783,33 @@ class DataObject:
                         if actualCol >= len(columns):
                             break
                         drawn = 0
+                        col = columns[actualCol]
                         for ds in self.__fileindex:
-                            data = self.__data[ds][columns[actualCol]].truncate(before=start, after=stop)
-                            data.plot(ax=axes[i][j], color=np.random.rand(3,1))
-                            axes[i][j].set_xlabel('') 
+                            x = self.getacolumn(col[0], start, stop, step, filename = ds)
+                            y = self.getacolumn(col[1], start, stop, step, filename = ds)
+                            color = np.random.rand(3,1)
+                            axes[i][j].plot(x, y, color=color)
                             drawn += 1
                             if numfiles and drawn == numfiles:
                                 break
+                        axes[i][j].set_xlabel('') 
                         actualCol += 1
-                fig.tight_layout(rect = [0, 0, 1, 0.95])
-                ax = fig.add_subplot(111, frame_on=False, visible=False)
+                fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+                ax = fig.add_subplot(111, frame_on=False)
                 ax.set_xticks([]) 
-                ax.set_yticks([]) 
-                ax.set_xlabel(xlabel, labelpad=20)
-                ax.set_ylabel(ylabel, labelpad=50)
+                ax.set_yticks([])
+                if xlabel:
+                    ax.set_xlabel(xlabel, labelpad=20)
+                if ylabel:
+                    ax.set_ylabel(ylabel, labelpad=50)
 
             else:
                 # dev version
-                figname = figname + ' ' + ' '.join(columns)
-                col = [columns]                
-                filename = '_'.join(('ts', columns[0], columns[-1], str(start), str(stop)))
+                # figname = figname + ' ' + ' '.join(columns)
+                #filename = '_'.join(('ts', columns[0], columns[-1], str(start), str(stop)))
+                filename = '_'.join(('ts', str(start), str(stop)))
                 r, c = layout
-                if (r * c) < len(col):
+                if (r * c) < len(columns):
                     raise ValueError('too phase space to represent')
                 fig, axes = plt.subplots(nrows=r, ncols=c, squeeze=False)
                 h = (hsize * r) +1
@@ -800,17 +817,17 @@ class DataObject:
                 fig.set_size_inches(w, h)
                 actualCol = 0
                 for i in range(r):
-                    if actualCol >= len(col):
+                    if actualCol >= len(columns):
                         break
                     for j in range(c):
-                        if actualCol >= len(col):
+                        if actualCol >= len(columns):
                             break
-                        c = col[actualCol]
-                        x = self.getacolumn(c[0], start, stop, step)
-                        y = self.getacolumn(c[1], start, stop, step)
-                        label = c[0] + ' ' + c[1]
-                        plt.plot(x, y, color=np.random.rand(3,1), axes=axes[i][j], label = label)
-                        axes[i][j].legend(loc='best')
+                        col = columns[actualCol]
+                        x = self.getacolumn(col[0], start, stop, step)
+                        y = self.getacolumn(col[1], start, stop, step)
+                        axes[i][j].plot(x, y, color=np.random.rand(3,1))
+                        axes[i][j].set_xlabel(col[0])
+                        axes[i][j].set_ylabel(col[1])
                         actualCol += 1
 
                 fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
@@ -818,7 +835,7 @@ class DataObject:
                 ax.set_xticks([]) 
                 ax.set_yticks([]) 
                 ax.set_xlabel(xlabel, labelpad=20)
-                ax.set_ylabel(ylabel, labelpad=50)
+                ax.set_ylabel(ylabel, labelpad=40)
                     
             self.printto(filename, figname, 'traces/')
         
@@ -848,7 +865,10 @@ class DataObject:
               xkcd=None,
               layout=None,
               hsize = 4,
-              wsize = 8):
+              wsize = 8,
+              xlabel = None,
+              ylabel = None,
+              title = None):
 
         """
         Average of a dataset.
@@ -885,11 +905,16 @@ class DataObject:
         if len(columns) == 1:
             merge = True
 
+        if title is None:
+            figname = 'Average'
+        else:
+            figname = title
+
         def internalMplot():
             if self.__isSet:
-                figname = 'mean'
                 if merge:
-                    plt.figure()
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111) 
                     filename = '_'.join(('mean_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join(columns)
@@ -902,7 +927,11 @@ class DataObject:
                             self.createrange(thisrange, col, start, stop, step)
                         if 'txt' in self.__outputs:
                             filedata.append(self.__range[thisrange].mean(1).values)
-                        self.__range[thisrange].mean(1).plot(label=col)
+                        self.__range[thisrange].mean(1).plot(label=col, ax=ax)
+                    if xlabel:
+                        ax.set_xlabel(xlabel)
+                    if ylabel:
+                        ax.set_ylabel(ylabel)
                     plt.legend(loc='best')
                 else:
                     r, c = layout
@@ -935,7 +964,17 @@ class DataObject:
                             self.__range[thisrange].mean(1).plot(label=columns[actualCol], ax=axes[i][j])
                             axes[i][j].legend(loc='best')
                             actualCol += 1
-                    fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    if xlabel or ylabel:
+                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+                    else:
+                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    ax = fig.add_subplot(111, frame_on=False)
+                    ax.set_xticks([]) 
+                    ax.set_yticks([])
+                    if xlabel:
+                        ax.set_xlabel(xlabel, labelpad=20)
+                    if ylabel:
+                        ax.set_ylabel(ylabel, labelpad=40)
 
 
 
@@ -963,7 +1002,10 @@ class DataObject:
                xkcd=None,
                layout=None,
                hsize = 4,
-               wsize = 8):
+               wsize = 8,
+               xlabel = None,
+               ylabel = None,
+               title = None):
 
         """
         Standard Deviation of a dataset.
@@ -1002,11 +1044,16 @@ class DataObject:
         if len(columns) == 1:
             merge = True
 
+        if title is None:
+            figname = 'Standard Deviation'
+        else:
+            figname = title
+
         def internalSdplot():    
             if self.__isSet:
-                figname = 'standard deviation'
                 if merge:
-                    plt.figure()
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111) 
                     filename = '_'.join(('std_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
@@ -1020,7 +1067,11 @@ class DataObject:
                         if 'txt' in self.__outputs:
                             filedata.append(self.__range[thisrange].mean(1).values)
                             filedata.append(self.__range[thisrange].std(1).values)
-                        self.__range[thisrange].std(1).plot(label=col)
+                        self.__range[thisrange].std(1).plot(label=col, ax=ax)
+                    if xlabel:
+                        ax.set_xlabel(xlabel)
+                    if ylabel:
+                        ax.set_ylabel(ylabel)
                     plt.legend(loc='best')
                 else:
                     r, c = layout
@@ -1055,7 +1106,17 @@ class DataObject:
                             axes[i][j].legend(loc='best')
                             actualCol += 1
 
-                    fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    if xlabel or ylabel:
+                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+                    else:
+                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    ax = fig.add_subplot(111, frame_on=False)
+                    ax.set_xticks([]) 
+                    ax.set_yticks([])
+                    if xlabel:
+                        ax.set_xlabel(xlabel, labelpad=20)
+                    if ylabel:
+                        ax.set_ylabel(ylabel, labelpad=40)
 
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
@@ -1070,18 +1131,27 @@ class DataObject:
         plt.close()
 
 
-    def msdplot(self, 
+    def msdplot(self):
+        """
+        Just to prevent error...
+        """
+        raise NameError('Sorry sir, no more msdplot(). Try use asdplot()!')
+
+    def asdplot(self, 
                 start=None, 
                 stop=None, 
                 columns=None, 
                 step=1, 
                 merge=None, 
                 errorbar=None, 
-                bardist=5, 
+                numbars=15, 
                 xkcd=None,
                 layout=None,
                 hsize = 4,
-                wsize = 8):
+                wsize = 8,
+                xlabel = None,
+                ylabel = None,
+                title = None):
 
         """
         Mean with Standard Deviation.
@@ -1116,12 +1186,16 @@ class DataObject:
         step = float(step)
         if len(columns) == 1:
             merge = True
+        if title is None:
+            figname = 'Average and Standard Deviation'
+        else:
+            figname = title
 
         def internalMsdplot():    
             if self.__isSet:
-                figname = 'mean and standard deviation'
                 if merge:
                     fig = plt.figure()
+                    ax = fig.add_subplot(111) 
                     filename = '_'.join(('mean_std_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     if 'txt' in self.__outputs:
                         filecolumns = ' '.join(columns)
@@ -1137,19 +1211,24 @@ class DataObject:
                             filedata.append(self.__range[thisrange].std(1).values)
                         mean = self.__range[thisrange].mean(1)
                         std = self.__range[thisrange].std(1)
-                        mean.plot(label=col)
+                        mean.plot(label=col, ax=ax)
                         if errorbar:
-                            xind = [t for i, t in enumerate(mean.index.values) if (i % bardist) == 0]
-                            yval = [t for i, t in enumerate(mean.values) if (i % bardist) == 0]
-                            yerr = [t for i, t in enumerate(std.values) if (i % bardist) == 0]
-                            plt.errorbar(xind, yval, yerr=yerr, fmt=None)
+                            bardist = int((stop - start) / numbars)
+                            xind = [t for q, t in enumerate(mean.index.values) if (q % bardist) == 0]
+                            yval = [t for q, t in enumerate(mean.values) if (q % bardist) == 0]
+                            yerr = [t for q, t in enumerate(std.values) if (q % bardist) == 0]
+                            plt.errorbar(xind, yval, yerr=yerr, fmt=None, ax=ax)
                         else:
                             upper = mean + std
                             lower = mean - std
-                            upper.plot(style='k--', legend=False)
-                            lower.plot(style='k--', legend=False)
+                            upper.plot(style='k--', legend=False, ax=ax)
+                            lower.plot(style='k--', legend=False, ax=ax)
                     patches, labels = fig.get_axes()[0].get_legend_handles_labels()
                     fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
+                    if xlabel:
+                        ax.set_xlabel(xlabel)
+                    if ylabel:
+                        ax.set_ylabel(ylabel)
                 else:
                     r, c = layout
                     if (r * c) < len(columns):
@@ -1183,9 +1262,10 @@ class DataObject:
                                 filedata.append(std.values)
                             mean.plot(label=columns[actualCol], ax=axes[i][j])
                             if errorbar:
-                                xind = [t for j, t in enumerate(mean.index.values) if (j % bardist) == 0]
-                                yval = [t for j, t in enumerate(mean.values) if (j % bardist) == 0]
-                                yerr = [t for j, t in enumerate(std.values) if (j % bardist) == 0]
+                                bardist = int((stop - start) / numbars)
+                                xind = [t for q, t in enumerate(mean.index.values) if (q % bardist) == 0]
+                                yval = [t for q, t in enumerate(mean.values) if (q % bardist) == 0]
+                                yerr = [t for q, t in enumerate(std.values) if (q % bardist) == 0]
                                 axes[i][j].errorbar(xind, yval, yerr=yerr, fmt=None)
                             else:
                                 upper = mean + std
@@ -1196,7 +1276,18 @@ class DataObject:
                             axes[i][j].legend([handles[0]], [labels[0]], loc='best')
                             actualCol += 1
 
-                    fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    if xlabel or ylabel:
+                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+                    else:
+                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    ax = fig.add_subplot(111, frame_on=False)
+                    ax.set_xticks([]) 
+                    ax.set_yticks([])
+                    if xlabel:
+                        ax.set_xlabel(xlabel, labelpad=20)
+                    if ylabel:
+                        ax.set_ylabel(ylabel, labelpad=40)
+
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
                 self.printto(filename, figname, 'averages/')
@@ -1222,7 +1313,10 @@ class DataObject:
             xkcd=None,
             layout=None,
             hsize = 4,
-            wsize = 8):
+            wsize = 8,
+            xlabel = None,
+            ylabel = None,
+            title = None):
 
         """
         Probability Density Function (PDF).
@@ -1254,12 +1348,17 @@ class DataObject:
         if numbins is None:
             numbins = 10
 
+        if title is None:
+            figname = 'Probability Density Function'
+        else:
+            figname = title
+
         def internalPdf(nbins):    
             if self.__isSet:
-                figname = 'probability density function'
                 if merge:
                     filename = '_'.join(('pdf_merge', str(columns[0]), str(columns[-1]), str(time)))
-                    plt.figure()
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111) 
                     minrange = None
                     maxrange = None
                     for col in columns:
@@ -1278,7 +1377,7 @@ class DataObject:
                     for col in columns:  
                         thisrow = '_'.join((str(value), str(col)))       
                         n, bins, patches = plt.hist(self.__row[thisrow].values, range=[minrange, maxrange], bins=nbins, \
-                            normed=normed, alpha=0.5, label=col)
+                            normed=normed, alpha=0.5, label=col, ax=ax)
                         if fit:
                             if not normed:
                                 raise ValueError('Fit only if normed')
@@ -1286,8 +1385,11 @@ class DataObject:
                                 (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
                                 x = np.arange(minrange, maxrange, ((maxrange-minrange) / 100))
                                 y = mlab.normpdf(x, mu, sigma)
-                                plt.plot(x, y, 'r--', linewidth=2)
-
+                                plt.plot(x, y, 'r--', linewidth=2, ax=ax)
+                    if xlabel:
+                        ax.set_xlabel(xlabel)
+                    if ylabel:
+                        ax.set_ylabel(ylabel)
                     plt.legend(loc='best')
                 else:
                     filename = '_'.join(('pdf', str(columns[0]), str(columns[-1]), str(time)))
@@ -1329,7 +1431,18 @@ class DataObject:
                             axes[i][j].legend(loc='best')
                             actualCol += 1
 
-                    fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    if xlabel or ylabel:
+                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+                    else:
+                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    ax = fig.add_subplot(111, frame_on=False)
+                    ax.set_xticks([]) 
+                    ax.set_yticks([])
+                    if xlabel:
+                        ax.set_xlabel(xlabel, labelpad=20)
+                    if ylabel:
+                        ax.set_ylabel(ylabel, labelpad=40)
+
                 self.printto(filename, figname, 'p-density/')
 
         if (xkcd):
@@ -1348,7 +1461,11 @@ class DataObject:
               numbins=None, 
               normed=False, 
               fit=False, 
-              vmax=None):
+              vmax=None,
+              xlabel = None,
+              ylabel = None,
+              zlabel = None,
+              title=None):
 
         """
         Probability Density Function 3D.
@@ -1371,9 +1488,14 @@ class DataObject:
         The following code is an example of pdf3d():
 
         >>> dataset.pdf3d('X1', [10, 20, 30])"""
+
+        if title is None:
+            figname = 'Probability Density Function'
+        else:
+            figname = title
+
         moments = [float(x) for x in moments]
         moments.sort()
-        figname = 'probability density function'
         filename = '_'.join(('pdf_3d', column, str(moments[0]), str(moments[-1])))
         if self.__isSet:
             minrange = None
@@ -1421,8 +1543,13 @@ class DataObject:
             if vmax:
                 ax.set_zlim3d(0, vmax)
 
-            ax.set_xlabel(column)
-            ax.set_ylabel('moments')
+
+            if xlabel:
+                ax.set_xlabel(xlabel)
+            if ylabel:
+                ax.set_ylabel(ylabel)
+            if zlabel:
+                ax.set_zlabel(zlabel)
             ax.set_ylim3d(-1, len(moments))
             yticks = [-1] + py.range(len(moments)) + [len(moments)]
             ytick_labels = [''] + moments + ['']
@@ -1443,7 +1570,10 @@ class DataObject:
               normed=True, 
               vmax=None,
               hsize = 4,
-              wsize = 8):
+              wsize = 8,
+              xlabel = None,
+              ylabel = None,
+              title=None):
 
         """
         Master Equation 2D.
@@ -1477,8 +1607,11 @@ class DataObject:
             layout = (len(columns), 1)
         step = float(step)
         moments = np.arange(start, stop, step)
+        if title is None:
+            figname = 'Heatmap'
+        else:
+            figname = title
         
-        figname = 'Heatmap' + ' ' + ' '.join(columns)
         filename = '_'.join(('heatmap', columns[0], columns[-1], str(start), str(stop)))
         if self.__isSet:
             r, c = layout
@@ -1544,7 +1677,17 @@ class DataObject:
                 cbar.set_label('probability')
                 actualCol += 1
 
-            fig.tight_layout(rect = [0, 0, 1, 0.95])
+            if xlabel or ylabel:
+                fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+            else:
+                fig.tight_layout(rect = [0, 0, 1, 0.95])
+            ax = fig.add_subplot(111, frame_on=False)
+            ax.set_xticks([]) 
+            ax.set_yticks([])
+            if xlabel:
+                ax.set_xlabel(xlabel, labelpad=20)
+            if ylabel:
+                ax.set_ylabel(ylabel, labelpad=40)
 
             self.printto(filename, figname, 'm-equation/')
             plt.clf()
@@ -1560,7 +1703,11 @@ class DataObject:
               binsize=None, 
               numbins=None, 
               normed=True, 
-              vmax=None):
+              vmax=None,
+              xlabel = None,
+              ylabel = None,
+              zlabel = None,
+              title=None):
 
         """
         Master Equation 3D.
@@ -1591,7 +1738,10 @@ class DataObject:
             stop = self.__timemax
         step = float(step)
         moments = np.arange(start, stop, step)
-        figname = 'Surface ' + column 
+        if title is None:
+            figname = 'Surface'
+        else:
+            figname = title
         filename = '_'.join(('surface', column, str(start), str(stop)))
         if self.__isSet:
             fig = plt.figure()
@@ -1646,8 +1796,13 @@ class DataObject:
             cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
             cbar.set_label('probability')
 
-            ax.set_xlabel('time')
-            ax.set_ylabel(column)
+
+            if xlabel:
+                ax.set_xlabel(xlabel)
+            if ylabel:
+                ax.set_ylabel(ylabel)
+            if zlabel:
+                ax.set_zlabel(zlabel)
             
 
         self.printto(filename, figname, 'm-equation/')
@@ -1693,6 +1848,20 @@ class DataObject:
                 error = 'Column ' + c + ' not in columns'
                 raise ValueError(error)
         return col
+
+    def columnsPhSpCheck(self, col):
+        if isinstance(col, list):
+            if isinstance(col[0], list):
+                for c in col:
+                    if len(c) != 2 or c[0] not in self.__columns or c[1] not in self.__columns:
+                        raise ValueError('There is a problem on selected columns')
+            else:
+                if len(col) != 2 or col[0] not in self.__columns or col[1] not in self.__columns:
+                    raise ValueError('There is a problem on selected columns')
+                return [col]
+        return col 
+
+
 
 
 class RedPandaInfo(ts.IsDescription):

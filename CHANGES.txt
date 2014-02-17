@@ -10,6 +10,7 @@ v0.1.11, 09.01.2014 -- Tight layout
 v0.1.12, 11.01.2014 -- Fix Issue #6 (https://github.com/luca-dex/pyTSA/issues/6)
 v0.2.0, 12.01.2014 -- Grid layout
 v0.2.1, 20.01.2014 -- From file.endswith to in
-v0.2.2, 13.01.2014 -- pdf smooth - xlabel and ylabel on splot
-v0.2.3, 13.01.2014 -- from mplot to aplot
-v0.3.0, 13.01.2014 -- fist version of phspace added
+v0.2.2, 13.02.2014 -- pdf smooth - xlabel and ylabel on splot
+v0.2.3, 13.02.2014 -- from mplot to aplot
+v0.3.0, 13.02.2014 -- fist version of phspace added
+v0.3.1, 17.02.2014 -- custom title, xlabel, ylabel and zlabel
