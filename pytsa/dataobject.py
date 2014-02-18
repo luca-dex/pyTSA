@@ -653,17 +653,22 @@ class DataObject:
                                 if numfiles and drawn == numfiles:
                                     break
                             actualCol += 1
-                    if xlabel or ylabel:
-                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
-                    else:
-                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                            if j == 0 and len(ylabel) == r:
+                                axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
+                    xmargin = 0
+                    ymargin = 0
+                    if isinstance(xlabel, basestring):
+                        xmargin = 0.05
+                    if isinstance(ylabel, basestring):
+                        ymargin = 0.05
+                    fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     ax = fig.add_subplot(111, frame_on=False)
                     ax.set_xticks([]) 
                     ax.set_yticks([])
                     if xlabel:
                         ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
-                    if ylabel:
+                    if isinstance(ylabel, basestring):
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
             else:
@@ -701,17 +706,23 @@ class DataObject:
                             axes[i][j].legend(loc='best')
                             axes[i][j].set_xlabel('')
                             actualCol += 1
-
-                    if xlabel or ylabel:
-                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
-                    else:
-                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                            if j == 0 and len(ylabel) == r:
+                                axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
+                    xmargin = 0
+                    ymargin = 0
+                    if isinstance(xlabel, basestring):
+                        xmargin = 0.05
+                    if isinstance(ylabel, basestring):
+                        ymargin = 0.05
+                    fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     ax = fig.add_subplot(111, frame_on=False)
                     ax.set_xticks([]) 
-                    ax.set_yticks([]) 
-                    ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
-                    ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
+                    ax.set_yticks([])
+                    if xlabel:
+                        ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
+                    if isinstance(ylabel, basestring):
+                        ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
                     
             self.printto(filename, 'traces/')
         
@@ -842,14 +853,23 @@ class DataObject:
                         axes[i][j].set_xlabel(col[0])
                         axes[i][j].set_ylabel(col[1])
                         actualCol += 1
-
-                fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
+                        if j == 0 and len(ylabel) == r:
+                            axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
+                xmargin = 0
+                ymargin = 0
+                if isinstance(xlabel, basestring):
+                    xmargin = 0.05
+                if isinstance(ylabel, basestring):
+                    ymargin = 0.05
+                fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
                 fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                 ax = fig.add_subplot(111, frame_on=False)
                 ax.set_xticks([]) 
-                ax.set_yticks([]) 
-                ax.set_xlabel(xlabel, labelpad=20)
-                ax.set_ylabel(ylabel, labelpad=40)
+                ax.set_yticks([])
+                if xlabel:
+                    ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
+                if isinstance(ylabel, basestring):
+                    ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
                     
             self.printto(filename, 'traces/')
         
@@ -884,7 +904,8 @@ class DataObject:
               ylabel = None,
               title = None,
               titlesize=19,
-              labelsize=16):
+              labelsize=16,
+              legend=None):
 
         """
         Average of a dataset.
@@ -948,7 +969,8 @@ class DataObject:
                         ax.set_xlabel(xlabel, fontsize=labelsize)
                     if ylabel:
                         ax.set_ylabel(ylabel, fontsize=labelsize)
-                    plt.legend(loc='best')
+                    if legend:
+                        plt.legend(loc='best')
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                 else:
                     r, c = layout
@@ -979,19 +1001,25 @@ class DataObject:
                             if 'txt' in self.__outputs:
                                 filedata.append(self.__range[thisrange].mean(1).values)
                             self.__range[thisrange].mean(1).plot(label=columns[actualCol], ax=axes[i][j])
-                            axes[i][j].legend(loc='best')
+                            if legend:
+                                axes[i][j].legend(loc='best')
                             actualCol += 1
-                    if xlabel or ylabel:
-                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
-                    else:
-                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                            if j == 0 and len(ylabel) == r:
+                                axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
+                    xmargin = 0
+                    ymargin = 0
+                    if isinstance(xlabel, basestring):
+                        xmargin = 0.05
+                    if isinstance(ylabel, basestring):
+                        ymargin = 0.05
+                    fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     ax = fig.add_subplot(111, frame_on=False)
                     ax.set_xticks([]) 
                     ax.set_yticks([])
                     if xlabel:
                         ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
-                    if ylabel:
+                    if isinstance(ylabel, basestring):
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
 
@@ -1026,7 +1054,9 @@ class DataObject:
                  ylabel = None,
                  title = None,
                  titlesize=19,
-                 labelsize=16):
+                 labelsize=16,
+                 kegend=None):
+
 
         """
         Average of a dataset.
@@ -1086,7 +1116,8 @@ class DataObject:
                         ax.set_xlabel(xlabel, fontsize=labelsize)
                     if ylabel:
                         ax.set_ylabel(ylabel, fontsize=labelsize)
-                    plt.legend(loc='best')
+                    if legend:
+                        plt.legend(loc='best')
                 else:
                     r, c = layout
                     if (r * c) < len(columns):
@@ -1109,19 +1140,25 @@ class DataObject:
                             if thisrange not in self.__range:
                                 self.createrange(thisrange, columns[actualCol], start, stop, step)
                             self.__range[thisrange].mean(1).plot(label=columns[actualCol], ax=axes[i][j])
-                            axes[i][j].legend(loc='best')
+                            if legend:
+                                axes[i][j].legend(loc='best')
                             actualCol += 1
-                    if xlabel or ylabel:
-                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
-                    else:
-                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                            if j == 0 and len(ylabel) == r:
+                                axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
+                    xmargin = 0
+                    ymargin = 0
+                    if isinstance(xlabel, basestring):
+                        xmargin = 0.05
+                    if isinstance(ylabel, basestring):
+                        ymargin = 0.05
+                    fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     ax = fig.add_subplot(111, frame_on=False)
                     ax.set_xticks([]) 
                     ax.set_yticks([])
                     if xlabel:
                         ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
-                    if ylabel:
+                    if isinstance(ylabel, basestring):
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
 
@@ -1156,7 +1193,8 @@ class DataObject:
                ylabel = None,
                title = None,
                titlesize=19,
-               labelsize=16):
+               labelsize=16,
+               legend=None):
 
         """
         Standard Deviation of a dataset.
@@ -1224,7 +1262,8 @@ class DataObject:
                         ax.set_xlabel(xlabel, fontsize=labelsize)
                     if ylabel:
                         ax.set_ylabel(ylabel, fontsize=labelsize)
-                    plt.legend(loc='best')
+                    if legend:
+                        plt.legend(loc='best')
                 else:
                     r, c = layout
                     if (r * c) < len(columns):
@@ -1255,20 +1294,26 @@ class DataObject:
                                 filedata.append(self.__range[thisrange].mean(1).values)
                                 filedata.append(self.__range[thisrange].std(1).values)
                             self.__range[thisrange].std(1).plot(label=columns[actualCol], ax=axes[i][j])
-                            axes[i][j].legend(loc='best')
+                            if legend:
+                                axes[i][j].legend(loc='best')
                             actualCol += 1
+                            if j == 0 and len(ylabel) == r:
+                                axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
 
-                    if xlabel or ylabel:
-                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
-                    else:
-                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    xmargin = 0
+                    ymargin = 0
+                    if isinstance(xlabel, basestring):
+                        xmargin = 0.05
+                    if isinstance(ylabel, basestring):
+                        ymargin = 0.05
+                    fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     ax = fig.add_subplot(111, frame_on=False)
                     ax.set_xticks([]) 
                     ax.set_yticks([])
                     if xlabel:
                         ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
-                    if ylabel:
+                    if isinstance(ylabel, basestring):
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
@@ -1306,7 +1351,8 @@ class DataObject:
                 ylabel = None,
                 title = None,
                 titlesize=19,
-                labelsize=16):
+                labelsize=16,
+                legend=None):
 
         """
         Mean with Standard Deviation.
@@ -1378,8 +1424,9 @@ class DataObject:
                             lower = mean - std
                             upper.plot(style='k--', legend=False, ax=ax)
                             lower.plot(style='k--', legend=False, ax=ax)
-                    patches, labels = fig.get_axes()[0].get_legend_handles_labels()
-                    fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
+                    if legend:
+                        patches, labels = fig.get_axes()[0].get_legend_handles_labels()
+                        fig.get_axes()[0].legend(patches[::3], labels[::3], loc='best')
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     if xlabel:
                         ax.set_xlabel(xlabel, fontsize=labelsize)
@@ -1428,21 +1475,27 @@ class DataObject:
                                 lower = mean - std
                                 upper.plot(style='k--', ax=axes[i][j], legend=False)
                                 lower.plot(style='k--', ax=axes[i][j], legend=False)
-                            handles, labels = axes[i][j].get_legend_handles_labels()
-                            axes[i][j].legend([handles[0]], [labels[0]], loc='best')
+                            if legend:
+                                handles, labels = axes[i][j].get_legend_handles_labels()
+                                axes[i][j].legend([handles[0]], [labels[0]], loc='best')
+                            if j == 0 and len(ylabel) == r:
+                                axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                             actualCol += 1
 
-                    if xlabel or ylabel:
-                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
-                    else:
-                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    xmargin = 0
+                    ymargin = 0
+                    if isinstance(xlabel, basestring):
+                        xmargin = 0.05
+                    if isinstance(ylabel, basestring):
+                        ymargin = 0.05
+                    fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     ax = fig.add_subplot(111, frame_on=False)
                     ax.set_xticks([]) 
                     ax.set_yticks([])
                     if xlabel:
                         ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
-                    if ylabel:
+                    if isinstance(ylabel, basestring):
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
@@ -1589,19 +1642,23 @@ class DataObject:
                                     axes[i][j].plot(x, y, 'r--', linewidth = 2)
 
                             axes[i][j].legend(loc='best')
+                            if j == 0 and len(ylabel) == r:
+                                axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                             actualCol += 1
-
-                    if xlabel or ylabel:
-                        fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
-                    else:
-                        fig.tight_layout(rect = [0, 0, 1, 0.95])
+                    xmargin = 0
+                    ymargin = 0
+                    if isinstance(xlabel, basestring):
+                        xmargin = 0.05
+                    if isinstance(ylabel, basestring):
+                        ymargin = 0.05
+                    fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     ax = fig.add_subplot(111, frame_on=False)
                     ax.set_xticks([]) 
                     ax.set_yticks([])
                     if xlabel:
                         ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
-                    if ylabel:
+                    if isinstance(ylabel, basestring):
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 self.printto(filename, 'p-density/')
@@ -1840,18 +1897,24 @@ class DataObject:
                     extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
                 cbar = fig.colorbar(im, ax=axes[q][j])
                 cbar.set_label('probability')
+                if j == 0 and len(ylabel) == r:
+                    axes[q][j].set_ylabel(ylabel[q], fontsize=labelsize)
                 actualCol += 1
 
-            if xlabel or ylabel:
-                fig.tight_layout(rect = [0.05, 0.05, 1, 0.95])
-            else:
-                fig.tight_layout(rect = [0, 0, 1, 0.95])
+            xmargin = 0
+            ymargin = 0
+            if isinstance(xlabel, basestring):
+                xmargin = 0.05
+            if isinstance(ylabel, basestring):
+                ymargin = 0.05
+            fig.tight_layout(rect = [ymargin, xmargin, 1, 0.95])
+            fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
             ax = fig.add_subplot(111, frame_on=False)
             ax.set_xticks([]) 
             ax.set_yticks([])
             if xlabel:
                 ax.set_xlabel(xlabel, labelpad=20, fontsize=labelsize)
-            if ylabel:
+            if isinstance(ylabel, basestring):
                 ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
             self.printto(filename, 'm-equation/')
@@ -1961,6 +2024,7 @@ class DataObject:
             surf = ax.plot_surface(X, Y, I.T, rstride=1, cstride=1, cmap=plt.cm.jet, \
                 linewidth=0, antialiased=False)
             fig.colorbar(surf, shrink=0.5, aspect=5)
+            fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
             if xlabel:
                 ax.set_xlabel(xlabel, fontsize=labelsize)
             if ylabel:
