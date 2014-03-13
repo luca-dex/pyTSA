@@ -660,7 +660,7 @@ class DataObject:
                                 if numfiles and drawn == numfiles:
                                     break
                             actualCol += 1
-                            if j == 0 and len(ylabel) == r:
+                            if j == 0 and ylabel and len(ylabel) == r:
                                 axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                     xmargin = 0
                     ymargin = 0
@@ -713,7 +713,7 @@ class DataObject:
                             axes[i][j].legend(loc='best')
                             axes[i][j].set_xlabel('')
                             actualCol += 1
-                            if j == 0 and len(ylabel) == r:
+                            if j == 0 and ylabel and len(ylabel) == r:
                                 axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                     xmargin = 0
                     ymargin = 0
@@ -860,7 +860,7 @@ class DataObject:
                         axes[i][j].set_xlabel(col[0])
                         axes[i][j].set_ylabel(col[1])
                         actualCol += 1
-                        if j == 0 and len(ylabel) == r:
+                        if j == 0 and ylabel and len(ylabel) == r:
                             axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                 xmargin = 0
                 ymargin = 0
@@ -1012,7 +1012,7 @@ class DataObject:
                             if legend:
                                 axes[i][j].legend(loc='best')
                             actualCol += 1
-                            if j == 0 and len(ylabel) == r:
+                            if j == 0 and ylabel and len(ylabel) == r:
                                 axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                     xmargin = 0
                     ymargin = 0
@@ -1149,7 +1149,7 @@ class DataObject:
                             if legend:
                                 axes[i][j].legend(loc='best')
                             actualCol += 1
-                            if j == 0 and len(ylabel) == r:
+                            if j == 0 and ylabel and len(ylabel) == r:
                                 axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                     xmargin = 0
                     ymargin = 0
@@ -1303,7 +1303,7 @@ class DataObject:
                             if legend:
                                 axes[i][j].legend(loc='best')
                             actualCol += 1
-                            if j == 0 and len(ylabel) == r:
+                            if j == 0 and ylabel and len(ylabel) == r:
                                 axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
 
                     xmargin = 0
@@ -1488,7 +1488,7 @@ class DataObject:
                             if legend:
                                 handles, labels = axes[i][j].get_legend_handles_labels()
                                 axes[i][j].legend([handles[0]], [labels[0]], loc='best')
-                            if j == 0 and len(ylabel) == r:
+                            if j == 0 and ylabel and len(ylabel) == r:
                                 axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                             actualCol += 1
 
@@ -1652,7 +1652,7 @@ class DataObject:
                                     axes[i][j].plot(x, y, 'r--', linewidth = 2)
 
                             axes[i][j].legend(loc='best')
-                            if j == 0 and len(ylabel) == r:
+                            if j == 0 and ylabel and len(ylabel) == r:
                                 axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
                             actualCol += 1
                     xmargin = 0
@@ -1908,7 +1908,7 @@ class DataObject:
                     extent=[moments[0], moments[-1], value[0], value[-1]],origin='lower', vmax=vmax)
                 cbar = fig.colorbar(im, ax=axes[q][j])
                 cbar.set_label('probability')
-                if j == 0 and len(ylabel) == r:
+                if j == 0 and ylabel and len(ylabel) == r:
                     axes[q][j].set_ylabel(ylabel[q], fontsize=labelsize)
                 actualCol += 1
 
