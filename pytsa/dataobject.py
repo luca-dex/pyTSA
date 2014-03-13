@@ -524,7 +524,7 @@ class DataObject:
             to_return = np.append(to_return, fromthists)
         self.__row[label] = pd.Series(to_return)
 
-    def getacolumn(self, col, start, stop, step, filename = None):
+    def getacolumn(self, col, start, stop, step, filename = None, average = None):
         '''
         filename  -> dataset
         !filename -> timeseries
@@ -541,6 +541,13 @@ class DataObject:
                     value = 0.0
                 to_return = np.append(to_return, value)
                 start += step
+        elif average:
+            thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
+            if thisrange not in self.__range:
+                self.createrange(thisrange, col, start, stop, step)
+            data = self.__range[thisrange].mean(1)
+            to_return = data.values
+            start += step
         else:
             while start < stop:
                 try:
@@ -962,9 +969,10 @@ class DataObject:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
+                        data = self.__range[thisrange].mean(1)
+                        data.plot(label=col, ax=ax)
                         if 'txt' in self.__outputs:
-                            filedata.append(self.__range[thisrange].mean(1).values)
-                        self.__range[thisrange].mean(1).plot(label=col, ax=ax)
+                            filedata.append(data.values)
                     if xlabel:
                         ax.set_xlabel(xlabel, fontsize=labelsize)
                     if ylabel:
@@ -1055,7 +1063,8 @@ class DataObject:
                  title = None,
                  titlesize=19,
                  labelsize=16,
-                 kegend=None):
+                 kegend=None,
+                 legend=None):
 
 
         """
@@ -1104,11 +1113,8 @@ class DataObject:
                     ax = fig.add_subplot(111) 
                     filename = '_'.join(('average_phspace', str(columns[0]), str(columns[-1]), str(start), str(stop)))
                     for col in columns:
-                        thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
-                        if thisrange not in self.__range:
-                            self.createrange(thisrange, col, start, stop, step)
-                        x = self.getacolumn(thisrange, start, stop, step)
-                        y = self.getacolumn(thisrange, start, stop, step)
+                        x = self.getacolumn(col[0], start, stop, step, average = True)
+                        y = self.getacolumn(col[1], start, stop, step, average = True)
                         color = np.random.rand(3,1)
                         ax.plot(x, y, color=color)
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
@@ -1403,6 +1409,7 @@ class DataObject:
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
                         filedata.append(np.arange(start, stop, step))
+                    color = np.random.rand(3,1)
                     for col in columns:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
@@ -1412,13 +1419,14 @@ class DataObject:
                             filedata.append(self.__range[thisrange].std(1).values)
                         mean = self.__range[thisrange].mean(1)
                         std = self.__range[thisrange].std(1)
-                        mean.plot(label=col, ax=ax)
+                        mean.plot(label=col, ax=ax, color=color)
                         if errorbar:
                             bardist = int((stop - start) / numbars)
                             xind = [t for q, t in enumerate(mean.index.values) if (q % bardist) == 0]
                             yval = [t for q, t in enumerate(mean.values) if (q % bardist) == 0]
                             yerr = [t for q, t in enumerate(std.values) if (q % bardist) == 0]
-                            plt.errorbar(xind, yval, yerr=yerr, fmt=None, ax=ax)
+                            plt.plot(xind, yval, 'bh', ax=ax)
+                            plt.errorbar(xind, yval, yerr=yerr, fmt=None, ax=ax, color='red')
                         else:
                             upper = mean + std
                             lower = mean - std
@@ -1449,6 +1457,7 @@ class DataObject:
 
                     # graphics block    
                     actualCol = 0
+                    color = np.random.rand(3,1)
                     for i in range(r):
                         if actualCol >= len(columns):
                             break
@@ -1463,13 +1472,14 @@ class DataObject:
                             if 'txt' in self.__outputs:
                                 filedata.append(mean.values)
                                 filedata.append(std.values)
-                            mean.plot(label=columns[actualCol], ax=axes[i][j])
+                            mean.plot(label=columns[actualCol], ax=axes[i][j], color = color)
                             if errorbar:
                                 bardist = int((stop - start) / numbars)
                                 xind = [t for q, t in enumerate(mean.index.values) if (q % bardist) == 0]
                                 yval = [t for q, t in enumerate(mean.values) if (q % bardist) == 0]
                                 yerr = [t for q, t in enumerate(std.values) if (q % bardist) == 0]
-                                axes[i][j].errorbar(xind, yval, yerr=yerr, fmt=None)
+                                axes[i][j].plot(xind, yval, 'bh')
+                                axes[i][j].errorbar(xind, yval, yerr=yerr, fmt=None, color='red')
                             else:
                                 upper = mean + std
                                 lower = mean - std
@@ -1749,7 +1759,8 @@ class DataObject:
                 if normed:
                     histogram = histogram / sum(histogram)
 
-                ax.bar(newx, histogram, zs=i, zdir='y', alpha=0.5, width=binsize, label='A')
+                color = np.random.rand(3,1)
+                ax.bar(newx, histogram, zs=i, zdir='y', alpha=0.5, color=color, width=binsize, label='A')
 
                 if fit:
                     if not normed:
