@@ -42,7 +42,7 @@ from dataSampler import *
 from itertools import izip_longest
 
 def dataset(path, 
-            commentstring=None, 
+            commentstring='#', 
             colnames=None, 
             delimiter='[\s\t]+', 
             start=-float('inf'), 
@@ -219,7 +219,7 @@ def dataset(path,
     return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name, t = t)
 
 def timeseries(path, 
-               commentstring=None, 
+               commentstring='#', 
                colnames=None, 
                delimiter='[\s\t]+', 
                start=-float('inf'), 

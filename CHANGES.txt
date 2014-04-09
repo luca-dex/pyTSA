@@ -1,19 +1,20 @@
-v0.1.0, 05.04.2013 -- Initial release.
-v0.1.1, 04.06.2013 -- Renamed to RedPanda. Now with task!
-v0.1.5, 01.11.2013 -- Renamed to pyTSA.
-v0.1.6, 21.11.2013 -- Timeseries are imported using a multiprocess script based on the number of cpu
-v0.1.7, 27.12.2013 -- New output type addes: text
-v0.1.8, 04.01.2014 -- Fix Issue #14 (https://github.com/luca-dex/pyTSA/issues/14)
-v0.1.9, 05.01.2014 -- Fix Issue #8 (https://github.com/luca-dex/pyTSA/issues/8)
-v0.1.10, 08.01.2014 -- Fix Issue #10 (https://github.com/luca-dex/pyTSA/issues/10)
-v0.1.11, 09.01.2014 -- Tight layout
-v0.1.12, 11.01.2014 -- Fix Issue #6 (https://github.com/luca-dex/pyTSA/issues/6)
-v0.2.0, 12.01.2014 -- Grid layout
-v0.2.1, 20.01.2014 -- From file.endswith to in
-v0.2.2, 13.02.2014 -- pdf smooth - xlabel and ylabel on splot
-v0.2.3, 13.02.2014 -- from mplot to aplot
-v0.3.0, 13.02.2014 -- fist version of phspace added
-v0.3.1, 16.02.2014 -- custom title, xlabel, ylabel and zlabel #9 #12 #13
-v0.3.2, 17.02.2014 -- aphspace added
+v0.3.5, 09.04.2014 -- default commentstring set to #  #5
+v0.3.4, 08.04.2014 -- phspace3d and aphspace3d added and tested
 v0.3.3, 19.02.2014 -- aplot changed
-v0.3.4, 09.04.2014 -- phspace3d and aphspace3d added and tested
+v0.3.2, 17.02.2014 -- aphspace added
+v0.3.1, 16.02.2014 -- custom title, xlabel, ylabel and zlabel #9 #12 #13
+v0.3.0, 13.02.2014 -- fist version of phspace added
+v0.2.3, 13.02.2014 -- from mplot to aplot
+v0.2.2, 13.02.2014 -- pdf smooth - xlabel and ylabel on splot
+v0.2.1, 20.01.2014 -- From file.endswith to in
+v0.2.0, 12.01.2014 -- Grid layout
+v0.1.12, 11.01.2014 -- Fix Issue #6 (https://github.com/luca-dex/pyTSA/issues/6)
+v0.1.11, 09.01.2014 -- Tight layout
+v0.1.10, 08.01.2014 -- Fix Issue #10 (https://github.com/luca-dex/pyTSA/issues/10)
+v0.1.9, 05.01.2014 -- Fix Issue #8 (https://github.com/luca-dex/pyTSA/issues/8)
+v0.1.8, 04.01.2014 -- Fix Issue #14 (https://github.com/luca-dex/pyTSA/issues/14)
+v0.1.7, 27.12.2013 -- New output type addes: text
+v0.1.6, 21.11.2013 -- Timeseries are imported using a multiprocess script based on the number of cpu
+v0.1.5, 01.11.2013 -- Renamed to pyTSA.
+v0.1.1, 04.06.2013 -- Renamed to RedPanda. Now with task!
+v0.1.0, 05.04.2013 -- Initial release.
