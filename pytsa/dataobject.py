@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# =======
+# License
+# =======
+# 
+# pyTSA is distributed under a 3-clause ("Simplified" or "New") BSD
+# license. Parts of Pandas, NumPy, SciPy, numpydoc, bottleneck, which all have
+# BSD-compatible licenses, are included. Their licenses follow the pandas
+# license.
+# 
+# pyTSA license
+# =============
+# 
+# Copyright (c) 2014, Luca De Sano, Giulio Caravagna
+# All rights reserved.
+# See LICENSE.txt 
+
 from __future__ import print_function, division
 try:
     import builtins as py
@@ -17,6 +33,7 @@ import tables as ts
 import sys
 import re
 import time
+import random
 import multiprocessing
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
@@ -103,8 +120,10 @@ def dataset(path,
     if ext:
         #badfiles = [f for f in os.listdir(path) if (ext not in f and os.path.isfile(path + f))]
         files = [x for x in files if ext in x]
+    
+    # if numfiles chose randomply from files
     if numfiles:
-        files = files[:numfiles]
+        files = random.sample(files, numfiles)
 
 
     # progressbar
@@ -556,7 +575,6 @@ class DataObject:
                     value = 0.0
                 to_return = np.append(to_return, value)
                 start += step
-        print(to_return)
         return to_return
 
 
@@ -891,6 +909,108 @@ class DataObject:
         if self.__hdf5:
             self.__data.close()
 
+
+    def phspace3d(self,
+                  columns,
+                  start=None, 
+                  stop=None,
+                  step=1,
+                  xkcd=None,
+                  numfiles=None,
+                  hsize = 4,
+                  wsize = 8,
+                  xlabel = None,
+                  ylabel = None,
+                  zlabel = None,
+                  title = None,
+                  titlesize=19,
+                  labelsize=16):
+
+        """
+        Print the phase space of 3 columns
+
+        Keyword arguments:
+
+        columns array-like : columns names, in the form ['X1', 'X2', 'X3']. If not set all the columns will be considered
+        start float (default Timemin) : The initial time 
+        stop float (default Timemax) : The final time
+        numfiles int (default None) : Display only first numfiles file
+        xkcd boolean (default None) : If you want xkcd-style
+
+        The following code is an example of splot():
+
+        >>> timeseries.phspace(['X1', 'X2'], stop = 50)
+
+        >>> dataset.phspace(['X3', 'X5'], stop = 100)"""
+        if self.__hdf5:
+            self.__data = pd.HDFStore(self.__hdf5, 'r')
+        if start is None:
+            start = self.__timemin
+        if stop is None:
+            stop = self.__timemax
+        if title is None:
+            figname = 'Phase Space'
+        else:
+            figname = title
+
+        start = float(start)
+        stop = float(stop)
+        step = float(step)
+
+        def internalPhspace3d():
+            
+            if self.__isSet:
+                fig = plt.figure()
+                axes = fig.gca(projection='3d')
+                filename = '_'.join(('ds_phspace', str(start), str(stop)))
+
+                for ds in self.__fileindex:
+                    x = self.getacolumn(columns[0], start, stop, step, filename = ds)
+                    y = self.getacolumn(columns[1], start, stop, step, filename = ds)
+                    z = self.getacolumn(columns[2], start, stop, step, filename = ds)
+                    color = np.random.rand(3,1)
+                    axes.plot(x, y, z, color=color)
+                            
+                fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
+                if xlabel:
+                    axes.set_xlabel(xlabel, fontsize=labelsize)
+                if ylabel:
+                    axes.set_ylabel(ylabel, fontsize=labelsize)
+                if zlabel:
+                    axes.set_zlabel(zlabel, fontsize=labelsize)
+            else:
+                fig = plt.figure()
+                axes = fig.gca(projection='3d')
+                filename = '_'.join(('ts', str(start), str(stop)))
+                
+                
+                x = self.getacolumn(columns[0], start, stop, step)
+                y = self.getacolumn(columns[1], start, stop, step)
+                z = self.getacolumn(columns[2], start, stop, step)
+                color = np.random.rand(3,1)
+                axes.plot(x, y, z, color=color)
+
+                fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
+                if xlabel:
+                    axes.set_xlabel(xlabel, fontsize=labelsize)
+                if ylabel:
+                    axes.set_ylabel(ylabel, fontsize=labelsize)
+                if zlabel:
+                    axes.set_zlabel(zlabel, fontsize=labelsize)
+                    
+            self.printto(filename, 'traces/')
+        
+        if (xkcd):
+            with plt.xkcd():
+                internalPhspace3d()
+        else:
+            internalPhspace3d()
+
+        
+        plt.close()
+        if self.__hdf5:
+            self.__data.close()
+
     def mplot(self):
         """
         Just to prevent error...
@@ -1049,9 +1169,9 @@ class DataObject:
 
 
     def aphspace(self, 
+                 columns, 
                  start=None, 
                  stop=None, 
-                 columns=None, 
                  step=1, 
                  merge=None, 
                  xkcd=None,
@@ -1142,12 +1262,10 @@ class DataObject:
                         for j in range(c):
                             if actualCol >= len(columns):
                                 break
-                            thisrange = '_'.join((str(start), str(stop), str(step), str(columns[actualCol])))
-                            if thisrange not in self.__range:
-                                self.createrange(thisrange, columns[actualCol], start, stop, step)
-                            self.__range[thisrange].mean(1).plot(label=columns[actualCol], ax=axes[i][j])
-                            if legend:
-                                axes[i][j].legend(loc='best')
+                            x = self.getacolumn(columns[actualCol][0], start, stop, step, average = True)
+                            y = self.getacolumn(columns[actualCol][1], start, stop, step, average = True)
+                            color = np.random.rand(3,1)
+                            axes[i][j].plot(x, y, color=color)
                             actualCol += 1
                             if j == 0 and ylabel and len(ylabel) == r:
                                 axes[i][j].set_ylabel(ylabel[i], fontsize=labelsize)
@@ -1180,6 +1298,92 @@ class DataObject:
                 internalAphspace()
         else:
             internalAphspace()
+
+        plt.clf()
+        plt.close()
+
+    def aphspace3d(self, 
+                   columns, 
+                   start=None, 
+                   stop=None, 
+                   step=1, 
+                   xkcd=None,
+                   hsize = 4,
+                   wsize = 8,
+                   xlabel = None,
+                   ylabel = None,
+                   zlabel = None,
+                   title = None,
+                   titlesize=19,
+                   labelsize=16,
+                   legend=None):
+
+
+        """
+        Average of a dataset.
+
+        aplot() is used to plot the average of a set of time series. You can select a single
+        column or a set of columns and also merge them. It does not work (obviously) on single time series. 
+        Picks an observation from start to stop every step elements.
+
+        Keyword arguments:
+
+        start number (default Timemin) : The initial time
+        stop number (default Timemax) : The final time
+        step number (default 1) : Used in createRange()
+        columns array-like (default None) : columns names, in the form ['X1', 'X2']. If not set all the columns will be considered
+        merge boolean (default None) : If default one column per axis, if True overlaps the axes
+        xkcd boolean (default None) : If you want xkcd-style
+
+        The following code is an example of mplot():
+
+        >>> dataset.aplot(start = 0, stop = 80)
+        >>> dataset.aplot(start = 0, stop = 80, merge = True)"""
+        
+        if start is None:
+            start = self.__timemin
+        if stop is None:
+            stop = self.__timemax
+        start = float(start)
+        stop = float(stop)
+        step = float(step)
+
+        if title is None:
+            figname = 'Average Phase Space'
+        else:
+            figname = title
+
+        def internalAphspace3d():
+            if self.__isSet:
+                fig = plt.figure()
+                ax = fig.gca(projection='3d')
+                filename = '_'.join(('average_phspace', str(columns[0]), str(columns[-1]), str(start), str(stop)))
+                for col in columns:
+                    x = self.getacolumn(columns[0], start, stop, step, average = True)
+                    y = self.getacolumn(columns[1], start, stop, step, average = True)
+                    z = self.getacolumn(columns[2], start, stop, step, average = True)
+                    color = np.random.rand(3,1)
+                    ax.plot(x, y, z, color=color)
+                fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
+                if xlabel:
+                    ax.set_xlabel(xlabel, fontsize=labelsize)
+                if ylabel:
+                    ax.set_ylabel(ylabel, fontsize=labelsize)
+                if zlabel:
+                    ax.set_zlabel(zlabel, fontsize=labelsize)
+                if legend:
+                    plt.legend(loc='best')
+                
+
+                if 'txt' in self.__outputs:
+                    self.printFromSeries(filename, filetitle, filedata)
+                self.printto(filename, 'averages/')
+
+        if (xkcd):
+            with plt.xkcd():
+                internalAphspace3d()
+        else:
+            internalAphspace3d()
 
         plt.clf()
         plt.close()
@@ -1599,15 +1803,16 @@ class DataObject:
                     for col in columns:  
                         thisrow = '_'.join((str(value), str(col)))       
                         n, bins, patches = plt.hist(self.__row[thisrow].values, range=[minrange, maxrange], bins=nbins, \
-                            normed=normed, alpha=0.5, label=col, ax=ax)
+                            normed=normed, alpha=0.5, label=col, axes=ax)
                         if fit:
                             if not normed:
                                 raise ValueError('Fit only if normed')
                             else:
                                 (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
+                                print('Col', col, '-> mu:', round(mu, 5), ' - sigma:', round(sigma, 5))
                                 x = np.arange(minrange, maxrange, ((maxrange-minrange) / 100))
                                 y = mlab.normpdf(x, mu, sigma)
-                                plt.plot(x, y, 'r--', linewidth=2, ax=ax)
+                                plt.plot(x, y, 'r--', linewidth=2, axes=ax)
                     fig.suptitle(figname, fontweight='bold', fontsize=titlesize)
                     if xlabel:
                         ax.set_xlabel(xlabel, fontsize=labelsize)
@@ -1647,6 +1852,7 @@ class DataObject:
                                     raise ValueError('Fit only if normed')
                                 else:
                                     (mu, sigma) = stats.norm.fit(self.__row[thisrow].values)
+                                    print('Col', columns[actualCol], '-> mu:', round(mu, 5), ' - sigma:', round(sigma, 5))
                                     x = np.arange(minrange, maxrange, ((maxrange-minrange) / 100))
                                     y = mlab.normpdf(x, mu, sigma)
                                     axes[i][j].plot(x, y, 'r--', linewidth = 2)

@@ -15,4 +15,5 @@ v0.2.3, 13.02.2014 -- from mplot to aplot
 v0.3.0, 13.02.2014 -- fist version of phspace added
 v0.3.1, 16.02.2014 -- custom title, xlabel, ylabel and zlabel #9 #12 #13
 v0.3.2, 17.02.2014 -- aphspace added
-v0.3.3, 19.02.2014 -- aplot with o
+v0.3.3, 19.02.2014 -- aplot changed
+v0.3.4, 09.04.2014 -- phspace3d and aphspace3d added and tested
