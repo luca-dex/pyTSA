@@ -1,5 +1,5 @@
-RedPanda
-========
+pyTSA
+=====
 
 pyTSA is a [Pandas](https://github.com/pydata/pandas) extension that allow you to work on multiple time series.
 
