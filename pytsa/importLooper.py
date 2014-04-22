@@ -18,6 +18,7 @@
 # See LICENSE.txt 
 
 import os
+import sys
 import pandas as pd
 from multiprocessing import Process
 from commentedfile import *
@@ -92,7 +93,8 @@ class ImportLooper(Process):
 
             # maybe commentstring is worng
             except StopIteration:
-                sys.stdout.write("\b" * (progressbarlen+2))
+                #sys.stdout.write("\b" * (progressbarlen+2))
+                sys.stdout.write("\b")
                 print('Warning! In file', actualfile, 'a line starts with NaN')
 
             self.queueOUT.put((datadictname, toReturn))
