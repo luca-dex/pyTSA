@@ -613,8 +613,6 @@ class DataObject:
 
         >>> dataset.splot(stop = 100)"""
 
-        #ristampo comando fatto
-        print('')
 
         if self.__hdf5:
             self.__data = pd.HDFStore(self.__hdf5, 'r')
@@ -646,6 +644,8 @@ class DataObject:
             figname = 'Time-series'
         else:
             figname = title
+
+        print('Time series from', round(start, 4), 'to', round(stop, 4), 'on columns:', ' '.join(columns))
 
         def internalSplot():
             if self.__isSet:
@@ -831,6 +831,11 @@ class DataObject:
         stop = float(stop)
         step = float(step)
 
+        s = ''
+        for c in columns:
+            s += '[' + ' '.join(c) + '] '
+        print('2d phase space from', round(start, 4), 'to', round(stop, 4), 'on columns:', s)
+
         def internalPhspace():
             
             if self.__isSet:
@@ -991,6 +996,8 @@ class DataObject:
         stop = float(stop)
         step = float(step)
 
+        print('3d phase space from', round(start, 4), 'to', round(stop, 4), 'on columns:', '[', ' '.join(columns), ']')
+
         def internalPhspace3d():
             
             if self.__isSet:
@@ -1109,6 +1116,8 @@ class DataObject:
             figname = 'Time-series (averages)'
         else:
             figname = title
+
+        print('Time-series (averages) from', round(start, 4), 'to', round(stop, 4), 'on columns: [', ' '.join(columns), ']')
 
         def internalAplot():
             if self.__isSet:
@@ -1260,9 +1269,15 @@ class DataObject:
         step = float(step)
 
         if title is None:
-            figname = '3D Phase Space (averages)'
+            figname = 'Phase Space (averages)'
         else:
             figname = title
+
+        s = ''
+        for c in columns:
+            s += '[' + ' '.join(c) + '] '
+        print('Phase space (averages) from', round(start, 4), 'to', round(stop, 4), 'on columns: [', s, ']')
+
 
         def internalAphspace():
             if self.__isSet:
@@ -1408,6 +1423,8 @@ class DataObject:
         else:
             figname = title
 
+        print('3D phase space (averages) from', round(start, 4), 'to', round(stop, 4), 'on columns: [', ' '.join(columns), ']')
+
         def internalAphspace3d():
             if self.__isSet:
                 fig = plt.figure()
@@ -1504,6 +1521,8 @@ class DataObject:
             figname = 'Time-series standard deviation'
         else:
             figname = title
+
+        print('Time-series standard deviation from', round(start, 4), 'to', round(stop, 4), 'on columns: [', ' '.join(columns), ']')
 
         def internalSdplot():    
             if self.__isSet:
@@ -1660,6 +1679,8 @@ class DataObject:
             figname = 'Time-series averages and standard deviations'
         else:
             figname = title
+
+        print('Time-series averages and standard deviations from', round(start, 4), 'to', round(stop, 4), 'on columns: [', ' '.join(columns), ']')
 
         def internalMsdplot():    
             if self.__isSet:
@@ -1850,6 +1871,8 @@ class DataObject:
         elif xlabel is ' ':
             xlabel = None
 
+        print('Probability density function at', round(time, 4), 'on columns: [', ' '.join(columns), ']')
+
         def internalPdf(nbins):    
             if self.__isSet:
                 if merge:
@@ -2020,6 +2043,12 @@ class DataObject:
 
         moments = [float(x) for x in moments]
         moments.sort()
+
+        s = ''
+        for x in moments:
+            s += ' ' + str(round(x, 4))
+        print('Probability density function at [', s, '] on column:', column )
+
         filename = '_'.join(('pdf_3d', column, str(moments[0]), str(moments[-1])))
         if self.__isSet:
             minrange = None
@@ -2149,6 +2178,9 @@ class DataObject:
             ylabel = self.__columns
         elif ylabel is ' ':
             ylabel = None
+
+        print('Probability density function (heatmap) from', round(start, 4), 'to', round(stop, 4), 'on columns: [', ' '.join(columns), ']')
+
         
         filename = '_'.join(('heatmap', columns[0], columns[-1], str(start), str(stop)))
         if self.__isSet:
@@ -2305,6 +2337,9 @@ class DataObject:
             figname = 'Probability densitiy function (surface)'
         else:
             figname = title
+
+        print('Probability density function (surface) from', round(start, 4), 'to', round(stop, 4), 'on column:' , column)
+
         filename = '_'.join(('surface', column, str(start), str(stop)))
         if self.__isSet:
             fig = plt.figure()
