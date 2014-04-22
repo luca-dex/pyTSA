@@ -921,6 +921,8 @@ class DataObject:
         else:
             internalPhspace()
 
+        print('Command completed \n')
+
         
         plt.close()
         if self.__hdf5:
@@ -1037,6 +1039,8 @@ class DataObject:
                 internalPhspace3d()
         else:
             internalPhspace3d()
+
+        print('Command completed \n')
 
         
         plt.close()
@@ -1196,6 +1200,8 @@ class DataObject:
         else:
             internalAplot()
 
+        print('Command completed \n')
+
         plt.clf()
         plt.close()
 
@@ -1331,6 +1337,8 @@ class DataObject:
         else:
             internalAphspace()
 
+        print('Command completed \n')
+
         plt.clf()
         plt.close()
 
@@ -1431,6 +1439,8 @@ class DataObject:
                 internalAphspace3d()
         else:
             internalAphspace3d()
+
+        print('Command completed \n')
 
         plt.clf()
         plt.close()
@@ -1584,6 +1594,8 @@ class DataObject:
             internalSdplot()
 
         plt.close()
+
+        print('Command completed \n')
 
 
     def msdplot(self):
@@ -1769,6 +1781,8 @@ class DataObject:
         else:
             internalMsdplot()
 
+        print('Command completed \n')
+
         plt.clf()
         plt.close()
 
@@ -1940,7 +1954,9 @@ class DataObject:
             with plt.xkcd():
                 internalPdf(numbins)
         else:
-            internalPdf(numbins)                
+            internalPdf(numbins)  
+
+        print('Command completed \n')              
         
         plt.clf()
         plt.close()
@@ -2068,6 +2084,7 @@ class DataObject:
             self.printto(filename, 'p-density/')
             plt.clf()
             plt.close()
+        print('Command completed \n')
 
     def meq2d(self, 
               start=None, 
@@ -2219,6 +2236,7 @@ class DataObject:
             self.printto(filename, 'm-equation/')
             plt.clf()
             plt.close()
+        print('Command completed \n')
 
 
 
@@ -2351,6 +2369,7 @@ class DataObject:
         self.printto(filename, 'm-equation/')
         plt.clf()
         plt.close()
+        print('Command completed \n')
 
 
     def printto(self, filename, path = ''):
