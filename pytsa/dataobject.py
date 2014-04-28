@@ -313,7 +313,7 @@ class DataObject:
         self.__hdf5 = hdf5name
         self.__fpath = ''
 
-        if fileindex is not None:
+        if fileindex:
             self.__fileindex = fileindex
 
         if isSet:
@@ -631,7 +631,10 @@ class DataObject:
             merge = True
 
         if xlabel is None:
-            xlabel = self.__data[self.__fileindex[0]].index.name
+            if self.__isSet:
+                xlabel = self.__data[self.__fileindex[0]].index.name
+            else:
+                xlabel = self.__data.index.name
         elif xlabel is ' ':
             xlabel = None
 
@@ -1867,7 +1870,10 @@ class DataObject:
             ylabel = None
 
         if xlabel is None:
-            xlabel = self.__data[self.__fileindex[0]].index.name
+            if self.__isSet:
+                xlabel = self.__data[self.__fileindex[0]].index.name
+            else:
+                xlabel = self.__data.index.name
         elif xlabel is ' ':
             xlabel = None
 
@@ -2027,7 +2033,10 @@ class DataObject:
             figname = title
 
         if xlabel is None:
-            xlabel = self.__data[self.__fileindex[0]].index.name
+            if self.__isSet:
+                xlabel = self.__data[self.__fileindex[0]].index.name
+            else:
+                xlabel = self.__data.index.name
         elif xlabel is ' ':
             xlabel = None
 
@@ -2170,7 +2179,10 @@ class DataObject:
             figname = title
 
         if xlabel is None:
-            xlabel = self.__data[self.__fileindex[0]].index.name
+            if self.__isSet:
+                xlabel = self.__data[self.__fileindex[0]].index.name
+            else:
+                xlabel = self.__data.index.name
         elif xlabel is ' ':
             xlabel = None
 
@@ -2318,7 +2330,10 @@ class DataObject:
         step = float(step)
 
         if xlabel is None:
-            xlabel = self.__data[self.__fileindex[0]].index.name
+            if self.__isSet:
+                xlabel = self.__data[self.__fileindex[0]].index.name
+            else:
+                xlabel = self.__data.index.name
         elif xlabel is ' ':
             xlabel = None
 
