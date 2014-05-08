@@ -15,8 +15,7 @@ setup(
         "python-dateutil >= 1.5",
         "matplotlib >= 1.3.0",
         "numexpr",
-        "bottleneck",
-        "tables"
+        "bottleneck"
     ],
 
     # metadata for upload to PyPI
