@@ -29,7 +29,7 @@ import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
-import tables as ts
+# import tables as ts
 import sys
 import re
 import time
@@ -345,17 +345,17 @@ class DataObject:
                 print('mean: ', round(np.mean(vmed), 6))
                 print('std:  ', round(np.mean(vstd), 6))
 
-        if hdf5name and newRp:
-            self.__data.close()
-            store = ts.openFile(hdf5name, 'a')
-            group = store.createGroup('/', 'info')
-            table = store.createTable(group, 'desc', RedPandaInfo)
-            table.attrs.isSet = self.__isSet
-            table.attrs.timemin = self.__isSet = self.__timemin
-            table.attrs.timemax = self.__isSet = self.__timemax
-            table.attrs.fileindex =  self.__fileindex
-            table.flush()
-            store.close()
+#        if hdf5name and newRp:
+#            self.__data.close()
+#            store = ts.openFile(hdf5name, 'a')
+#            group = store.createGroup('/', 'info')
+#            table = store.createTable(group, 'desc', RedPandaInfo)
+#            table.attrs.isSet = self.__isSet
+#            table.attrs.timemin = self.__isSet = self.__timemin
+#            table.attrs.timemax = self.__isSet = self.__timemax
+#            table.attrs.fileindex =  self.__fileindex
+#            table.flush()
+#            store.close()
             
 
     def getTimemin(self):
@@ -1696,8 +1696,8 @@ class DataObject:
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
                         filedata.append(np.arange(start, stop, step))
-                    color = np.random.rand(3,1)
                     for col in columns:
+                        color = np.random.rand(3,1)
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
@@ -2032,18 +2032,18 @@ class DataObject:
         else:
             figname = title
 
-        if xlabel is None:
-            if self.__isSet:
-                xlabel = self.__data[self.__fileindex[0]].index.name
-            else:
-                xlabel = self.__data.index.name
-        elif xlabel is ' ':
-            xlabel = None
-
         if ylabel is None:
-            ylabel = column
+            if self.__isSet:
+                ylabel = self.__data[self.__fileindex[0]].index.name
+            else:
+                ylabel = self.__data.index.name
         elif ylabel is ' ':
             ylabel = None
+
+        if xlabel is None:
+            xlabel = column
+        elif xlabel is ' ':
+            xlabel = None
 
         if zlabel is None:
             zlabel = 'probability'
@@ -2470,9 +2470,3 @@ class DataObject:
                     raise ValueError('There is a problem on selected columns')
                 return [col]
         return col 
-
-
-
-
-class RedPandaInfo(ts.IsDescription):
-    pass

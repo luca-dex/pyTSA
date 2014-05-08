@@ -9,13 +9,14 @@ setup(
     install_requires=[
         "Numpy >= 1.6.1",
         "Scipy >= 0.10.1",
-        "Pandas >= 0.12.0",
         "patsy",
         "statsmodels",
+        "Pandas >= 0.12.0",
         "python-dateutil >= 1.5",
         "matplotlib >= 1.3.0",
         "numexpr",
-        "bottleneck"
+        "bottleneck",
+        "tables"
     ],
 
     # metadata for upload to PyPI
