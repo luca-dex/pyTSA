@@ -40,6 +40,7 @@ from commentedfile import *
 from importLooper import *
 from dataSampler import *
 from itertools import izip_longest
+from sbrml import write_sbrml
 
 def dataset(path, 
             commentstring='#', 
@@ -489,7 +490,7 @@ class DataObject:
         To add a new output to the output list you have to do this:
 
         >>> dataset.addOutput('eps')"""
-        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view', 'txt']:
+        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view', 'txt', 'sbrml']:
             self.__outputs.add(out)
         else:
             print(out, 'not in outputs')
@@ -1691,7 +1692,7 @@ class DataObject:
                     fig = plt.figure()
                     ax = fig.add_subplot(111) 
                     filename = '_'.join(('mean_std_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
@@ -1701,7 +1702,7 @@ class DataObject:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
-                        if 'txt' in self.__outputs:
+                        if 'txt' or 'sbrml' in self.__outputs:
                             filedata.append(self.__range[thisrange].mean(1).values)
                             filedata.append(self.__range[thisrange].std(1).values)
                         mean = self.__range[thisrange].mean(1)
@@ -1736,7 +1737,7 @@ class DataObject:
                     w = (wsize * c)
                     fig.set_size_inches(w, h)
                     filename = '_'.join(('mean_std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join([cl + '_mean ' + cl + '_std' for cl in columns])
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
@@ -1756,7 +1757,7 @@ class DataObject:
                                 self.createrange(thisrange, columns[actualCol], start, stop, step)
                             mean = self.__range[thisrange].mean(1)
                             std = self.__range[thisrange].std(1)
-                            if 'txt' in self.__outputs:
+                            if 'txt' or 'sbrml' in self.__outputs:
                                 filedata.append(mean.values)
                                 filedata.append(std.values)
                             mean.plot(label=columns[actualCol], ax=axes[i][j], color = color)
@@ -1797,6 +1798,9 @@ class DataObject:
 
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
+
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -2426,7 +2430,7 @@ class DataObject:
         for out in self.__outputs:
             if out == 'view':
                 plt.show()
-            elif out == 'txt':
+            elif out in ['txt', 'sbrml']:
                 pass
             else:
                 fig = '.'.join((filename, out))
