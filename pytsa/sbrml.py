@@ -19,7 +19,7 @@
 
 # import xml.etree.ElementTree as etree
 import lxml.etree
-
+import time
 
 def read():
 	pass
@@ -27,14 +27,14 @@ def read():
 def write_sbrml(name,
 		  title,
 		  data):
-	tit = title.split('# ')[1]
+	tit = title.split('# ')[1][:-3]
 	col_names = title.split('# ')[2].split()
 	filename = name + '.xml'
 	NSMAP = {None: "http://www.sbrml.org/sbrml/level1/version1"}
 	data_result = lxml.etree.Element('sbrml', nsmap=NSMAP) 
 	data_result.set("version", '1')
 	data_result.set("level", '1')
-	data_result.set("creationDate", 'ci va la data')
+	data_result.set("creationDate", time.strftime("%Y-%m-%d %H:%M:%S"))
 
 	ontologyTerms = lxml.etree.SubElement(data_result, 'ontologyTerms')
 	lxml.etree.SubElement(ontologyTerms, 'ontologyTerm', attrib={'id': 'term1',
@@ -57,7 +57,7 @@ def write_sbrml(name,
 	resultComponent = lxml.etree.SubElement(result, 'resultComponent', attrib={'id': 'component1'})
 	dimensionDescription = lxml.etree.SubElement(resultComponent, 'dimensionDescription')
 	compositeDescription = lxml.etree.SubElement(dimensionDescription, 'compositeDescription', attrib={'name': 'time',
-																				'indexType': 'time'})
+																				'indexType': 'float'})
 	tupleDescription = lxml.etree.SubElement(compositeDescription, 'tupleDescription')
 	for col in col_names[1:]:
 		lxml.etree.SubElement(tupleDescription, 'atomicDescription', attrib={'name': col,
