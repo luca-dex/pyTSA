@@ -1129,7 +1129,7 @@ class DataObject:
                     fig = plt.figure()
                     ax = fig.add_subplot(111) 
                     filename = '_'.join(('mean_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -1140,7 +1140,7 @@ class DataObject:
                             self.createrange(thisrange, col, start, stop, step)
                         data = self.__range[thisrange].mean(1)
                         data.plot(label=col, ax=ax)
-                        if 'txt' in self.__outputs:
+                        if 'txt' or 'sbrml' in self.__outputs:
                             filedata.append(data.values)
                     if xlabel:
                         ax.set_xlabel(xlabel, fontsize=labelsize)
@@ -1158,7 +1158,7 @@ class DataObject:
                     w = (wsize * c)
                     fig.set_size_inches(w, h)
                     filename = '_'.join(('average', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -1175,7 +1175,7 @@ class DataObject:
                             thisrange = '_'.join((str(start), str(stop), str(step), str(columns[actualCol])))
                             if thisrange not in self.__range:
                                 self.createrange(thisrange, columns[actualCol], start, stop, step)
-                            if 'txt' in self.__outputs:
+                            if 'txt' or 'sbrml' in self.__outputs:
                                 filedata.append(self.__range[thisrange].mean(1).values)
                             self.__range[thisrange].mean(1).plot(label=columns[actualCol], ax=axes[i][j])
                             if legend:
@@ -1200,11 +1200,10 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
 
-
-
-
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -1342,12 +1341,11 @@ class DataObject:
                     if isinstance(ylabel, basestring):
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
-
-
-
-
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
+
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -1453,6 +1451,8 @@ class DataObject:
 
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -1534,7 +1534,7 @@ class DataObject:
                     fig = plt.figure()
                     ax = fig.add_subplot(111) 
                     filename = '_'.join(('std_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -1543,7 +1543,7 @@ class DataObject:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
-                        if 'txt' in self.__outputs:
+                        if 'txt' or 'sbrml' in self.__outputs:
                             filedata.append(self.__range[thisrange].mean(1).values)
                             filedata.append(self.__range[thisrange].std(1).values)
                         self.__range[thisrange].std(1).plot(label=col, ax=ax)
@@ -1563,7 +1563,7 @@ class DataObject:
                     w = (wsize * c)
                     fig.set_size_inches(w, h)
                     filename = '_'.join(('std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join([cl + '_mean ' + cl + '_std' for cl in columns])
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -1580,7 +1580,7 @@ class DataObject:
                             thisrange = '_'.join((str(start), str(stop), str(step), str(columns[actualCol])))
                             if thisrange not in self.__range:
                                 self.createrange(thisrange, columns[actualCol], start, stop, step)
-                            if 'txt' in self.__outputs:
+                            if 'txt' or 'sbrml' in self.__outputs:
                                 filedata.append(self.__range[thisrange].mean(1).values)
                                 filedata.append(self.__range[thisrange].std(1).values)
                             self.__range[thisrange].std(1).plot(label=columns[actualCol], ax=axes[i][j])
@@ -1608,6 +1608,8 @@ class DataObject:
 
                 if 'txt' in self.__outputs:
                     self.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
 
         if (xkcd):
