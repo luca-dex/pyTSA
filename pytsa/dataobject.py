@@ -35,6 +35,7 @@ import re
 import time
 import random
 import multiprocessing
+import util
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
 from importLooper import *
@@ -151,6 +152,7 @@ def dataset(path,
     queueIN = multiprocessing.Queue()
     queueOUT = multiprocessing.Queue()
     process = multiprocessing.cpu_count()
+
     for f in files:
         queueIN.put(f)
 
@@ -214,8 +216,7 @@ def dataset(path,
         sys.stdout.flush()
     sys.stdout.write("\n")
 
-    tstop = time.time()
-    t = tstop - tstart
+    t = time.time() - tstart
 
     return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name, t = t)
 
@@ -275,17 +276,6 @@ def loadHdf5(path):
     fileindex = list(table.attrs.fileindex)
 
     return DataObject(store, isSet, timemin, timemax, fileindex, path, newRp = None)
-
-def chunks(l, n):
-    """ Yield successive n-sized chunks from l.
-    """
-    for i in xrange(0, len(l), n):
-        yield l[i:i+n]
-
-def grouper(n, iterable):
-    "grouper(3, 'abcdefg') --> ('a','b','c'), ('d','e','f'), ('g', None, None)"
-    return izip_longest(*[iter(iterable)]*n)
-
 
 
 class DataObject:
@@ -623,7 +613,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -822,7 +812,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        columns = self.columnsPhSpCheck(columns)
+        columns = util.columnsPhSpCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
 
@@ -1107,7 +1097,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1201,7 +1191,7 @@ class DataObject:
 
 
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
@@ -1264,7 +1254,7 @@ class DataObject:
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
 
-        columns = self.columnsPhSpCheck(columns)
+        columns = util.columnsPhSpCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1342,7 +1332,7 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
 
@@ -1450,7 +1440,7 @@ class DataObject:
                 
 
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
@@ -1512,7 +1502,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1607,7 +1597,7 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
@@ -1673,7 +1663,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1799,7 +1789,7 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
 
@@ -1855,7 +1845,7 @@ class DataObject:
         fit boolean (defaul None) : If True fits the histrogram with a gaussian, works if normed
         xkcd boolean (defaul None) : If you want xkcd-style"""
         time = float(time)
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         value = float(time)
@@ -2174,7 +2164,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         step = float(step)
@@ -2440,39 +2430,3 @@ class DataObject:
                     os.makedirs(path)
                 fname = path + fig
                 plt.savefig(fname)
-
-    @staticmethod
-    def printFromSeries(name, title, data):
-        filename = name + '.data'
-        with open(filename, 'w') as f:
-            f.write(title)
-            f.write('\n')
-            for row in zip(*data):
-                cols = [c for c in row]
-                for col in cols:
-                    f.write(str(col))
-                    f.write('\t')
-                f.write('\n')
-
-    def columnsCheck(self, col):
-        if col is None:
-            return self.__columns
-        if isinstance(col, str):
-            col = col.split()
-        for c in col:
-            if c not in self.__columns:
-                error = 'Column ' + c + ' not in columns'
-                raise ValueError(error)
-        return col
-
-    def columnsPhSpCheck(self, col):
-        if isinstance(col, list):
-            if isinstance(col[0], list):
-                for c in col:
-                    if len(c) != 2 or c[0] not in self.__columns or c[1] not in self.__columns:
-                        raise ValueError('There is a problem on selected columns')
-            else:
-                if len(col) != 2 or col[0] not in self.__columns or col[1] not in self.__columns:
-                    raise ValueError('There is a problem on selected columns')
-                return [col]
-        return col 

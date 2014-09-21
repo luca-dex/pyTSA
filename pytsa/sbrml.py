@@ -21,7 +21,7 @@
 import lxml.etree
 import time
 
-def read():
+def read_sbrml():
 	pass
 
 def write_sbrml(name,
