@@ -35,11 +35,13 @@ import re
 import time
 import random
 import multiprocessing
+import util
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
 from importLooper import *
+from importLooperSBRML import *
 from dataSampler import *
-from itertools import izip_longest
+from sbrml import write_sbrml
 
 def dataset(path, 
             commentstring='#', 
@@ -51,7 +53,8 @@ def dataset(path,
             ext=None, 
             every=None, 
             numfiles=None, 
-            hdf5=None):
+            hdf5=None,
+            filetype=None):
     """
     Return a pytsa DataObject object from a set of time series.
 
@@ -71,6 +74,7 @@ def dataset(path,
     every float range 0-1 (default None) : percentage of rows to be loaded, equally distributed over the entire file. 0 is no rows, 1 is the entire file. If Default every row will be loaded
     numfiles int (default None) : in a folder you can load only numfiles files. Files are chosen randomly.
     """
+
 
     # check if pathname is correct
     if not path.endswith('/'):
@@ -150,6 +154,7 @@ def dataset(path,
     queueIN = multiprocessing.Queue()
     queueOUT = multiprocessing.Queue()
     process = multiprocessing.cpu_count()
+
     for f in files:
         queueIN.put(f)
 
@@ -158,8 +163,12 @@ def dataset(path,
     tstart = time.time()
 
     for _ in range(process):
-        looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
-            commentstring, delimiter, colnames, colid, col_pref, convert_comma)
+        if filetype == 'sbrml':
+            looper = ImportLooperSBRML(path, queueIN, queueOUT, r, every, start, stop, \
+                colnames, colid, col_pref)
+        else:
+            looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
+                commentstring, delimiter, colnames, colid, col_pref, convert_comma)
         looper.start()
         proc.append(looper)
    
@@ -213,8 +222,7 @@ def dataset(path,
         sys.stdout.flush()
     sys.stdout.write("\n")
 
-    tstop = time.time()
-    t = tstop - tstart
+    t = time.time() - tstart
 
     return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name, t = t)
 
@@ -274,17 +282,6 @@ def loadHdf5(path):
     fileindex = list(table.attrs.fileindex)
 
     return DataObject(store, isSet, timemin, timemax, fileindex, path, newRp = None)
-
-def chunks(l, n):
-    """ Yield successive n-sized chunks from l.
-    """
-    for i in xrange(0, len(l), n):
-        yield l[i:i+n]
-
-def grouper(n, iterable):
-    "grouper(3, 'abcdefg') --> ('a','b','c'), ('d','e','f'), ('g', None, None)"
-    return izip_longest(*[iter(iterable)]*n)
-
 
 
 class DataObject:
@@ -489,7 +486,7 @@ class DataObject:
         To add a new output to the output list you have to do this:
 
         >>> dataset.addOutput('eps')"""
-        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view', 'txt']:
+        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view', 'txt', 'sbrml']:
             self.__outputs.add(out)
         else:
             print(out, 'not in outputs')
@@ -504,7 +501,7 @@ class DataObject:
         To remove an output from the output list you have to do this:
 
         >>> dataset.delOutput('svg')"""
-        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
+        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view', 'txt', 'sbrml']:
             try:
                 self.__outputs.remove(out)
             except:
@@ -622,7 +619,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -821,7 +818,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        columns = self.columnsPhSpCheck(columns)
+        columns = util.columnsPhSpCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
 
@@ -1106,7 +1103,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1128,7 +1125,7 @@ class DataObject:
                     fig = plt.figure()
                     ax = fig.add_subplot(111) 
                     filename = '_'.join(('mean_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -1139,7 +1136,7 @@ class DataObject:
                             self.createrange(thisrange, col, start, stop, step)
                         data = self.__range[thisrange].mean(1)
                         data.plot(label=col, ax=ax)
-                        if 'txt' in self.__outputs:
+                        if 'txt' or 'sbrml' in self.__outputs:
                             filedata.append(data.values)
                     if xlabel:
                         ax.set_xlabel(xlabel, fontsize=labelsize)
@@ -1157,7 +1154,7 @@ class DataObject:
                     w = (wsize * c)
                     fig.set_size_inches(w, h)
                     filename = '_'.join(('average', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -1174,7 +1171,7 @@ class DataObject:
                             thisrange = '_'.join((str(start), str(stop), str(step), str(columns[actualCol])))
                             if thisrange not in self.__range:
                                 self.createrange(thisrange, columns[actualCol], start, stop, step)
-                            if 'txt' in self.__outputs:
+                            if 'txt' or 'sbrml' in self.__outputs:
                                 filedata.append(self.__range[thisrange].mean(1).values)
                             self.__range[thisrange].mean(1).plot(label=columns[actualCol], ax=axes[i][j])
                             if legend:
@@ -1199,11 +1196,10 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
 
-
-
-
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -1264,7 +1260,7 @@ class DataObject:
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
 
-        columns = self.columnsPhSpCheck(columns)
+        columns = util.columnsPhSpCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1341,12 +1337,11 @@ class DataObject:
                     if isinstance(ylabel, basestring):
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
-
-
-
-
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
+
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -1451,7 +1446,9 @@ class DataObject:
                 
 
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -1511,7 +1508,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1533,7 +1530,7 @@ class DataObject:
                     fig = plt.figure()
                     ax = fig.add_subplot(111) 
                     filename = '_'.join(('std_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join([c + '_mean ' + c + '_std' for c in columns])
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -1542,7 +1539,7 @@ class DataObject:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
-                        if 'txt' in self.__outputs:
+                        if 'txt' or 'sbrml' in self.__outputs:
                             filedata.append(self.__range[thisrange].mean(1).values)
                             filedata.append(self.__range[thisrange].std(1).values)
                         self.__range[thisrange].std(1).plot(label=col, ax=ax)
@@ -1562,7 +1559,7 @@ class DataObject:
                     w = (wsize * c)
                     fig.set_size_inches(w, h)
                     filename = '_'.join(('std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join([cl + '_mean ' + cl + '_std' for cl in columns])
                         filetitle = '# mean al columns \n# time ' + filecolumns
                         filedata = []
@@ -1579,7 +1576,7 @@ class DataObject:
                             thisrange = '_'.join((str(start), str(stop), str(step), str(columns[actualCol])))
                             if thisrange not in self.__range:
                                 self.createrange(thisrange, columns[actualCol], start, stop, step)
-                            if 'txt' in self.__outputs:
+                            if 'txt' or 'sbrml' in self.__outputs:
                                 filedata.append(self.__range[thisrange].mean(1).values)
                                 filedata.append(self.__range[thisrange].std(1).values)
                             self.__range[thisrange].std(1).plot(label=columns[actualCol], ax=axes[i][j])
@@ -1606,7 +1603,9 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -1670,7 +1669,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1691,7 +1690,7 @@ class DataObject:
                     fig = plt.figure()
                     ax = fig.add_subplot(111) 
                     filename = '_'.join(('mean_std_merge', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join(columns)
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
@@ -1701,7 +1700,7 @@ class DataObject:
                         thisrange = '_'.join((str(start), str(stop), str(step), str(col)))
                         if thisrange not in self.__range:
                             self.createrange(thisrange, col, start, stop, step)
-                        if 'txt' in self.__outputs:
+                        if 'txt' or 'sbrml' in self.__outputs:
                             filedata.append(self.__range[thisrange].mean(1).values)
                             filedata.append(self.__range[thisrange].std(1).values)
                         mean = self.__range[thisrange].mean(1)
@@ -1736,7 +1735,7 @@ class DataObject:
                     w = (wsize * c)
                     fig.set_size_inches(w, h)
                     filename = '_'.join(('mean_std', str(columns[0]), str(columns[-1]), str(start), str(stop)))
-                    if 'txt' in self.__outputs:
+                    if 'txt' or 'sbrml' in self.__outputs:
                         filecolumns = ' '.join([cl + '_mean ' + cl + '_std' for cl in columns])
                         filetitle = '# mean std all columns \n# time ' + filecolumns
                         filedata = []
@@ -1756,7 +1755,7 @@ class DataObject:
                                 self.createrange(thisrange, columns[actualCol], start, stop, step)
                             mean = self.__range[thisrange].mean(1)
                             std = self.__range[thisrange].std(1)
-                            if 'txt' in self.__outputs:
+                            if 'txt' or 'sbrml' in self.__outputs:
                                 filedata.append(mean.values)
                                 filedata.append(std.values)
                             mean.plot(label=columns[actualCol], ax=axes[i][j], color = color)
@@ -1796,7 +1795,10 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
-                    self.printFromSeries(filename, filetitle, filedata)
+                    util.printFromSeries(filename, filetitle, filedata)
+                if 'sbrml' in self.__outputs:
+                    write_sbrml(filename, filetitle, filedata)
+
                 self.printto(filename, 'averages/')
 
         if (xkcd):
@@ -1849,7 +1851,7 @@ class DataObject:
         fit boolean (defaul None) : If True fits the histrogram with a gaussian, works if normed
         xkcd boolean (defaul None) : If you want xkcd-style"""
         time = float(time)
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         value = float(time)
@@ -2168,7 +2170,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        columns = self.columnsCheck(columns)
+        columns = util.columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         step = float(step)
@@ -2426,7 +2428,7 @@ class DataObject:
         for out in self.__outputs:
             if out == 'view':
                 plt.show()
-            elif out == 'txt':
+            elif out in ['txt', 'sbrml']:
                 pass
             else:
                 fig = '.'.join((filename, out))
@@ -2434,39 +2436,3 @@ class DataObject:
                     os.makedirs(path)
                 fname = path + fig
                 plt.savefig(fname)
-
-    @staticmethod
-    def printFromSeries(name, title, data):
-        filename = name + '.data'
-        with open(filename, 'w') as f:
-            f.write(title)
-            f.write('\n')
-            for row in zip(*data):
-                cols = [c for c in row]
-                for col in cols:
-                    f.write(str(col))
-                    f.write('\t')
-                f.write('\n')
-
-    def columnsCheck(self, col):
-        if col is None:
-            return self.__columns
-        if isinstance(col, str):
-            col = col.split()
-        for c in col:
-            if c not in self.__columns:
-                error = 'Column ' + c + ' not in columns'
-                raise ValueError(error)
-        return col
-
-    def columnsPhSpCheck(self, col):
-        if isinstance(col, list):
-            if isinstance(col[0], list):
-                for c in col:
-                    if len(c) != 2 or c[0] not in self.__columns or c[1] not in self.__columns:
-                        raise ValueError('There is a problem on selected columns')
-            else:
-                if len(col) != 2 or col[0] not in self.__columns or col[1] not in self.__columns:
-                    raise ValueError('There is a problem on selected columns')
-                return [col]
-        return col 
