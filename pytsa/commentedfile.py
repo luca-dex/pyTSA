@@ -57,6 +57,7 @@ class CommentedFile(file):
         self.rowtoadd += self.every
 
         try:
+            line = line.lstrip()
             while line[0] in self.comments or float(line.split()[0]) < self.l_limit:
                 line = self.f.next()
 

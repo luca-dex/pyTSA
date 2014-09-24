@@ -39,8 +39,8 @@ import util
 from mpl_toolkits.mplot3d import Axes3D
 from commentedfile import *
 from importLooper import *
+from importLooperSBRML import *
 from dataSampler import *
-from itertools import izip_longest
 from sbrml import write_sbrml
 
 def dataset(path, 
@@ -53,7 +53,8 @@ def dataset(path,
             ext=None, 
             every=None, 
             numfiles=None, 
-            hdf5=None):
+            hdf5=None,
+            filetype=None):
     """
     Return a pytsa DataObject object from a set of time series.
 
@@ -73,6 +74,7 @@ def dataset(path,
     every float range 0-1 (default None) : percentage of rows to be loaded, equally distributed over the entire file. 0 is no rows, 1 is the entire file. If Default every row will be loaded
     numfiles int (default None) : in a folder you can load only numfiles files. Files are chosen randomly.
     """
+
 
     # check if pathname is correct
     if not path.endswith('/'):
@@ -161,8 +163,12 @@ def dataset(path,
     tstart = time.time()
 
     for _ in range(process):
-        looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
-            commentstring, delimiter, colnames, colid, col_pref, convert_comma)
+        if filetype == 'sbrml':
+            looper = ImportLooperSBRML(path, queueIN, queueOUT, r, every, start, stop, \
+                colnames, colid, col_pref, convert_comma)
+        else:
+            looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
+                commentstring, delimiter, colnames, colid, col_pref, convert_comma)
         looper.start()
         proc.append(looper)
    
@@ -495,7 +501,7 @@ class DataObject:
         To remove an output from the output list you have to do this:
 
         >>> dataset.delOutput('svg')"""
-        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view']:
+        if out in ['png', 'pdf', 'ps', 'eps', 'svg', 'view', 'txt', 'sbrml']:
             try:
                 self.__outputs.remove(out)
             except:
