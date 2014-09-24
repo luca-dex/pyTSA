@@ -37,8 +37,7 @@ class ImportLooperSBRML(Process):
                  tmax, 
                  colnames, 
                  colid, 
-                 col_pref, 
-                 convert_comma):
+                 col_pref):
 
         self.path = path
         self.queueIN = queueIN
@@ -50,7 +49,6 @@ class ImportLooperSBRML(Process):
         self.colnames = colnames
         self.colid = colid
         self.col_pref = col_pref
-        self.convert_comma = convert_comma
         self.killReceived = False
 
         super(ImportLooperSBRML, self).__init__()
@@ -71,8 +69,9 @@ class ImportLooperSBRML(Process):
             # create a fake file and pd.read_csv!
 
             columns = []
-            time = []
-            value = {}
+            index = []
+            indexName = ''
+            value = []
 
             try:
 
@@ -82,15 +81,45 @@ class ImportLooperSBRML(Process):
                 sbrml = 'sbrml:'
                 nsmap = {'sbrml': root.nsmap[None]}
 
-                for child in root:
-                    print(child)
-
-                root.findall(sbrml + 'tupleDescription', namespaces=nsmap)
+                operations = root.find(sbrml+'operations', namespaces=nsmap)
+                print(operations)
 
                 # find time series
-                # create df in toReturn
-                print(columns) 
-                toReturn = None
+
+                for operation in operations:
+                    print(operation)
+                    result = operation.find(sbrml+'result', namespaces=nsmap)
+                    print(result)
+                    resultComponent = result.find(sbrml+'resultComponent', namespaces=nsmap)
+                    print(resultComponent)
+                    dimDesc = resultComponent.find(sbrml+'dimensionDescription', namespaces=nsmap)
+                    print(dimDesc)
+                    compDesc = dimDesc.find(sbrml+'compositeDescription', namespaces=nsmap)
+                    indexName = compDesc.get('name')
+                    tupleDesc = compDesc.find(sbrml+'tupleDescription', namespaces=nsmap)
+                    for atomicDesc in tupleDesc:
+                        columns.append(atomicDesc.get('name'))
+                        value.append([])
+
+                    dim = resultComponent.find(sbrml+'dimension', namespaces=nsmap)
+                    print(dim)
+                    for compValue in dim:
+                        index.append(float(compValue.get('indexValue')))
+                        tupleValues = compValue.find(sbrml+'tuple', namespaces=nsmap)
+                        for k, atomicValue in enumerate(tupleValues):
+                            value[k].append(float(atomicValue.text))
+
+                # create a Pandas Series for every column
+                s = {}
+                for k, col in enumerate(columns):
+                    s[col] = pd.Series(value[k], index=index)
+
+                # merge Series in a DataFrame
+                df = pd.DataFrame(s)
+                df.index.name = indexName
+
+                # put df in toReturn
+                toReturn = df
 
             # mmm somethings wrong here
             except ValueError:

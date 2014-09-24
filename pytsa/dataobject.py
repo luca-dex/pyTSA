@@ -165,7 +165,7 @@ def dataset(path,
     for _ in range(process):
         if filetype == 'sbrml':
             looper = ImportLooperSBRML(path, queueIN, queueOUT, r, every, start, stop, \
-                colnames, colid, col_pref, convert_comma)
+                colnames, colid, col_pref)
         else:
             looper = ImportLooper(path, queueIN, queueOUT, r, every, start, stop, \
                 commentstring, delimiter, colnames, colid, col_pref, convert_comma)
