@@ -82,18 +82,13 @@ class ImportLooperSBRML(Process):
                 nsmap = {'sbrml': root.nsmap[None]}
 
                 operations = root.find(sbrml+'operations', namespaces=nsmap)
-                print(operations)
 
                 # find time series
 
                 for operation in operations:
-                    print(operation)
                     result = operation.find(sbrml+'result', namespaces=nsmap)
-                    print(result)
                     resultComponent = result.find(sbrml+'resultComponent', namespaces=nsmap)
-                    print(resultComponent)
                     dimDesc = resultComponent.find(sbrml+'dimensionDescription', namespaces=nsmap)
-                    print(dimDesc)
                     compDesc = dimDesc.find(sbrml+'compositeDescription', namespaces=nsmap)
                     indexName = compDesc.get('name')
                     tupleDesc = compDesc.find(sbrml+'tupleDescription', namespaces=nsmap)
@@ -102,7 +97,6 @@ class ImportLooperSBRML(Process):
                         value.append([])
 
                     dim = resultComponent.find(sbrml+'dimension', namespaces=nsmap)
-                    print(dim)
                     for compValue in dim:
                         index.append(float(compValue.get('indexValue')))
                         tupleValues = compValue.find(sbrml+'tuple', namespaces=nsmap)
