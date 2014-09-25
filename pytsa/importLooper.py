@@ -71,6 +71,7 @@ class ImportLooper(Process):
                 datadictname = 'f' + self.re.sub('', datadictname)
 
             # create a fake file and pd.read_csv!
+            toReturn = None
             try:
                 source = CommentedFile(open(actualfile, 'rb'), every=self.every, \
                     commentstring=self.commentstring, low_limit=self.tmin, high_limit=self.tmax, \
@@ -97,7 +98,10 @@ class ImportLooper(Process):
                 sys.stdout.write("\b")
                 print('Warning! In file', actualfile, 'a line starts with NaN')
 
-            self.queueOUT.put((datadictname, toReturn))
+            if toReturn:
+                self.queueOUT.put((datadictname, toReturn))
+            else:
+                print("Error in file", actualfile,"\n")
 
 
             

@@ -72,6 +72,7 @@ class ImportLooperSBRML(Process):
             index = []
             indexName = ''
             value = []
+            geneOntology = {}
 
             try:
 
@@ -126,6 +127,6 @@ class ImportLooperSBRML(Process):
                 sys.stdout.write("\b")
                 print('Warning! In file', actualfile, 'there is somethings wrong')
 
-            self.queueOUT.put((datadictname, toReturn))
+            self.queueOUT.put((datadictname, toReturn, geneOntology))
 
       

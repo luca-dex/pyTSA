@@ -173,10 +173,16 @@ def dataset(path,
         proc.append(looper)
    
 
+    # nome of files loaded
     fileindex = []
+    # in case of sbrml mode is possible to have geneOntology term
+    g = None
 
     for _ in files:
-        k, w = queueOUT.get()
+        if filetype == 'sbrml':
+            k, w, g = queueOUT.get()
+        else:
+            k, w = queueOUT.get()
         datadict[k] = w
 
         # range limit check
@@ -224,7 +230,7 @@ def dataset(path,
 
     t = time.time() - tstart
 
-    return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name, t = t)
+    return DataObject(datadict, True, timemin, timemax, fileindex, hdf5name, t = t, geneOntology = g)
 
 def timeseries(path, 
                commentstring='#', 
@@ -293,7 +299,8 @@ class DataObject:
                  fileindex=None, 
                  hdf5name = None, 
                  newRp = True,
-                 t = None):
+                 t = None,
+                 geneOntology = None):
 
         # dataset or timeseries
         self.__data = data

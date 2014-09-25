@@ -50,6 +50,8 @@ class CommentedFile(file):
     # return next line, skip lines starting with commentstring
     def next(self):
         line = self.f.next()
+        line = line.lstrip()
+        
         while (self.readnumber != int(self.rowtoadd)):
             self.readnumber += 1
             line = self.f.next()
@@ -57,7 +59,6 @@ class CommentedFile(file):
         self.rowtoadd += self.every
 
         try:
-            line = line.lstrip()
             while line[0] in self.comments or float(line.split()[0]) < self.l_limit:
                 line = self.f.next()
 
