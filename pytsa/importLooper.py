@@ -98,7 +98,7 @@ class ImportLooper(Process):
                 sys.stdout.write("\b")
                 print('Warning! In file', actualfile, 'a line starts with NaN')
 
-            if toReturn:
+            if toReturn is not None:
                 self.queueOUT.put((datadictname, toReturn))
             else:
                 print("Error in file", actualfile,"\n")
