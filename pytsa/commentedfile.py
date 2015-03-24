@@ -17,7 +17,9 @@
 # All rights reserved.
 # See LICENSE.txt 
 
-class CommentedFile(file):
+import sys
+
+class CommentedFile:
     """ this class skips comment lines. comment lines start with any of the symbols in commentstring """
     def __init__(self, 
                  f, 
@@ -48,25 +50,43 @@ class CommentedFile(file):
 
 
     # return next line, skip lines starting with commentstring
+
+    def __next__(self):
+        return self.next()
+
     def next(self):
-        line = self.f.next()
+
+        if sys.version_info >= (3, 1):
+            line = self.f.__next__()
+        else:
+            line = self.f.next()
+
         line = line.lstrip()
         
         while (self.readnumber != int(self.rowtoadd)):
             self.readnumber += 1
-            line = self.f.next()
+            if sys.version_info >= (3, 1):
+                line = self.f.__next__()
+            else:
+                line = self.f.next()
+
         self.readnumber += 1
         self.rowtoadd += self.every
 
         try:
-            while line[0] in self.comments or float(line.split()[0]) < self.l_limit:
-                line = self.f.next()
+            while (line[0] in self.comments) or (float(line.split()[0]) < self.l_limit):
+
+                if sys.version_info >= (3, 1):
+                    line = self.f.__next__()
+                else:
+                    line = self.f.next()
 
             splitted = line.split()
             if  float(splitted[0]) < self.h_limit:
                 if self.convert_comma:
-                    return ','.join(splitted)
-                return line
+                    print(','.join([str(x) for x in map(float, splitted)]))
+                    return ','.join([str(x) for x in map(float, splitted)])
+                return '\t'.join([str(x) for x in map(float, splitted)])
             else:
                 self.close()
                 self.readnumber = 0
@@ -92,6 +112,13 @@ class CommentedFile(file):
         f.seek(0)
         return numlines
 
+    # standard stuff from file
 
     def __iter__(self):
         return self
+
+    def __enter__(self):
+        return self
+
+    def __getattr__(self, attr):
+        return getattr(self.f, attr)

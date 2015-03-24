@@ -17,7 +17,11 @@
 # All rights reserved.
 # See LICENSE.txt 
 
-from Queue import Empty
+import sys
+if sys.version_info >= (3, 1):
+    from queue import Empty
+else:
+    from Queue import Empty
 from multiprocessing import Process
 
 class DataSampler(Process):

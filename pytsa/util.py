@@ -17,8 +17,6 @@
 # All rights reserved.
 # See LICENSE.txt 
 
-from itertools import izip_longest
-
 
 def printFromSeries(name, title, data):
         filename = name + '.data'
@@ -60,7 +58,3 @@ def chunks(l, n):
     """
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
-
-def grouper(n, iterable):
-    "grouper(3, 'abcdefg') --> ('a','b','c'), ('d','e','f'), ('g', None, None)"
-    return izip_longest(*[iter(iterable)]*n)
