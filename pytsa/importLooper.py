@@ -21,9 +21,13 @@ import os
 import sys
 import pandas as pd
 from multiprocessing import Process
-from commentedfile import *
-from Queue import Empty
-import cStringIO
+from .commentedfile import *
+if sys.version_info >= (3, 1):
+    from queue import Empty
+    import io
+else:
+    from Queue import Empty
+    import cStringIO as io
 
 class ImportLooper(Process):
     def __init__(self, 
@@ -73,18 +77,19 @@ class ImportLooper(Process):
             # create a fake file and pd.read_csv!
             toReturn = None
             try:
-                source = CommentedFile(open(actualfile, 'rb'), every=self.every, \
+                source = CommentedFile(open(actualfile, 'r'), every=self.every, \
                     commentstring=self.commentstring, low_limit=self.tmin, high_limit=self.tmax, \
                     convert_comma=self.convert_comma)
                 if self.convert_comma:
                     temp_string = ""
                     for r in source:
                         temp_string = temp_string + r + '\n'
-                    toReturn = pd.read_csv(cStringIO.StringIO(temp_string), sep=self.delimiter, index_col=0, \
+                    toReturn = pd.read_csv(io.StringIO(temp_string), sep=self.delimiter, index_col=0, \
                         header=None, names=self.colnames, usecols=self.colid, prefix=self.col_pref)
                 else:
                     toReturn = pd.read_csv(source, sep=self.delimiter, index_col=0, \
                         header=None, names=self.colnames, usecols=self.colid, prefix=self.col_pref)
+                toReturn = toReturn.astype(float)
                 source.close()
 
             # mmm somethings wrong here
@@ -98,7 +103,7 @@ class ImportLooper(Process):
                 sys.stdout.write("\b")
                 print('Warning! In file', actualfile, 'a line starts with NaN')
 
-            if toReturn:
+            if toReturn is not None:
                 self.queueOUT.put((datadictname, toReturn))
             else:
                 print("Error in file", actualfile,"\n")

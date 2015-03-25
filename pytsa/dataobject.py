@@ -35,13 +35,13 @@ import re
 import time
 import random
 import multiprocessing
-import util
 from mpl_toolkits.mplot3d import Axes3D
-from commentedfile import *
-from importLooper import *
-from importLooperSBRML import *
-from dataSampler import *
-from sbrml import write_sbrml
+from .commentedfile import *
+from .importLooper import *
+from .importLooperSBRML import *
+from .dataSampler import *
+from .sbrml import write_sbrml
+from .util import printFromSeries, columnsCheck, columnsPhSpCheck
 
 def dataset(path, 
             commentstring='#', 
@@ -626,7 +626,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = util.columnsCheck(self.__columns, columns)
+        columns = columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -825,7 +825,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        columns = util.columnsPhSpCheck(self.__columns, columns)
+        columns = columnsPhSpCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
 
@@ -1110,7 +1110,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = util.columnsCheck(self.__columns, columns)
+        columns = columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1204,7 +1204,7 @@ class DataObject:
 
 
                 if 'txt' in self.__outputs:
-                    util.printFromSeries(filename, filetitle, filedata)
+                    printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
@@ -1267,7 +1267,7 @@ class DataObject:
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
 
-        columns = util.columnsPhSpCheck(self.__columns, columns)
+        columns = columnsPhSpCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1345,7 +1345,7 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
-                    util.printFromSeries(filename, filetitle, filedata)
+                    printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
 
@@ -1453,7 +1453,7 @@ class DataObject:
                 
 
                 if 'txt' in self.__outputs:
-                    util.printFromSeries(filename, filetitle, filedata)
+                    printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
@@ -1515,7 +1515,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = util.columnsCheck(self.__columns, columns)
+        columns = columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1610,7 +1610,7 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
-                    util.printFromSeries(filename, filetitle, filedata)
+                    printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
                 self.printto(filename, 'averages/')
@@ -1676,7 +1676,7 @@ class DataObject:
             stop = self.__timemax
         if layout and merge:
             raise ValueError('Layout and merge is not a good idea')
-        columns = util.columnsCheck(self.__columns, columns)
+        columns = columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         start = float(start)
@@ -1802,7 +1802,7 @@ class DataObject:
                         ax.set_ylabel(ylabel, labelpad=40, fontsize=labelsize)
 
                 if 'txt' in self.__outputs:
-                    util.printFromSeries(filename, filetitle, filedata)
+                    printFromSeries(filename, filetitle, filedata)
                 if 'sbrml' in self.__outputs:
                     write_sbrml(filename, filetitle, filedata)
 
@@ -1858,7 +1858,7 @@ class DataObject:
         fit boolean (defaul None) : If True fits the histrogram with a gaussian, works if normed
         xkcd boolean (defaul None) : If you want xkcd-style"""
         time = float(time)
-        columns = util.columnsCheck(self.__columns, columns)
+        columns = columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         value = float(time)
@@ -2177,7 +2177,7 @@ class DataObject:
             start = self.__timemin
         if stop is None:
             stop = self.__timemax
-        columns = util.columnsCheck(self.__columns, columns)
+        columns = columnsCheck(self.__columns, columns)
         if layout is None:
             layout = (len(columns), 1)
         step = float(step)

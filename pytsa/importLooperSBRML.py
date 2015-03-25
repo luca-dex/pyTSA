@@ -23,8 +23,11 @@ import pandas as pd
 import lxml.etree as etree
 
 from multiprocessing import Process
-from commentedfile import *
-from Queue import Empty
+from .commentedfile import *
+if sys.version_info >= (3, 1):
+    from queue import Empty
+else:
+    from Queue import Empty
 
 class ImportLooperSBRML(Process):
     def __init__(self, 
