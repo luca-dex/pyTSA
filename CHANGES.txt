@@ -1,3 +1,5 @@
+v0.3.8, 24.03.2015 -- minor fix
+v0.3.7, 30.09.2014 -- match pandas-0.14.1 API
 v0.3.6, 26.09.2014 -- added support to the SBRML format
 v0.3.5, 09.04.2014 -- default commentstring set to #  #5
 v0.3.4, 08.04.2014 -- phspace3d and aphspace3d added and tested
