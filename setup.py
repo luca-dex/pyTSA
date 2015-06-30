@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(
     name = "pyTSA",
-    version = "0.3.8",
+    version = "0.3.9",
     packages=['pytsa'],
 
     # Project uses reStructuredText, so ensure that the docutils get
@@ -15,7 +15,8 @@ setup(
         "python-dateutil >= 1.5",
         "matplotlib >= 1.3.0",
         "numexpr",
-        "bottleneck"
+        "bottleneck",
+        "lxml"
     ],
 
     # metadata for upload to PyPI
